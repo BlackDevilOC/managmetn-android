@@ -1,4 +1,4 @@
-package com.substituemanagment.managment.data.database
+package com.substituemanagment.managment.data.dao
 
 import androidx.room.*
 import com.substituemanagment.managment.data.models.Schedule
@@ -9,14 +9,14 @@ interface ScheduleDao {
     @Query("SELECT * FROM schedules")
     fun getAllSchedules(): Flow<List<Schedule>>
 
-    @Query("SELECT * FROM schedules WHERE day = :day")
-    fun getSchedulesByDay(day: String): Flow<List<Schedule>>
-
     @Query("SELECT * FROM schedules WHERE teacherId = :teacherId")
     fun getSchedulesByTeacher(teacherId: Int): Flow<List<Schedule>>
 
+    @Query("SELECT * FROM schedules WHERE day = :day")
+    fun getSchedulesByDay(day: String): Flow<List<Schedule>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSchedule(schedule: Schedule)
+    suspend fun insertSchedule(schedule: Schedule): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchedules(schedules: List<Schedule>)

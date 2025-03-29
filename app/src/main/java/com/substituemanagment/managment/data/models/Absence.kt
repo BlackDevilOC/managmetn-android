@@ -32,5 +32,5 @@ data class Absence(
     val date: String,
     val substituteId: Int?,
     val reason: String?,
-    val status: AbsenceStatus
+    val status: AbsenceStatus = AbsenceStatus.PENDING
 ) 

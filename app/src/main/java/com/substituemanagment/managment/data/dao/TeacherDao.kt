@@ -1,4 +1,4 @@
-package com.substituemanagment.managment.data.database
+package com.substituemanagment.managment.data.dao
 
 import androidx.room.*
 import com.substituemanagment.managment.data.models.Teacher
@@ -9,11 +9,11 @@ interface TeacherDao {
     @Query("SELECT * FROM teachers")
     fun getAllTeachers(): Flow<List<Teacher>>
 
-    @Query("SELECT * FROM teachers WHERE isSubstitute = 1")
-    fun getSubstituteTeachers(): Flow<List<Teacher>>
+    @Query("SELECT * FROM teachers WHERE id = :id")
+    suspend fun getTeacherById(id: Int): Teacher?
 
-    @Query("SELECT * FROM teachers WHERE id = :teacherId")
-    suspend fun getTeacherById(teacherId: Int): Teacher?
+    @Query("SELECT * FROM teachers WHERE isSubstitute = 1")
+    fun getAllSubstitutes(): Flow<List<Teacher>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTeacher(teacher: Teacher): Long

@@ -1,4 +1,4 @@
-package com.substituemanagment.managment.data.database
+package com.substituemanagment.managment.data.dao
 
 import androidx.room.*
 import com.substituemanagment.managment.data.models.Absence
@@ -10,17 +10,17 @@ interface AbsenceDao {
     @Query("SELECT * FROM absences")
     fun getAllAbsences(): Flow<List<Absence>>
 
-    @Query("SELECT * FROM absences WHERE date = :date")
-    fun getAbsencesByDate(date: String): Flow<List<Absence>>
-
     @Query("SELECT * FROM absences WHERE teacherId = :teacherId")
     fun getAbsencesByTeacher(teacherId: Int): Flow<List<Absence>>
+
+    @Query("SELECT * FROM absences WHERE date = :date")
+    fun getAbsencesByDate(date: String): Flow<List<Absence>>
 
     @Query("SELECT * FROM absences WHERE status = :status")
     fun getAbsencesByStatus(status: AbsenceStatus): Flow<List<Absence>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAbsence(absence: Absence)
+    suspend fun insertAbsence(absence: Absence): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAbsences(absences: List<Absence>)

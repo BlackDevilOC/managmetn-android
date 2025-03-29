@@ -18,7 +18,7 @@ class StringListConverter {
     }
 
     @TypeConverter
-    fun toString(list: List<String>): String {
+    fun fromList(list: List<String>): String {
         return gson.toJson(list)
     }
 } 
