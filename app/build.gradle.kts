@@ -44,7 +44,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.navigation.compose)
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -75,6 +74,9 @@ dependencies {
 
     // Gson for JSON handling
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // CSV Processing
+    implementation("com.opencsv:opencsv:5.9")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
