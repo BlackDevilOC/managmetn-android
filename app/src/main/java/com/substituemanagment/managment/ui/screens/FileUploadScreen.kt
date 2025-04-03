@@ -17,7 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.substituemanagment.managment.data.FileType
+import com.substituemanagment.managment.navigation.Screen
 import com.substituemanagment.managment.ui.viewmodels.FileUploadViewModel
 import com.substituemanagment.managment.ui.viewmodels.FileUploadUiState
 import kotlinx.coroutines.delay
@@ -25,7 +27,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FileUploadScreen() {
+fun FileUploadScreen(navController: NavController) {
     val viewModel: FileUploadViewModel = viewModel()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -247,7 +249,7 @@ fun FileUploadScreen() {
             // Process Button at the bottom
             if (!isVerifying) {
                 Button(
-                    onClick = { /* TODO: Implement processing */ },
+                    onClick = { navController.navigate(Screen.Process.route) },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
