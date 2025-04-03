@@ -33,7 +33,6 @@ data class DaySchedule(
 )
 
 data class TeacherSchedule(
-    val teacherId: Int,
     val teacherName: String,
     val schedules: List<Schedule>
 )
@@ -47,7 +46,6 @@ data class Schedule(
     val id: Int,
     val day: String,
     val period: Int,
-    val teacherId: Int,
     val className: String
 )
 
@@ -287,7 +285,7 @@ class TimetableProcessor(private val context: Context) {
             // Initialize data structures
             val classSchedules = mutableMapOf<String, MutableList<Schedule>>()
             val daySchedules = mutableMapOf<String, MutableList<Schedule>>()
-            val teacherSchedules = mutableMapOf<Int, MutableList<Schedule>>()
+            val teacherSchedules = mutableMapOf<String, MutableList<Schedule>>()
             val periodSchedules = mutableMapOf<Int, MutableList<Schedule>>()
             var scheduleId = 1
 
@@ -315,13 +313,11 @@ class TimetableProcessor(private val context: Context) {
                         teacherNormalizer.registerTeacher(teacherName)
                         
                         val className = validClasses[j - 2]
-                        val teacherId = generateTeacherId(teacherName)
 
                         val schedule = Schedule(
                             id = scheduleId++,
                             day = day,
                             period = period,
-                            teacherId = teacherId,
                             className = className
                         )
 
@@ -331,8 +327,8 @@ class TimetableProcessor(private val context: Context) {
                         // Add to day schedules
                         daySchedules.getOrPut(day) { mutableListOf() }.add(schedule)
 
-                        // Add to teacher schedules
-                        teacherSchedules.getOrPut(teacherId) { mutableListOf() }.add(schedule)
+                        // Add to teacher schedules using teacher name
+                        teacherSchedules.getOrPut(teacherName.lowercase()) { mutableListOf() }.add(schedule)
 
                         // Add to period schedules
                         periodSchedules.getOrPut(period) { mutableListOf() }.add(schedule)
@@ -352,8 +348,8 @@ class TimetableProcessor(private val context: Context) {
                 DaySchedule(day, schedules)
             }
 
-            val finalTeacherSchedules = teacherSchedules.map { (teacherId, schedules) ->
-                TeacherSchedule(teacherId, getTeacherName(teacherId), schedules)
+            val finalTeacherSchedules = teacherSchedules.map { (teacherName, schedules) ->
+                TeacherSchedule(teacherName, schedules)
             }
 
             val finalPeriodSchedules = periodSchedules.map { (period, schedules) ->
@@ -419,6 +415,33 @@ class TimetableProcessor(private val context: Context) {
         // Save period schedules
         saveJsonFile("period_schedules.json", periodSchedules)
         Log.i(TAG, "Saved ${periodSchedules.size} period schedules")
+
+        // Create and save teacher schedules with names
+        createTeacherSchedulesWithNames(teacherSchedules)
+    }
+
+    private fun createTeacherSchedulesWithNames(teacherSchedules: List<TeacherSchedule>) {
+        val teacherSchedulesWithNames = mutableMapOf<String, List<Map<String, Any>>>()
+        
+        for (schedule in teacherSchedules) {
+            val teacherName = schedule.teacherName.lowercase()
+            val scheduleList = schedule.schedules
+                .sortedWith(compareBy<Schedule> { it.day }.thenBy { it.period })
+                .map { schedule ->
+                    mapOf(
+                        "day" to schedule.day,
+                        "period" to schedule.period,
+                        "className" to schedule.className
+                    )
+                }
+            teacherSchedulesWithNames[teacherName] = scheduleList
+        }
+
+        val file = File(processedDir, "teacher_schedules.json")
+        FileOutputStream(file).use { outputStream ->
+            outputStream.write(gson.toJson(teacherSchedulesWithNames).toByteArray())
+        }
+        Log.i(TAG, "Saved teacher schedules with names to: ${file.absolutePath}")
     }
 
     private fun saveJsonFile(filename: String, data: Any) {
@@ -433,16 +456,7 @@ class TimetableProcessor(private val context: Context) {
         return day.lowercase().trim()
     }
 
-    private fun generateTeacherId(teacherName: String): Int {
-        // Use the normalized name for consistent ID generation
-        return teacherNormalizer.normalizeName(teacherName).hashCode()
-    }
-
-    private fun getTeacherName(teacherId: Int): String {
-        // Find the teacher by ID in the normalizer's map
-        return teacherNormalizer.getTeachers()
-            .find { it.canonicalName.hashCode() == teacherId }
-            ?.canonicalName
-            ?: "Unknown Teacher"
+    private fun normalizeTeacherName(teacherName: String): String {
+        return teacherName.lowercase().trim()
     }
 } 

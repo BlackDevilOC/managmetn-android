@@ -1,0 +1,4922 @@
+[
+  {
+    "schedules": [
+      {
+        "className": "10A",
+        "day": "monday",
+        "id": 1,
+        "period": 1,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "tuesday",
+        "id": 16,
+        "period": 1,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "wednesday",
+        "id": 31,
+        "period": 1,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "thursday",
+        "id": 46,
+        "period": 1,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "friday",
+        "id": 61,
+        "period": 1,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "saturday",
+        "id": 76,
+        "period": 1,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "monday",
+        "id": 91,
+        "period": 2,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "tuesday",
+        "id": 106,
+        "period": 2,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "wednesday",
+        "id": 121,
+        "period": 2,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "thurday",
+        "id": 136,
+        "period": 2,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "friday",
+        "id": 151,
+        "period": 2,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "saturday",
+        "id": 166,
+        "period": 2,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10B",
+        "day": "thursday",
+        "id": 315,
+        "period": 4,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10B",
+        "day": "friday",
+        "id": 330,
+        "period": 4,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "tuesday",
+        "id": 374,
+        "period": 5,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "thursday",
+        "id": 404,
+        "period": 5,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10B",
+        "day": "friday",
+        "id": 420,
+        "period": 5,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10B",
+        "day": "wednesday",
+        "id": 479,
+        "period": 6,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10B",
+        "day": "saturday",
+        "id": 509,
+        "period": 6,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "monday",
+        "id": 523,
+        "period": 7,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10B",
+        "day": "tuesday",
+        "id": 614,
+        "period": 8,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "wednesday",
+        "id": 628,
+        "period": 8,
+        "teacherId": -1810322361
+      },
+      {
+        "className": "10A",
+        "day": "saturday",
+        "id": 658,
+        "period": 8,
+        "teacherId": -1810322361
+      }
+    ],
+    "teacherId": -1810322361,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "10B",
+        "day": "monday",
+        "id": 2,
+        "period": 1,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "tuesday",
+        "id": 17,
+        "period": 1,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "wednesday",
+        "id": 32,
+        "period": 1,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "thursday",
+        "id": 47,
+        "period": 1,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "friday",
+        "id": 62,
+        "period": 1,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "saturday",
+        "id": 77,
+        "period": 1,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "monday",
+        "id": 92,
+        "period": 2,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "tuesday",
+        "id": 107,
+        "period": 2,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "wednesday",
+        "id": 122,
+        "period": 2,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "thurday",
+        "id": 137,
+        "period": 2,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "saturday",
+        "id": 167,
+        "period": 2,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10C",
+        "day": "friday",
+        "id": 421,
+        "period": 5,
+        "teacherId": -799267780
+      },
+      {
+        "className": "9B",
+        "day": "thursday",
+        "id": 572,
+        "period": 7,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10B",
+        "day": "monday",
+        "id": 599,
+        "period": 8,
+        "teacherId": -799267780
+      },
+      {
+        "className": "10A",
+        "day": "tuesday",
+        "id": 613,
+        "period": 8,
+        "teacherId": -799267780
+      },
+      {
+        "className": "9A",
+        "day": "wednesday",
+        "id": 631,
+        "period": 8,
+        "teacherId": -799267780
+      },
+      {
+        "className": "9C",
+        "day": "saturday",
+        "id": 663,
+        "period": 8,
+        "teacherId": -799267780
+      }
+    ],
+    "teacherId": -799267780,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "10C",
+        "day": "monday",
+        "id": 3,
+        "period": 1,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "tuesday",
+        "id": 18,
+        "period": 1,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "wednesday",
+        "id": 33,
+        "period": 1,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "thursday",
+        "id": 48,
+        "period": 1,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "friday",
+        "id": 63,
+        "period": 1,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "saturday",
+        "id": 78,
+        "period": 1,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "monday",
+        "id": 93,
+        "period": 2,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "tuesday",
+        "id": 108,
+        "period": 2,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "wednesday",
+        "id": 123,
+        "period": 2,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "thurday",
+        "id": 138,
+        "period": 2,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "friday",
+        "id": 153,
+        "period": 2,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "saturday",
+        "id": 168,
+        "period": 2,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "monday",
+        "id": 183,
+        "period": 3,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "tuesday",
+        "id": 198,
+        "period": 3,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "wednesday",
+        "id": 213,
+        "period": 3,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "thursday",
+        "id": 228,
+        "period": 3,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "friday",
+        "id": 242,
+        "period": 3,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "saturday",
+        "id": 257,
+        "period": 3,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "monday",
+        "id": 525,
+        "period": 7,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "tuesday",
+        "id": 540,
+        "period": 7,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "wednesday",
+        "id": 630,
+        "period": 8,
+        "teacherId": 1786288830
+      },
+      {
+        "className": "10C",
+        "day": "thursday",
+        "id": 645,
+        "period": 8,
+        "teacherId": 1786288830
+      }
+    ],
+    "teacherId": 1786288830,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "9A",
+        "day": "monday",
+        "id": 4,
+        "period": 1,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "tuesday",
+        "id": 19,
+        "period": 1,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "wednesday",
+        "id": 34,
+        "period": 1,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "thursday",
+        "id": 49,
+        "period": 1,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "friday",
+        "id": 64,
+        "period": 1,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "saturday",
+        "id": 79,
+        "period": 1,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "monday",
+        "id": 94,
+        "period": 2,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "tuesday",
+        "id": 109,
+        "period": 2,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "wednesday",
+        "id": 124,
+        "period": 2,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "thurday",
+        "id": 139,
+        "period": 2,
+        "teacherId": 848586978
+      },
+      {
+        "className": "9A",
+        "day": "saturday",
+        "id": 169,
+        "period": 2,
+        "teacherId": 848586978
+      },
+      {
+        "className": "10A",
+        "day": "tuesday",
+        "id": 196,
+        "period": 3,
+        "teacherId": 848586978
+      },
+      {
+        "className": "10B",
+        "day": "monday",
+        "id": 449,
+        "period": 6,
+        "teacherId": 848586978
+      },
+      {
+        "className": "6C",
+        "day": "tuesday",
+        "id": 477,
+        "period": 6,
+        "teacherId": 848586978
+      },
+      {
+        "className": "10A",
+        "day": "thursday",
+        "id": 493,
+        "period": 6,
+        "teacherId": 848586978
+      },
+      {
+        "className": "10B",
+        "day": "tuesday",
+        "id": 539,
+        "period": 7,
+        "teacherId": 848586978
+      },
+      {
+        "className": "10B",
+        "day": "thursday",
+        "id": 569,
+        "period": 7,
+        "teacherId": 848586978
+      },
+      {
+        "className": "10A",
+        "day": "saturday",
+        "id": 583,
+        "period": 7,
+        "teacherId": 848586978
+      },
+      {
+        "className": "10A",
+        "day": "monday",
+        "id": 598,
+        "period": 8,
+        "teacherId": 848586978
+      },
+      {
+        "className": "10B",
+        "day": "saturday",
+        "id": 659,
+        "period": 8,
+        "teacherId": 848586978
+      }
+    ],
+    "teacherId": 848586978,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "9B",
+        "day": "monday",
+        "id": 5,
+        "period": 1,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "tuesday",
+        "id": 20,
+        "period": 1,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "wednesday",
+        "id": 35,
+        "period": 1,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "thursday",
+        "id": 50,
+        "period": 1,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "friday",
+        "id": 65,
+        "period": 1,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "saturday",
+        "id": 80,
+        "period": 1,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "monday",
+        "id": 95,
+        "period": 2,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "tuesday",
+        "id": 110,
+        "period": 2,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "wednesday",
+        "id": 125,
+        "period": 2,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "thurday",
+        "id": 140,
+        "period": 2,
+        "teacherId": -763279209
+      },
+      {
+        "className": "9B",
+        "day": "saturday",
+        "id": 170,
+        "period": 2,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10A",
+        "day": "friday",
+        "id": 240,
+        "period": 3,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10A",
+        "day": "monday",
+        "id": 270,
+        "period": 4,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10B",
+        "day": "tuesday",
+        "id": 286,
+        "period": 4,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10B",
+        "day": "wednesday",
+        "id": 300,
+        "period": 4,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10A",
+        "day": "thursday",
+        "id": 314,
+        "period": 4,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10A",
+        "day": "saturday",
+        "id": 344,
+        "period": 4,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10B",
+        "day": "monday",
+        "id": 360,
+        "period": 5,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10B",
+        "day": "wednesday",
+        "id": 390,
+        "period": 5,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10B",
+        "day": "saturday",
+        "id": 435,
+        "period": 5,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10A",
+        "day": "tuesday",
+        "id": 463,
+        "period": 6,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10B",
+        "day": "thursday",
+        "id": 494,
+        "period": 6,
+        "teacherId": -763279209
+      },
+      {
+        "className": "10A",
+        "day": "wednesday",
+        "id": 553,
+        "period": 7,
+        "teacherId": -763279209
+      }
+    ],
+    "teacherId": -763279209,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "9C",
+        "day": "monday",
+        "id": 6,
+        "period": 1,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "tuesday",
+        "id": 21,
+        "period": 1,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "wednesday",
+        "id": 36,
+        "period": 1,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "thursday",
+        "id": 51,
+        "period": 1,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "friday",
+        "id": 66,
+        "period": 1,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "saturday",
+        "id": 81,
+        "period": 1,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "monday",
+        "id": 96,
+        "period": 2,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "tuesday",
+        "id": 111,
+        "period": 2,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "wednesday",
+        "id": 126,
+        "period": 2,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "thurday",
+        "id": 141,
+        "period": 2,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "friday",
+        "id": 156,
+        "period": 2,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "saturday",
+        "id": 171,
+        "period": 2,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "10C",
+        "day": "monday",
+        "id": 272,
+        "period": 4,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "10C",
+        "day": "tuesday",
+        "id": 287,
+        "period": 4,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "10C",
+        "day": "wednesday",
+        "id": 301,
+        "period": 4,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "10C",
+        "day": "thursday",
+        "id": 316,
+        "period": 4,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "10C",
+        "day": "friday",
+        "id": 331,
+        "period": 4,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "10C",
+        "day": "saturday",
+        "id": 346,
+        "period": 4,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "monday",
+        "id": 364,
+        "period": 5,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "tuesday",
+        "id": 379,
+        "period": 5,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "wednesday",
+        "id": 394,
+        "period": 5,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "thursday",
+        "id": 409,
+        "period": 5,
+        "teacherId": -1845451190
+      },
+      {
+        "className": "9C",
+        "day": "saturday",
+        "id": 439,
+        "period": 5,
+        "teacherId": -1845451190
+      }
+    ],
+    "teacherId": -1845451190,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "8A",
+        "day": "monday",
+        "id": 7,
+        "period": 1,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "tuesday",
+        "id": 22,
+        "period": 1,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "wednesday",
+        "id": 37,
+        "period": 1,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "thursday",
+        "id": 52,
+        "period": 1,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "friday",
+        "id": 67,
+        "period": 1,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "saturday",
+        "id": 82,
+        "period": 1,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "monday",
+        "id": 97,
+        "period": 2,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "tuesday",
+        "id": 112,
+        "period": 2,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "wednesday",
+        "id": 127,
+        "period": 2,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "thurday",
+        "id": 142,
+        "period": 2,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8B",
+        "day": "friday",
+        "id": 158,
+        "period": 2,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8A",
+        "day": "saturday",
+        "id": 172,
+        "period": 2,
+        "teacherId": 377474508
+      },
+      {
+        "className": "9B",
+        "day": "monday",
+        "id": 274,
+        "period": 4,
+        "teacherId": 377474508
+      },
+      {
+        "className": "9B",
+        "day": "tuesday",
+        "id": 289,
+        "period": 4,
+        "teacherId": 377474508
+      },
+      {
+        "className": "9B",
+        "day": "wednesday",
+        "id": 303,
+        "period": 4,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8B",
+        "day": "thursday",
+        "id": 321,
+        "period": 4,
+        "teacherId": 377474508
+      },
+      {
+        "className": "9B",
+        "day": "friday",
+        "id": 333,
+        "period": 4,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8B",
+        "day": "monday",
+        "id": 366,
+        "period": 5,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8B",
+        "day": "tuesday",
+        "id": 381,
+        "period": 5,
+        "teacherId": 377474508
+      },
+      {
+        "className": "9B",
+        "day": "thursday",
+        "id": 408,
+        "period": 5,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8B",
+        "day": "wednesday",
+        "id": 485,
+        "period": 6,
+        "teacherId": 377474508
+      },
+      {
+        "className": "9B",
+        "day": "thursday",
+        "id": 497,
+        "period": 6,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8B",
+        "day": "saturday",
+        "id": 515,
+        "period": 6,
+        "teacherId": 377474508
+      },
+      {
+        "className": "6A",
+        "day": "monday",
+        "id": 535,
+        "period": 7,
+        "teacherId": 377474508
+      },
+      {
+        "className": "8B",
+        "day": "wednesday",
+        "id": 560,
+        "period": 7,
+        "teacherId": 377474508
+      },
+      {
+        "className": "9B",
+        "day": "saturday",
+        "id": 587,
+        "period": 7,
+        "teacherId": 377474508
+      }
+    ],
+    "teacherId": 377474508,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "8B",
+        "day": "monday",
+        "id": 8,
+        "period": 1,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "tuesday",
+        "id": 23,
+        "period": 1,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "wednesday",
+        "id": 38,
+        "period": 1,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "thursday",
+        "id": 53,
+        "period": 1,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "friday",
+        "id": 68,
+        "period": 1,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "saturday",
+        "id": 83,
+        "period": 1,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "monday",
+        "id": 98,
+        "period": 2,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "tuesday",
+        "id": 113,
+        "period": 2,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "wednesday",
+        "id": 128,
+        "period": 2,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "thurday",
+        "id": 143,
+        "period": 2,
+        "teacherId": 210185003
+      },
+      {
+        "className": "8B",
+        "day": "saturday",
+        "id": 173,
+        "period": 2,
+        "teacherId": 210185003
+      },
+      {
+        "className": "6B",
+        "day": "monday",
+        "id": 194,
+        "period": 3,
+        "teacherId": 210185003
+      },
+      {
+        "className": "6B",
+        "day": "wednesday",
+        "id": 224,
+        "period": 3,
+        "teacherId": 210185003
+      },
+      {
+        "className": "6B",
+        "day": "tuesday",
+        "id": 297,
+        "period": 4,
+        "teacherId": 210185003
+      },
+      {
+        "className": "6B",
+        "day": "wednesday",
+        "id": 312,
+        "period": 4,
+        "teacherId": 210185003
+      },
+      {
+        "className": "6B",
+        "day": "saturday",
+        "id": 357,
+        "period": 4,
+        "teacherId": 210185003
+      },
+      {
+        "className": "9B",
+        "day": "wednesday",
+        "id": 482,
+        "period": 6,
+        "teacherId": 210185003
+      },
+      {
+        "className": "6B",
+        "day": "thursday",
+        "id": 506,
+        "period": 6,
+        "teacherId": 210185003
+      },
+      {
+        "className": "9B",
+        "day": "monday",
+        "id": 602,
+        "period": 8,
+        "teacherId": 210185003
+      },
+      {
+        "className": "9B",
+        "day": "tuesday",
+        "id": 617,
+        "period": 8,
+        "teacherId": 210185003
+      },
+      {
+        "className": "9B",
+        "day": "saturday",
+        "id": 662,
+        "period": 8,
+        "teacherId": 210185003
+      }
+    ],
+    "teacherId": 210185003,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "8C",
+        "day": "monday",
+        "id": 9,
+        "period": 1,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "tuesday",
+        "id": 24,
+        "period": 1,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "wednesday",
+        "id": 39,
+        "period": 1,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "thursday",
+        "id": 54,
+        "period": 1,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "friday",
+        "id": 69,
+        "period": 1,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "saturday",
+        "id": 84,
+        "period": 1,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "monday",
+        "id": 99,
+        "period": 2,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "tuesday",
+        "id": 114,
+        "period": 2,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "wednesday",
+        "id": 129,
+        "period": 2,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "thurday",
+        "id": 144,
+        "period": 2,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "saturday",
+        "id": 174,
+        "period": 2,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "6C",
+        "day": "thursday",
+        "id": 239,
+        "period": 3,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "6C",
+        "day": "tuesday",
+        "id": 298,
+        "period": 4,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "6C",
+        "day": "wednesday",
+        "id": 492,
+        "period": 6,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "saturday",
+        "id": 516,
+        "period": 6,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "6C",
+        "day": "monday",
+        "id": 537,
+        "period": 7,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "tuesday",
+        "id": 546,
+        "period": 7,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "6C",
+        "day": "thursday",
+        "id": 582,
+        "period": 7,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "monday",
+        "id": 606,
+        "period": 8,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "wednesday",
+        "id": 636,
+        "period": 8,
+        "teacherId": 1377700947
+      },
+      {
+        "className": "8C",
+        "day": "thursday",
+        "id": 651,
+        "period": 8,
+        "teacherId": 1377700947
+      }
+    ],
+    "teacherId": 1377700947,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7A",
+        "day": "monday",
+        "id": 10,
+        "period": 1,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "tuesday",
+        "id": 25,
+        "period": 1,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "wednesday",
+        "id": 40,
+        "period": 1,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "thursday",
+        "id": 55,
+        "period": 1,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "friday",
+        "id": 70,
+        "period": 1,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "saturday",
+        "id": 85,
+        "period": 1,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "monday",
+        "id": 100,
+        "period": 2,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "tuesday",
+        "id": 115,
+        "period": 2,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "wednesday",
+        "id": 130,
+        "period": 2,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "thurday",
+        "id": 145,
+        "period": 2,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "saturday",
+        "id": 175,
+        "period": 2,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "8B",
+        "day": "tuesday",
+        "id": 203,
+        "period": 3,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "8B",
+        "day": "friday",
+        "id": 247,
+        "period": 3,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "monday",
+        "id": 279,
+        "period": 4,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "tuesday",
+        "id": 383,
+        "period": 5,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "8B",
+        "day": "wednesday",
+        "id": 396,
+        "period": 5,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "8B",
+        "day": "thursday",
+        "id": 411,
+        "period": 5,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "friday",
+        "id": 428,
+        "period": 5,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "tuesday",
+        "id": 472,
+        "period": 6,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "saturday",
+        "id": 592,
+        "period": 7,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "wednesday",
+        "id": 637,
+        "period": 8,
+        "teacherId": 1499615099
+      },
+      {
+        "className": "7A",
+        "day": "thursday",
+        "id": 652,
+        "period": 8,
+        "teacherId": 1499615099
+      }
+    ],
+    "teacherId": 1499615099,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7B",
+        "day": "monday",
+        "id": 11,
+        "period": 1,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "tuesday",
+        "id": 26,
+        "period": 1,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "wednesday",
+        "id": 41,
+        "period": 1,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "thursday",
+        "id": 56,
+        "period": 1,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "friday",
+        "id": 71,
+        "period": 1,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "saturday",
+        "id": 86,
+        "period": 1,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "monday",
+        "id": 101,
+        "period": 2,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "tuesday",
+        "id": 116,
+        "period": 2,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "wednesday",
+        "id": 131,
+        "period": 2,
+        "teacherId": -32701020
+      },
+      {
+        "className": "8C",
+        "day": "friday",
+        "id": 159,
+        "period": 2,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7B",
+        "day": "saturday",
+        "id": 176,
+        "period": 2,
+        "teacherId": -32701020
+      },
+      {
+        "className": "8C",
+        "day": "monday",
+        "id": 189,
+        "period": 3,
+        "teacherId": -32701020
+      },
+      {
+        "className": "8C",
+        "day": "tuesday",
+        "id": 204,
+        "period": 3,
+        "teacherId": -32701020
+      },
+      {
+        "className": "8C",
+        "day": "wednesday",
+        "id": 219,
+        "period": 3,
+        "teacherId": -32701020
+      },
+      {
+        "className": "8C",
+        "day": "thursday",
+        "id": 234,
+        "period": 3,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7C",
+        "day": "friday",
+        "id": 251,
+        "period": 3,
+        "teacherId": -32701020
+      },
+      {
+        "className": "8C",
+        "day": "saturday",
+        "id": 263,
+        "period": 3,
+        "teacherId": -32701020
+      },
+      {
+        "className": "8C",
+        "day": "friday",
+        "id": 337,
+        "period": 4,
+        "teacherId": -32701020
+      },
+      {
+        "className": "8C",
+        "day": "saturday",
+        "id": 352,
+        "period": 4,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7C",
+        "day": "monday",
+        "id": 459,
+        "period": 6,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7C",
+        "day": "tuesday",
+        "id": 474,
+        "period": 6,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7C",
+        "day": "wednesday",
+        "id": 489,
+        "period": 6,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7C",
+        "day": "thursday",
+        "id": 504,
+        "period": 6,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7C",
+        "day": "tuesday",
+        "id": 549,
+        "period": 7,
+        "teacherId": -32701020
+      },
+      {
+        "className": "7C",
+        "day": "saturday",
+        "id": 594,
+        "period": 7,
+        "teacherId": -32701020
+      }
+    ],
+    "teacherId": -32701020,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7C",
+        "day": "monday",
+        "id": 12,
+        "period": 1,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "tuesday",
+        "id": 27,
+        "period": 1,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "wednesday",
+        "id": 42,
+        "period": 1,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "thursday",
+        "id": 57,
+        "period": 1,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "friday",
+        "id": 72,
+        "period": 1,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "saturday",
+        "id": 87,
+        "period": 1,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "monday",
+        "id": 102,
+        "period": 2,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "tuesday",
+        "id": 117,
+        "period": 2,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "wednesday",
+        "id": 132,
+        "period": 2,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "thurday",
+        "id": 147,
+        "period": 2,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7C",
+        "day": "saturday",
+        "id": 177,
+        "period": 2,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "7A",
+        "day": "friday",
+        "id": 249,
+        "period": 3,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "9C",
+        "day": "wednesday",
+        "id": 304,
+        "period": 4,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "9C",
+        "day": "friday",
+        "id": 334,
+        "period": 4,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "10C",
+        "day": "monday",
+        "id": 361,
+        "period": 5,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "10C",
+        "day": "tuesday",
+        "id": 376,
+        "period": 5,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "10C",
+        "day": "wednesday",
+        "id": 391,
+        "period": 5,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "10C",
+        "day": "thursday",
+        "id": 406,
+        "period": 5,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "10C",
+        "day": "saturday",
+        "id": 436,
+        "period": 5,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "9C",
+        "day": "monday",
+        "id": 453,
+        "period": 6,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "9C",
+        "day": "tuesday",
+        "id": 468,
+        "period": 6,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "10C",
+        "day": "thursday",
+        "id": 495,
+        "period": 6,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "9C",
+        "day": "saturday",
+        "id": 513,
+        "period": 6,
+        "teacherId": 1083921750
+      },
+      {
+        "className": "9C",
+        "day": "thursday",
+        "id": 573,
+        "period": 7,
+        "teacherId": 1083921750
+      }
+    ],
+    "teacherId": 1083921750,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6A",
+        "day": "monday",
+        "id": 13,
+        "period": 1,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "tuesday",
+        "id": 28,
+        "period": 1,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "wednesday",
+        "id": 43,
+        "period": 1,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "thursday",
+        "id": 58,
+        "period": 1,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "friday",
+        "id": 73,
+        "period": 1,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "saturday",
+        "id": 88,
+        "period": 1,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "monday",
+        "id": 103,
+        "period": 2,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "tuesday",
+        "id": 118,
+        "period": 2,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "wednesday",
+        "id": 133,
+        "period": 2,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "thurday",
+        "id": 148,
+        "period": 2,
+        "teacherId": -847705456
+      },
+      {
+        "className": "6A",
+        "day": "saturday",
+        "id": 178,
+        "period": 2,
+        "teacherId": -847705456
+      },
+      {
+        "className": "8A",
+        "day": "tuesday",
+        "id": 291,
+        "period": 4,
+        "teacherId": -847705456
+      },
+      {
+        "className": "8A",
+        "day": "wednesday",
+        "id": 395,
+        "period": 5,
+        "teacherId": -847705456
+      },
+      {
+        "className": "8A",
+        "day": "friday",
+        "id": 425,
+        "period": 5,
+        "teacherId": -847705456
+      },
+      {
+        "className": "8A",
+        "day": "saturday",
+        "id": 440,
+        "period": 5,
+        "teacherId": -847705456
+      },
+      {
+        "className": "7A",
+        "day": "monday",
+        "id": 457,
+        "period": 6,
+        "teacherId": -847705456
+      },
+      {
+        "className": "7A",
+        "day": "wednesday",
+        "id": 487,
+        "period": 6,
+        "teacherId": -847705456
+      },
+      {
+        "className": "7A",
+        "day": "saturday",
+        "id": 517,
+        "period": 6,
+        "teacherId": -847705456
+      },
+      {
+        "className": "7A",
+        "day": "tuesday",
+        "id": 547,
+        "period": 7,
+        "teacherId": -847705456
+      }
+    ],
+    "teacherId": -847705456,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6B",
+        "day": "monday",
+        "id": 14,
+        "period": 1,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "tuesday",
+        "id": 29,
+        "period": 1,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "wednesday",
+        "id": 44,
+        "period": 1,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "thursday",
+        "id": 59,
+        "period": 1,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "friday",
+        "id": 74,
+        "period": 1,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "saturday",
+        "id": 89,
+        "period": 1,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "monday",
+        "id": 104,
+        "period": 2,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "tuesday",
+        "id": 119,
+        "period": 2,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "wednesday",
+        "id": 134,
+        "period": 2,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "thurday",
+        "id": 149,
+        "period": 2,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "saturday",
+        "id": 179,
+        "period": 2,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "monday",
+        "id": 283,
+        "period": 4,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "8C",
+        "day": "thursday",
+        "id": 322,
+        "period": 4,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "8C",
+        "day": "saturday",
+        "id": 441,
+        "period": 5,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "8B",
+        "day": "tuesday",
+        "id": 545,
+        "period": 7,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "8B",
+        "day": "thursday",
+        "id": 575,
+        "period": 7,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "8B",
+        "day": "saturday",
+        "id": 590,
+        "period": 7,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "monday",
+        "id": 611,
+        "period": 8,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "tuesday",
+        "id": 626,
+        "period": 8,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "wednesday",
+        "id": 641,
+        "period": 8,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "thursday",
+        "id": 656,
+        "period": 8,
+        "teacherId": -1643452155
+      },
+      {
+        "className": "6B",
+        "day": "saturday",
+        "id": 671,
+        "period": 8,
+        "teacherId": -1643452155
+      }
+    ],
+    "teacherId": -1643452155,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6C",
+        "day": "monday",
+        "id": 15,
+        "period": 1,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "tuesday",
+        "id": 30,
+        "period": 1,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "wednesday",
+        "id": 45,
+        "period": 1,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "thursday",
+        "id": 60,
+        "period": 1,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "friday",
+        "id": 75,
+        "period": 1,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "saturday",
+        "id": 90,
+        "period": 1,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "monday",
+        "id": 105,
+        "period": 2,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "tuesday",
+        "id": 120,
+        "period": 2,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "wednesday",
+        "id": 135,
+        "period": 2,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "thurday",
+        "id": 150,
+        "period": 2,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "saturday",
+        "id": 180,
+        "period": 2,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "monday",
+        "id": 195,
+        "period": 3,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "tuesday",
+        "id": 210,
+        "period": 3,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "wednesday",
+        "id": 225,
+        "period": 3,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "friday",
+        "id": 254,
+        "period": 3,
+        "teacherId": 111574615
+      },
+      {
+        "className": "8C",
+        "day": "wednesday",
+        "id": 307,
+        "period": 4,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "monday",
+        "id": 373,
+        "period": 5,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "wednesday",
+        "id": 403,
+        "period": 5,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "saturday",
+        "id": 522,
+        "period": 6,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "tuesday",
+        "id": 552,
+        "period": 7,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "saturday",
+        "id": 597,
+        "period": 7,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "monday",
+        "id": 612,
+        "period": 8,
+        "teacherId": 111574615
+      },
+      {
+        "className": "6C",
+        "day": "tuesday",
+        "id": 627,
+        "period": 8,
+        "teacherId": 111574615
+      }
+    ],
+    "teacherId": 111574615,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7B",
+        "day": "thurday",
+        "id": 146,
+        "period": 2,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7B",
+        "day": "friday",
+        "id": 161,
+        "period": 2,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7B",
+        "day": "tuesday",
+        "id": 206,
+        "period": 3,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7A",
+        "day": "saturday",
+        "id": 264,
+        "period": 3,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "8B",
+        "day": "monday",
+        "id": 277,
+        "period": 4,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "8B",
+        "day": "friday",
+        "id": 336,
+        "period": 4,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7A",
+        "day": "monday",
+        "id": 368,
+        "period": 5,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7A",
+        "day": "wednesday",
+        "id": 398,
+        "period": 5,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7B",
+        "day": "saturday",
+        "id": 443,
+        "period": 5,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7B",
+        "day": "monday",
+        "id": 458,
+        "period": 6,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "8B",
+        "day": "tuesday",
+        "id": 470,
+        "period": 6,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7B",
+        "day": "wednesday",
+        "id": 488,
+        "period": 6,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7A",
+        "day": "thursday",
+        "id": 502,
+        "period": 6,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "9A",
+        "day": "monday",
+        "id": 526,
+        "period": 7,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "9A",
+        "day": "tuesday",
+        "id": 541,
+        "period": 7,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "9A",
+        "day": "wednesday",
+        "id": 556,
+        "period": 7,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "9A",
+        "day": "saturday",
+        "id": 586,
+        "period": 7,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "7A",
+        "day": "tuesday",
+        "id": 622,
+        "period": 8,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "8B",
+        "day": "thursday",
+        "id": 650,
+        "period": 8,
+        "teacherId": -1214666315
+      },
+      {
+        "className": "8B",
+        "day": "saturday",
+        "id": 665,
+        "period": 8,
+        "teacherId": -1214666315
+      }
+    ],
+    "teacherId": -1214666315,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "10B",
+        "day": "friday",
+        "id": 152,
+        "period": 2,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "monday",
+        "id": 182,
+        "period": 3,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "tuesday",
+        "id": 197,
+        "period": 3,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "wednesday",
+        "id": 212,
+        "period": 3,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "thursday",
+        "id": 227,
+        "period": 3,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "friday",
+        "id": 241,
+        "period": 3,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "saturday",
+        "id": 256,
+        "period": 3,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "monday",
+        "id": 271,
+        "period": 4,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "saturday",
+        "id": 345,
+        "period": 4,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10A",
+        "day": "monday",
+        "id": 359,
+        "period": 5,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10A",
+        "day": "wednesday",
+        "id": 389,
+        "period": 5,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "thursday",
+        "id": 405,
+        "period": 5,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10A",
+        "day": "friday",
+        "id": 419,
+        "period": 5,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "tuesday",
+        "id": 464,
+        "period": 6,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10A",
+        "day": "saturday",
+        "id": 508,
+        "period": 6,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10A",
+        "day": "tuesday",
+        "id": 538,
+        "period": 7,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "wednesday",
+        "id": 554,
+        "period": 7,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10A",
+        "day": "thursday",
+        "id": 568,
+        "period": 7,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10B",
+        "day": "saturday",
+        "id": 584,
+        "period": 7,
+        "teacherId": 1302221526
+      },
+      {
+        "className": "10A",
+        "day": "thursday",
+        "id": 643,
+        "period": 8,
+        "teacherId": 1302221526
+      }
+    ],
+    "teacherId": 1302221526,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "9A",
+        "day": "friday",
+        "id": 154,
+        "period": 2,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10A",
+        "day": "monday",
+        "id": 181,
+        "period": 3,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9A",
+        "day": "tuesday",
+        "id": 199,
+        "period": 3,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10A",
+        "day": "wednesday",
+        "id": 211,
+        "period": 3,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10A",
+        "day": "thursday",
+        "id": 226,
+        "period": 3,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9B",
+        "day": "friday",
+        "id": 244,
+        "period": 3,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10A",
+        "day": "saturday",
+        "id": 255,
+        "period": 3,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9A",
+        "day": "monday",
+        "id": 273,
+        "period": 4,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10A",
+        "day": "tuesday",
+        "id": 285,
+        "period": 4,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9A",
+        "day": "wednesday",
+        "id": 302,
+        "period": 4,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9A",
+        "day": "thursday",
+        "id": 317,
+        "period": 4,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10A",
+        "day": "friday",
+        "id": 329,
+        "period": 4,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9B",
+        "day": "saturday",
+        "id": 348,
+        "period": 4,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9A",
+        "day": "thursday",
+        "id": 407,
+        "period": 5,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10C",
+        "day": "monday",
+        "id": 450,
+        "period": 6,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10C",
+        "day": "tuesday",
+        "id": 465,
+        "period": 6,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10C",
+        "day": "wednesday",
+        "id": 480,
+        "period": 6,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9A",
+        "day": "saturday",
+        "id": 511,
+        "period": 6,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9B",
+        "day": "monday",
+        "id": 527,
+        "period": 7,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9B",
+        "day": "tuesday",
+        "id": 542,
+        "period": 7,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9B",
+        "day": "wednesday",
+        "id": 557,
+        "period": 7,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10C",
+        "day": "thursday",
+        "id": 570,
+        "period": 7,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10C",
+        "day": "saturday",
+        "id": 585,
+        "period": 7,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "9B",
+        "day": "thursday",
+        "id": 647,
+        "period": 8,
+        "teacherId": -1920914546
+      },
+      {
+        "className": "10C",
+        "day": "saturday",
+        "id": 660,
+        "period": 8,
+        "teacherId": -1920914546
+      }
+    ],
+    "teacherId": -1920914546,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "9B",
+        "day": "friday",
+        "id": 155,
+        "period": 2,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "monday",
+        "id": 184,
+        "period": 3,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9B",
+        "day": "tuesday",
+        "id": 200,
+        "period": 3,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "wednesday",
+        "id": 214,
+        "period": 3,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "thursday",
+        "id": 229,
+        "period": 3,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "friday",
+        "id": 243,
+        "period": 3,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "saturday",
+        "id": 258,
+        "period": 3,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9B",
+        "day": "thursday",
+        "id": 318,
+        "period": 4,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "8A",
+        "day": "friday",
+        "id": 335,
+        "period": 4,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "saturday",
+        "id": 347,
+        "period": 4,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9B",
+        "day": "monday",
+        "id": 363,
+        "period": 5,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "tuesday",
+        "id": 377,
+        "period": 5,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9B",
+        "day": "wednesday",
+        "id": 393,
+        "period": 5,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "8A",
+        "day": "thursday",
+        "id": 410,
+        "period": 5,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "friday",
+        "id": 422,
+        "period": 5,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9B",
+        "day": "saturday",
+        "id": 438,
+        "period": 5,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "monday",
+        "id": 451,
+        "period": 6,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "tuesday",
+        "id": 466,
+        "period": 6,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "wednesday",
+        "id": 481,
+        "period": 6,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "9A",
+        "day": "thursday",
+        "id": 571,
+        "period": 7,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "8A",
+        "day": "monday",
+        "id": 604,
+        "period": 8,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "8A",
+        "day": "tuesday",
+        "id": 619,
+        "period": 8,
+        "teacherId": -1153230860
+      },
+      {
+        "className": "8A",
+        "day": "wednesday",
+        "id": 634,
+        "period": 8,
+        "teacherId": -1153230860
+      }
+    ],
+    "teacherId": -1153230860,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "8A",
+        "day": "friday",
+        "id": 157,
+        "period": 2,
+        "teacherId": -527528977
+      },
+      {
+        "className": "8C",
+        "day": "monday",
+        "id": 278,
+        "period": 4,
+        "teacherId": -527528977
+      },
+      {
+        "className": "8C",
+        "day": "tuesday",
+        "id": 293,
+        "period": 4,
+        "teacherId": -527528977
+      },
+      {
+        "className": "10A",
+        "day": "wednesday",
+        "id": 299,
+        "period": 4,
+        "teacherId": -527528977
+      },
+      {
+        "className": "9C",
+        "day": "thursday",
+        "id": 319,
+        "period": 4,
+        "teacherId": -527528977
+      },
+      {
+        "className": "10B",
+        "day": "tuesday",
+        "id": 375,
+        "period": 5,
+        "teacherId": -527528977
+      },
+      {
+        "className": "8C",
+        "day": "wednesday",
+        "id": 397,
+        "period": 5,
+        "teacherId": -527528977
+      },
+      {
+        "className": "8C",
+        "day": "thursday",
+        "id": 412,
+        "period": 5,
+        "teacherId": -527528977
+      },
+      {
+        "className": "10A",
+        "day": "saturday",
+        "id": 434,
+        "period": 5,
+        "teacherId": -527528977
+      },
+      {
+        "className": "10A",
+        "day": "monday",
+        "id": 448,
+        "period": 6,
+        "teacherId": -527528977
+      },
+      {
+        "className": "8A",
+        "day": "tuesday",
+        "id": 469,
+        "period": 6,
+        "teacherId": -527528977
+      },
+      {
+        "className": "10A",
+        "day": "wednesday",
+        "id": 478,
+        "period": 6,
+        "teacherId": -527528977
+      },
+      {
+        "className": "8A",
+        "day": "thursday",
+        "id": 499,
+        "period": 6,
+        "teacherId": -527528977
+      },
+      {
+        "className": "10B",
+        "day": "monday",
+        "id": 524,
+        "period": 7,
+        "teacherId": -527528977
+      },
+      {
+        "className": "9C",
+        "day": "saturday",
+        "id": 588,
+        "period": 7,
+        "teacherId": -527528977
+      },
+      {
+        "className": "9C",
+        "day": "monday",
+        "id": 603,
+        "period": 8,
+        "teacherId": -527528977
+      },
+      {
+        "className": "9C",
+        "day": "tuesday",
+        "id": 618,
+        "period": 8,
+        "teacherId": -527528977
+      },
+      {
+        "className": "10B",
+        "day": "wednesday",
+        "id": 629,
+        "period": 8,
+        "teacherId": -527528977
+      },
+      {
+        "className": "10B",
+        "day": "thursday",
+        "id": 644,
+        "period": 8,
+        "teacherId": -527528977
+      },
+      {
+        "className": "8A",
+        "day": "saturday",
+        "id": 664,
+        "period": 8,
+        "teacherId": -527528977
+      }
+    ],
+    "teacherId": -527528977,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7A",
+        "day": "friday",
+        "id": 160,
+        "period": 2,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7A",
+        "day": "monday",
+        "id": 190,
+        "period": 3,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7A",
+        "day": "tuesday",
+        "id": 205,
+        "period": 3,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "saturday",
+        "id": 265,
+        "period": 3,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "monday",
+        "id": 280,
+        "period": 4,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "tuesday",
+        "id": 294,
+        "period": 4,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7C",
+        "day": "thursday",
+        "id": 325,
+        "period": 4,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7C",
+        "day": "monday",
+        "id": 370,
+        "period": 5,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7C",
+        "day": "tuesday",
+        "id": 385,
+        "period": 5,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "wednesday",
+        "id": 399,
+        "period": 5,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7C",
+        "day": "thursday",
+        "id": 415,
+        "period": 5,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "tuesday",
+        "id": 473,
+        "period": 6,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "monday",
+        "id": 533,
+        "period": 7,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "wednesday",
+        "id": 563,
+        "period": 7,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "thursday",
+        "id": 578,
+        "period": 7,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "saturday",
+        "id": 593,
+        "period": 7,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7B",
+        "day": "tuesday",
+        "id": 623,
+        "period": 8,
+        "teacherId": 2035019265
+      },
+      {
+        "className": "7C",
+        "day": "saturday",
+        "id": 669,
+        "period": 8,
+        "teacherId": 2035019265
+      }
+    ],
+    "teacherId": 2035019265,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7C",
+        "day": "friday",
+        "id": 162,
+        "period": 2,
+        "teacherId": 328299417
+      },
+      {
+        "className": "9B",
+        "day": "monday",
+        "id": 185,
+        "period": 3,
+        "teacherId": 328299417
+      },
+      {
+        "className": "9B",
+        "day": "wednesday",
+        "id": 215,
+        "period": 3,
+        "teacherId": 328299417
+      },
+      {
+        "className": "7C",
+        "day": "thursday",
+        "id": 237,
+        "period": 3,
+        "teacherId": 328299417
+      },
+      {
+        "className": "9B",
+        "day": "saturday",
+        "id": 259,
+        "period": 3,
+        "teacherId": 328299417
+      },
+      {
+        "className": "7B",
+        "day": "friday",
+        "id": 339,
+        "period": 4,
+        "teacherId": 328299417
+      },
+      {
+        "className": "7B",
+        "day": "monday",
+        "id": 369,
+        "period": 5,
+        "teacherId": 328299417
+      },
+      {
+        "className": "9B",
+        "day": "tuesday",
+        "id": 378,
+        "period": 5,
+        "teacherId": 328299417
+      },
+      {
+        "className": "8B",
+        "day": "friday",
+        "id": 426,
+        "period": 5,
+        "teacherId": 328299417
+      },
+      {
+        "className": "7C",
+        "day": "saturday",
+        "id": 444,
+        "period": 5,
+        "teacherId": 328299417
+      },
+      {
+        "className": "8A",
+        "day": "monday",
+        "id": 529,
+        "period": 7,
+        "teacherId": 328299417
+      },
+      {
+        "className": "8A",
+        "day": "tuesday",
+        "id": 544,
+        "period": 7,
+        "teacherId": 328299417
+      },
+      {
+        "className": "8A",
+        "day": "wednesday",
+        "id": 559,
+        "period": 7,
+        "teacherId": 328299417
+      },
+      {
+        "className": "8A",
+        "day": "thursday",
+        "id": 574,
+        "period": 7,
+        "teacherId": 328299417
+      },
+      {
+        "className": "8C",
+        "day": "saturday",
+        "id": 591,
+        "period": 7,
+        "teacherId": 328299417
+      },
+      {
+        "className": "9A",
+        "day": "monday",
+        "id": 601,
+        "period": 8,
+        "teacherId": 328299417
+      },
+      {
+        "className": "9A",
+        "day": "tuesday",
+        "id": 616,
+        "period": 8,
+        "teacherId": 328299417
+      },
+      {
+        "className": "9A",
+        "day": "thursday",
+        "id": 646,
+        "period": 8,
+        "teacherId": 328299417
+      },
+      {
+        "className": "9A",
+        "day": "saturday",
+        "id": 661,
+        "period": 8,
+        "teacherId": 328299417
+      }
+    ],
+    "teacherId": 328299417,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6A",
+        "day": "friday",
+        "id": 163,
+        "period": 2,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6A",
+        "day": "monday",
+        "id": 193,
+        "period": 3,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6A",
+        "day": "tuesday",
+        "id": 208,
+        "period": 3,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8A",
+        "day": "thursday",
+        "id": 232,
+        "period": 3,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8B",
+        "day": "saturday",
+        "id": 262,
+        "period": 3,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8B",
+        "day": "tuesday",
+        "id": 292,
+        "period": 4,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8A",
+        "day": "wednesday",
+        "id": 305,
+        "period": 4,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8B",
+        "day": "saturday",
+        "id": 351,
+        "period": 4,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8A",
+        "day": "monday",
+        "id": 365,
+        "period": 5,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6B",
+        "day": "monday",
+        "id": 372,
+        "period": 5,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6B",
+        "day": "tuesday",
+        "id": 387,
+        "period": 5,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6A",
+        "day": "wednesday",
+        "id": 401,
+        "period": 5,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6B",
+        "day": "thursday",
+        "id": 417,
+        "period": 5,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6B",
+        "day": "friday",
+        "id": 432,
+        "period": 5,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8A",
+        "day": "monday",
+        "id": 454,
+        "period": 6,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8B",
+        "day": "thursday",
+        "id": 500,
+        "period": 6,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "8A",
+        "day": "saturday",
+        "id": 514,
+        "period": 6,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6A",
+        "day": "tuesday",
+        "id": 550,
+        "period": 7,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6A",
+        "day": "wednesday",
+        "id": 565,
+        "period": 7,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6A",
+        "day": "monday",
+        "id": 610,
+        "period": 8,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6A",
+        "day": "wednesday",
+        "id": 640,
+        "period": 8,
+        "teacherId": 1833040319
+      },
+      {
+        "className": "6A",
+        "day": "thursday",
+        "id": 655,
+        "period": 8,
+        "teacherId": 1833040319
+      }
+    ],
+    "teacherId": 1833040319,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6B",
+        "day": "friday",
+        "id": 164,
+        "period": 2,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7C",
+        "day": "monday",
+        "id": 192,
+        "period": 3,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7C",
+        "day": "tuesday",
+        "id": 207,
+        "period": 3,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6A",
+        "day": "wednesday",
+        "id": 223,
+        "period": 3,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6A",
+        "day": "thursday",
+        "id": 238,
+        "period": 3,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6A",
+        "day": "friday",
+        "id": 252,
+        "period": 3,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6C",
+        "day": "monday",
+        "id": 284,
+        "period": 4,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7B",
+        "day": "thursday",
+        "id": 324,
+        "period": 4,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6A",
+        "day": "saturday",
+        "id": 356,
+        "period": 4,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6A",
+        "day": "monday",
+        "id": 371,
+        "period": 5,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6A",
+        "day": "tuesday",
+        "id": 386,
+        "period": 5,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7A",
+        "day": "thursday",
+        "id": 413,
+        "period": 5,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7A",
+        "day": "saturday",
+        "id": 442,
+        "period": 5,
+        "teacherId": -215520162
+      },
+      {
+        "className": "8C",
+        "day": "tuesday",
+        "id": 471,
+        "period": 6,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6A",
+        "day": "wednesday",
+        "id": 490,
+        "period": 6,
+        "teacherId": -215520162
+      },
+      {
+        "className": "8C",
+        "day": "thursday",
+        "id": 501,
+        "period": 6,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7B",
+        "day": "saturday",
+        "id": 518,
+        "period": 6,
+        "teacherId": -215520162
+      },
+      {
+        "className": "8C",
+        "day": "monday",
+        "id": 531,
+        "period": 7,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6B",
+        "day": "saturday",
+        "id": 596,
+        "period": 7,
+        "teacherId": -215520162
+      },
+      {
+        "className": "6A",
+        "day": "tuesday",
+        "id": 625,
+        "period": 8,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7C",
+        "day": "wednesday",
+        "id": 639,
+        "period": 8,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7C",
+        "day": "thursday",
+        "id": 654,
+        "period": 8,
+        "teacherId": -215520162
+      },
+      {
+        "className": "7B",
+        "day": "saturday",
+        "id": 668,
+        "period": 8,
+        "teacherId": -215520162
+      }
+    ],
+    "teacherId": -215520162,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6C",
+        "day": "friday",
+        "id": 165,
+        "period": 2,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6A",
+        "day": "tuesday",
+        "id": 296,
+        "period": 4,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6C",
+        "day": "wednesday",
+        "id": 313,
+        "period": 4,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6C",
+        "day": "thursday",
+        "id": 328,
+        "period": 4,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6C",
+        "day": "saturday",
+        "id": 358,
+        "period": 4,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6C",
+        "day": "tuesday",
+        "id": 388,
+        "period": 5,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6C",
+        "day": "thursday",
+        "id": 418,
+        "period": 5,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6C",
+        "day": "monday",
+        "id": 462,
+        "period": 6,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6C",
+        "day": "thursday",
+        "id": 507,
+        "period": 6,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "10C",
+        "day": "saturday",
+        "id": 510,
+        "period": 6,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "10C",
+        "day": "wednesday",
+        "id": 555,
+        "period": 7,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6A",
+        "day": "thursday",
+        "id": 580,
+        "period": 7,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "6A",
+        "day": "saturday",
+        "id": 595,
+        "period": 7,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "10C",
+        "day": "monday",
+        "id": 600,
+        "period": 8,
+        "teacherId": 1373765963
+      },
+      {
+        "className": "10C",
+        "day": "tuesday",
+        "id": 615,
+        "period": 8,
+        "teacherId": 1373765963
+      }
+    ],
+    "teacherId": 1373765963,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "9C",
+        "day": "monday",
+        "id": 186,
+        "period": 3,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "tuesday",
+        "id": 201,
+        "period": 3,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "wednesday",
+        "id": 216,
+        "period": 3,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "thursday",
+        "id": 231,
+        "period": 3,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "friday",
+        "id": 245,
+        "period": 3,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "saturday",
+        "id": 260,
+        "period": 3,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "monday",
+        "id": 275,
+        "period": 4,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "tuesday",
+        "id": 290,
+        "period": 4,
+        "teacherId": 833647477
+      },
+      {
+        "className": "6A",
+        "day": "wednesday",
+        "id": 311,
+        "period": 4,
+        "teacherId": 833647477
+      },
+      {
+        "className": "6A",
+        "day": "thursday",
+        "id": 326,
+        "period": 4,
+        "teacherId": 833647477
+      },
+      {
+        "className": "6A",
+        "day": "friday",
+        "id": 341,
+        "period": 4,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "saturday",
+        "id": 349,
+        "period": 4,
+        "teacherId": 833647477
+      },
+      {
+        "className": "6A",
+        "day": "thursday",
+        "id": 416,
+        "period": 5,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "friday",
+        "id": 424,
+        "period": 5,
+        "teacherId": 833647477
+      },
+      {
+        "className": "6A",
+        "day": "saturday",
+        "id": 445,
+        "period": 5,
+        "teacherId": 833647477
+      },
+      {
+        "className": "6A",
+        "day": "tuesday",
+        "id": 475,
+        "period": 6,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "thursday",
+        "id": 498,
+        "period": 6,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "wednesday",
+        "id": 558,
+        "period": 7,
+        "teacherId": 833647477
+      },
+      {
+        "className": "9C",
+        "day": "wednesday",
+        "id": 633,
+        "period": 8,
+        "teacherId": 833647477
+      }
+    ],
+    "teacherId": 833647477,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "8A",
+        "day": "monday",
+        "id": 187,
+        "period": 3,
+        "teacherId": -72020675
+      },
+      {
+        "className": "8A",
+        "day": "tuesday",
+        "id": 202,
+        "period": 3,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9B",
+        "day": "thursday",
+        "id": 230,
+        "period": 3,
+        "teacherId": -72020675
+      },
+      {
+        "className": "8A",
+        "day": "saturday",
+        "id": 261,
+        "period": 3,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9A",
+        "day": "tuesday",
+        "id": 288,
+        "period": 4,
+        "teacherId": -72020675
+      },
+      {
+        "className": "8A",
+        "day": "thursday",
+        "id": 320,
+        "period": 4,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9A",
+        "day": "friday",
+        "id": 332,
+        "period": 4,
+        "teacherId": -72020675
+      },
+      {
+        "className": "8A",
+        "day": "saturday",
+        "id": 350,
+        "period": 4,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9A",
+        "day": "monday",
+        "id": 362,
+        "period": 5,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9A",
+        "day": "wednesday",
+        "id": 392,
+        "period": 5,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9B",
+        "day": "friday",
+        "id": 423,
+        "period": 5,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9A",
+        "day": "saturday",
+        "id": 437,
+        "period": 5,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9B",
+        "day": "monday",
+        "id": 452,
+        "period": 6,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9B",
+        "day": "tuesday",
+        "id": 467,
+        "period": 6,
+        "teacherId": -72020675
+      },
+      {
+        "className": "8A",
+        "day": "wednesday",
+        "id": 484,
+        "period": 6,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9A",
+        "day": "thursday",
+        "id": 496,
+        "period": 6,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9B",
+        "day": "saturday",
+        "id": 512,
+        "period": 6,
+        "teacherId": -72020675
+      },
+      {
+        "className": "9B",
+        "day": "wednesday",
+        "id": 632,
+        "period": 8,
+        "teacherId": -72020675
+      }
+    ],
+    "teacherId": -72020675,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "8B",
+        "day": "monday",
+        "id": 188,
+        "period": 3,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "8B",
+        "day": "wednesday",
+        "id": 218,
+        "period": 3,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "8B",
+        "day": "thursday",
+        "id": 233,
+        "period": 3,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "8C",
+        "day": "friday",
+        "id": 248,
+        "period": 3,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "saturday",
+        "id": 266,
+        "period": 3,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "monday",
+        "id": 281,
+        "period": 4,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7A",
+        "day": "wednesday",
+        "id": 308,
+        "period": 4,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7A",
+        "day": "friday",
+        "id": 338,
+        "period": 4,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "saturday",
+        "id": 355,
+        "period": 4,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "8C",
+        "day": "monday",
+        "id": 367,
+        "period": 5,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "8C",
+        "day": "tuesday",
+        "id": 382,
+        "period": 5,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "wednesday",
+        "id": 400,
+        "period": 5,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "friday",
+        "id": 430,
+        "period": 5,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "8C",
+        "day": "wednesday",
+        "id": 486,
+        "period": 6,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "monday",
+        "id": 534,
+        "period": 7,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "wednesday",
+        "id": 564,
+        "period": 7,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "thursday",
+        "id": 579,
+        "period": 7,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7A",
+        "day": "monday",
+        "id": 607,
+        "period": 8,
+        "teacherId": 1420677644
+      },
+      {
+        "className": "7C",
+        "day": "tuesday",
+        "id": 624,
+        "period": 8,
+        "teacherId": 1420677644
+      }
+    ],
+    "teacherId": 1420677644,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7B",
+        "day": "monday",
+        "id": 191,
+        "period": 3,
+        "teacherId": 594798075
+      },
+      {
+        "className": "7B",
+        "day": "wednesday",
+        "id": 221,
+        "period": 3,
+        "teacherId": 594798075
+      },
+      {
+        "className": "7B",
+        "day": "thursday",
+        "id": 236,
+        "period": 3,
+        "teacherId": 594798075
+      },
+      {
+        "className": "6B",
+        "day": "friday",
+        "id": 253,
+        "period": 3,
+        "teacherId": 594798075
+      },
+      {
+        "className": "7B",
+        "day": "wednesday",
+        "id": 309,
+        "period": 4,
+        "teacherId": 594798075
+      },
+      {
+        "className": "7C",
+        "day": "friday",
+        "id": 340,
+        "period": 4,
+        "teacherId": 594798075
+      },
+      {
+        "className": "7B",
+        "day": "saturday",
+        "id": 354,
+        "period": 4,
+        "teacherId": 594798075
+      },
+      {
+        "className": "7B",
+        "day": "tuesday",
+        "id": 384,
+        "period": 5,
+        "teacherId": 594798075
+      },
+      {
+        "className": "6B",
+        "day": "wednesday",
+        "id": 402,
+        "period": 5,
+        "teacherId": 594798075
+      },
+      {
+        "className": "7B",
+        "day": "thursday",
+        "id": 414,
+        "period": 5,
+        "teacherId": 594798075
+      },
+      {
+        "className": "6C",
+        "day": "friday",
+        "id": 433,
+        "period": 5,
+        "teacherId": 594798075
+      },
+      {
+        "className": "6B",
+        "day": "saturday",
+        "id": 446,
+        "period": 5,
+        "teacherId": 594798075
+      },
+      {
+        "className": "8C",
+        "day": "monday",
+        "id": 456,
+        "period": 6,
+        "teacherId": 594798075
+      },
+      {
+        "className": "9C",
+        "day": "wednesday",
+        "id": 483,
+        "period": 6,
+        "teacherId": 594798075
+      },
+      {
+        "className": "9C",
+        "day": "monday",
+        "id": 528,
+        "period": 7,
+        "teacherId": 594798075
+      },
+      {
+        "className": "9C",
+        "day": "tuesday",
+        "id": 543,
+        "period": 7,
+        "teacherId": 594798075
+      },
+      {
+        "className": "8C",
+        "day": "thursday",
+        "id": 576,
+        "period": 7,
+        "teacherId": 594798075
+      },
+      {
+        "className": "9C",
+        "day": "thursday",
+        "id": 648,
+        "period": 8,
+        "teacherId": 594798075
+      }
+    ],
+    "teacherId": 594798075,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6B",
+        "day": "tuesday",
+        "id": 209,
+        "period": 3,
+        "teacherId": -981986465
+      },
+      {
+        "className": "7B",
+        "day": "friday",
+        "id": 250,
+        "period": 3,
+        "teacherId": -981986465
+      },
+      {
+        "className": "6C",
+        "day": "saturday",
+        "id": 269,
+        "period": 3,
+        "teacherId": -981986465
+      },
+      {
+        "className": "8A",
+        "day": "monday",
+        "id": 276,
+        "period": 4,
+        "teacherId": -981986465
+      },
+      {
+        "className": "8B",
+        "day": "wednesday",
+        "id": 306,
+        "period": 4,
+        "teacherId": -981986465
+      },
+      {
+        "className": "7A",
+        "day": "thursday",
+        "id": 323,
+        "period": 4,
+        "teacherId": -981986465
+      },
+      {
+        "className": "7A",
+        "day": "saturday",
+        "id": 353,
+        "period": 4,
+        "teacherId": -981986465
+      },
+      {
+        "className": "8A",
+        "day": "tuesday",
+        "id": 380,
+        "period": 5,
+        "teacherId": -981986465
+      },
+      {
+        "className": "8B",
+        "day": "monday",
+        "id": 455,
+        "period": 6,
+        "teacherId": -981986465
+      },
+      {
+        "className": "6B",
+        "day": "wednesday",
+        "id": 491,
+        "period": 6,
+        "teacherId": -981986465
+      },
+      {
+        "className": "6A",
+        "day": "thursday",
+        "id": 505,
+        "period": 6,
+        "teacherId": -981986465
+      },
+      {
+        "className": "6A",
+        "day": "saturday",
+        "id": 520,
+        "period": 6,
+        "teacherId": -981986465
+      },
+      {
+        "className": "7B",
+        "day": "wednesday",
+        "id": 638,
+        "period": 8,
+        "teacherId": -981986465
+      },
+      {
+        "className": "7B",
+        "day": "thursday",
+        "id": 653,
+        "period": 8,
+        "teacherId": -981986465
+      }
+    ],
+    "teacherId": -981986465,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "8A",
+        "day": "wednesday",
+        "id": 217,
+        "period": 3,
+        "teacherId": 1648544337
+      },
+      {
+        "className": "8C",
+        "day": "friday",
+        "id": 427,
+        "period": 5,
+        "teacherId": 1648544337
+      },
+      {
+        "className": "8B",
+        "day": "monday",
+        "id": 530,
+        "period": 7,
+        "teacherId": 1648544337
+      },
+      {
+        "className": "8C",
+        "day": "wednesday",
+        "id": 561,
+        "period": 7,
+        "teacherId": 1648544337
+      },
+      {
+        "className": "8A",
+        "day": "saturday",
+        "id": 589,
+        "period": 7,
+        "teacherId": 1648544337
+      },
+      {
+        "className": "8B",
+        "day": "tuesday",
+        "id": 620,
+        "period": 8,
+        "teacherId": 1648544337
+      }
+    ],
+    "teacherId": 1648544337,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7A",
+        "day": "wednesday",
+        "id": 220,
+        "period": 3,
+        "teacherId": -1338912127
+      }
+    ],
+    "teacherId": -1338912127,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "7C",
+        "day": "wednesday",
+        "id": 222,
+        "period": 3,
+        "teacherId": -903165376
+      },
+      {
+        "className": "7A",
+        "day": "thursday",
+        "id": 235,
+        "period": 3,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6B",
+        "day": "saturday",
+        "id": 268,
+        "period": 3,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6A",
+        "day": "monday",
+        "id": 282,
+        "period": 4,
+        "teacherId": -903165376
+      },
+      {
+        "className": "7C",
+        "day": "tuesday",
+        "id": 295,
+        "period": 4,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6B",
+        "day": "thursday",
+        "id": 327,
+        "period": 4,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6B",
+        "day": "friday",
+        "id": 342,
+        "period": 4,
+        "teacherId": -903165376
+      },
+      {
+        "className": "7B",
+        "day": "friday",
+        "id": 429,
+        "period": 5,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6B",
+        "day": "monday",
+        "id": 461,
+        "period": 6,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6B",
+        "day": "saturday",
+        "id": 521,
+        "period": 6,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6B",
+        "day": "monday",
+        "id": 536,
+        "period": 7,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6B",
+        "day": "tuesday",
+        "id": 551,
+        "period": 7,
+        "teacherId": -903165376
+      },
+      {
+        "className": "7A",
+        "day": "wednesday",
+        "id": 562,
+        "period": 7,
+        "teacherId": -903165376
+      },
+      {
+        "className": "7B",
+        "day": "monday",
+        "id": 608,
+        "period": 8,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6C",
+        "day": "wednesday",
+        "id": 642,
+        "period": 8,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6C",
+        "day": "thursday",
+        "id": 657,
+        "period": 8,
+        "teacherId": -903165376
+      },
+      {
+        "className": "6C",
+        "day": "saturday",
+        "id": 672,
+        "period": 8,
+        "teacherId": -903165376
+      }
+    ],
+    "teacherId": -903165376,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "8A",
+        "day": "friday",
+        "id": 246,
+        "period": 3,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "7C",
+        "day": "wednesday",
+        "id": 310,
+        "period": 4,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "6C",
+        "day": "friday",
+        "id": 343,
+        "period": 4,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "6A",
+        "day": "friday",
+        "id": 431,
+        "period": 5,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "6C",
+        "day": "saturday",
+        "id": 447,
+        "period": 5,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "6A",
+        "day": "monday",
+        "id": 460,
+        "period": 6,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "6B",
+        "day": "tuesday",
+        "id": 476,
+        "period": 6,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "7B",
+        "day": "thursday",
+        "id": 503,
+        "period": 6,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "7C",
+        "day": "saturday",
+        "id": 519,
+        "period": 6,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "7A",
+        "day": "monday",
+        "id": 532,
+        "period": 7,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "7B",
+        "day": "tuesday",
+        "id": 548,
+        "period": 7,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "6B",
+        "day": "wednesday",
+        "id": 566,
+        "period": 7,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "7A",
+        "day": "thursday",
+        "id": 577,
+        "period": 7,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "8B",
+        "day": "monday",
+        "id": 605,
+        "period": 8,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "8C",
+        "day": "tuesday",
+        "id": 621,
+        "period": 8,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "8B",
+        "day": "wednesday",
+        "id": 635,
+        "period": 8,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "8A",
+        "day": "thursday",
+        "id": 649,
+        "period": 8,
+        "teacherId": -1330988588
+      },
+      {
+        "className": "8C",
+        "day": "saturday",
+        "id": 666,
+        "period": 8,
+        "teacherId": -1330988588
+      }
+    ],
+    "teacherId": -1330988588,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6A",
+        "day": "saturday",
+        "id": 267,
+        "period": 3,
+        "teacherId": 264788221
+      },
+      {
+        "className": "6C",
+        "day": "wednesday",
+        "id": 567,
+        "period": 7,
+        "teacherId": 264788221
+      },
+      {
+        "className": "6B",
+        "day": "thursday",
+        "id": 581,
+        "period": 7,
+        "teacherId": 264788221
+      },
+      {
+        "className": "7C",
+        "day": "monday",
+        "id": 609,
+        "period": 8,
+        "teacherId": 264788221
+      },
+      {
+        "className": "7A",
+        "day": "saturday",
+        "id": 667,
+        "period": 8,
+        "teacherId": 264788221
+      }
+    ],
+    "teacherId": 264788221,
+    "teacherName": "Unknown Teacher"
+  },
+  {
+    "schedules": [
+      {
+        "className": "6A",
+        "day": "saturday",
+        "id": 670,
+        "period": 8,
+        "teacherId": -1327274682
+      }
+    ],
+    "teacherId": -1327274682,
+    "teacherName": "Unknown Teacher"
+  }
+]
