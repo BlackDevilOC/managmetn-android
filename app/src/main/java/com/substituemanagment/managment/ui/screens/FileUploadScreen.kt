@@ -41,9 +41,6 @@ fun FileUploadScreen() {
     var hasTimetable by remember { mutableStateOf(false) }
     var hasSubstitute by remember { mutableStateOf(false) }
     
-    // State for under development dialog
-    var showUnderDevelopmentDialog by remember { mutableStateOf(false) }
-    
     // Initialize ViewModel with context
     LaunchedEffect(Unit) {
         viewModel.initialize(context)
@@ -250,7 +247,7 @@ fun FileUploadScreen() {
             // Process Button at the bottom
             if (!isVerifying) {
                 Button(
-                    onClick = { showUnderDevelopmentDialog = true },
+                    onClick = { /* TODO: Implement processing */ },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
@@ -264,45 +261,6 @@ fun FileUploadScreen() {
                         "Process Timetables",
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
-                }
-            }
-        }
-    }
-
-    // Under Development Dialog
-    if (showUnderDevelopmentDialog) {
-        Dialog(onDismissRequest = { showUnderDevelopmentDialog = false }) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "Under Development",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Medium
-                    )
-                    
-                    Text(
-                        text = "This feature is currently under development. Please check back later.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Button(
-                        onClick = { showUnderDevelopmentDialog = false },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Close")
-                    }
                 }
             }
         }
