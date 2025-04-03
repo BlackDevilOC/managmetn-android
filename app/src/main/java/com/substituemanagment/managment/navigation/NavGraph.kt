@@ -9,12 +9,14 @@ import com.substituemanagment.managment.ui.screens.HomeScreen
 import com.substituemanagment.managment.ui.screens.TeachersScreen
 import com.substituemanagment.managment.ui.screens.SubstitutionsScreen
 import com.substituemanagment.managment.ui.screens.SettingsScreen
+import com.substituemanagment.managment.ui.screens.FileUploadScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Teachers : Screen("teachers")
     object Substitutions : Screen("substitutions")
     object Settings : Screen("settings")
+    object FileUpload : Screen("file_upload")
 }
 
 @Composable
@@ -37,7 +39,10 @@ fun NavGraph(
             SubstitutionsScreen()
         }
         composable(Screen.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(navController)
+        }
+        composable(Screen.FileUpload.route) {
+            FileUploadScreen()
         }
     }
 } 

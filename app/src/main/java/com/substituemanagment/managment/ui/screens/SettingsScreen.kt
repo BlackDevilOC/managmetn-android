@@ -6,10 +6,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.substituemanagment.managment.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -23,12 +25,18 @@ fun SettingsScreen() {
                 .padding(paddingValues)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 text = "Settings Screen",
                 style = MaterialTheme.typography.headlineMedium
             )
+            
+            Button(
+                onClick = { navController.navigate(Screen.FileUpload.route) }
+            ) {
+                Text("Upload Files")
+            }
         }
     }
 } 
