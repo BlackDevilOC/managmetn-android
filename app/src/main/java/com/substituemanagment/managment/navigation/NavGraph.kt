@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.substituemanagment.managment.ui.screens.HomeScreen
 import com.substituemanagment.managment.ui.screens.TeachersScreen
+import com.substituemanagment.managment.ui.screens.SubstituteScreen
 import com.substituemanagment.managment.ui.screens.SubstitutionsScreen
 import com.substituemanagment.managment.ui.screens.SettingsScreen
 import com.substituemanagment.managment.ui.screens.FileUploadScreen
@@ -19,6 +20,7 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object FileUpload : Screen("file_upload")
     object Process : Screen("process")
+    object ViewSubstitutions : Screen("view_substitutions")
 }
 
 @Composable
@@ -38,7 +40,10 @@ fun NavGraph(
             TeachersScreen()
         }
         composable(Screen.Substitutions.route) {
-            SubstitutionsScreen()
+            SubstituteScreen(navController = navController)
+        }
+        composable(Screen.ViewSubstitutions.route) {
+            SubstitutionsScreen(navController = navController)
         }
         composable(Screen.Settings.route) {
             SettingsScreen(navController)

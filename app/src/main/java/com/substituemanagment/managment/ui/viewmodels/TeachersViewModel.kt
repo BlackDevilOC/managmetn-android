@@ -3,6 +3,7 @@ package com.substituemanagment.managment.ui.viewmodels
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.substituemanagment.managment.data.TeacherData
 import com.substituemanagment.managment.data.TeacherDataManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,46 +27,11 @@ class TeachersViewModel : ViewModel() {
 
     private fun loadTeachers() {
         viewModelScope.launch {
-            // Load teachers from the JSON file
-            val teacherList = listOf(
-                "Sir Bakir Shah",
-                "Sir Mushtaque Ahmed",
-                "Sir Irshad Qureshi",
-                "Sir Muhammad Taha",
-                "Sir Shafique Ahmed",
-                "Sir Iqbal Ahmed",
-                "Sir Asif Nawaz",
-                "Sir Amir Shaikh Senior",
-                "Miss Romalia",
-                "Sir Jamalullah",
-                "Sir Amir Shaikh Junior",
-                "Sir Abdul Hameed",
-                "Sir Abdul Sami",
-                "Sir Faiz Hussain",
-                "Sir Usama",
-                "Sir Faraz Ahmed",
-                "Sir Waqar Ali",
-                "Sir Faisal Ali",
-                "Sir Romanulabdin",
-                "Sir Rafaqat Maseeh",
-                "Sir Shabeer Ahmed",
-                "Sir Anwar Ali",
-                "Sir Irshad Bhutto",
-                "Miss Anum Hussain",
-                "Sir Abdul Rehman",
-                "Sir Aman Arif",
-                "Sir Khadim Hussain",
-                "Sir Jawad Ul Haq",
-                "Sir Imran Ahmed",
-                "Sir Meer Muhammad",
-                "Sir Shumail Arsalan",
-                "Sir Shabeer Ahmedb",
-                "Sir Shoaib",
-                "Sir Farhan Siddiqui"
-            ).map { name ->
+            val teacherDataList = teacherDataManager.getAllTeachers()
+            val teacherList = teacherDataList.map { teacherData ->
                 Teacher(
-                    name = name,
-                    isAbsent = teacherDataManager.isTeacherAbsent(name)
+                    name = teacherData.name,
+                    isAbsent = teacherDataManager.isTeacherAbsent(teacherData.name)
                 )
             }
             _teachers.value = teacherList
