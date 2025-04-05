@@ -15,7 +15,6 @@ import com.substituemanagment.managment.ui.screens.ProcessScreen
 import com.substituemanagment.managment.ui.screens.ScheduleScreen
 import com.substituemanagment.managment.ui.screens.PeriodSettingsScreen
 import com.substituemanagment.managment.ui.screens.SmsSendScreen
-import com.substituemanagment.managment.ui.screens.TeacherDetailScreen
 
 sealed class Screen(val route: String) {
     // Main screens accessible from bottom navigation
@@ -32,9 +31,6 @@ sealed class Screen(val route: String) {
     object ViewSubstitutions : Screen("view_substitutions") // Assigned Substitutes List
     object Schedule : Screen("schedule")
     object PeriodSettings : Screen("period_settings")
-    object TeacherDetail : Screen("teacher_detail/{teacherId}") {
-        fun createRoute(teacherId: String) = "teacher_detail/$teacherId"
-    }
 }
 
 @Composable
@@ -76,10 +72,6 @@ fun NavGraph(
         }
         composable(Screen.SmsSend.route) {
             SmsSendScreen(navController)
-        }
-        composable(Screen.TeacherDetail.route) { backStackEntry ->
-            val teacherId = backStackEntry.arguments?.getString("teacherId") ?: ""
-            TeacherDetailScreen(teacherId, navController)
         }
     }
 } 

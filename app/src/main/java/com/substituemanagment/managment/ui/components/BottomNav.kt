@@ -36,7 +36,7 @@ fun BottomNav(navController: NavController) {
     val selectedItemIndex = when (currentRoute) {
         Screen.Home.route -> 0
         Screen.Teachers.route -> 1
-        Screen.Substitutions.route -> 2
+        Screen.Assign.route -> 2
         Screen.SmsSend.route -> 3
         Screen.Settings.route -> 4
         else -> lastSelectedItemIndex
@@ -50,7 +50,7 @@ fun BottomNav(navController: NavController) {
         val items = listOf(
             Triple(Screen.Home, "Home", Icons.Default.Home),
             Triple(Screen.Teachers, "Teachers", Icons.Default.Person),
-            Triple(Screen.Substitutions, "Assign", Icons.Default.AssignmentInd),
+            Triple(Screen.Assign, "Assign", Icons.Default.AssignmentInd),
             Triple(Screen.SmsSend, "SMS", Icons.Default.Send),
             Triple(Screen.Settings, "Settings", Icons.Default.Settings)
         )
@@ -83,7 +83,7 @@ fun BottomNav(navController: NavController) {
                 icon = { 
                     Icon(
                         icon, 
-                        contentDescription = if (screen == Screen.Substitutions) "Assign Substitutes" else label,
+                        contentDescription = if (screen == Screen.Assign) "Assign Substitutes" else label,
                         modifier = Modifier
                             .size(24.dp)
                             .graphicsLayer {

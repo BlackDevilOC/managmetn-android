@@ -22,10 +22,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.substituemanagment.managment.navigation.NavGraph
 import com.substituemanagment.managment.navigation.Screen
-import com.substituemanagment.managment.ui.components.BottomNav
+import com.substituemanagment.managment.ui.components.BottomNavigationBar
 import com.substituemanagment.managment.ui.theme.SubstitutionManagementTheme
 import com.substituemanagment.managment.utils.FileChecker
 import kotlinx.coroutines.delay
@@ -87,6 +88,10 @@ class MainActivity : ComponentActivity() {
                 
                 Scaffold(
                     bottomBar = {
+                        // Get current route
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = navBackStackEntry?.destination?.route
+                        
                         // Bottom Navigation Bar
                         if (currentRoute in listOf(
                                 Screen.Home.route,
