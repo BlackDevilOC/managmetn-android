@@ -30,8 +30,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.substituemanagment.managment.navigation.Screen
 import com.substituemanagment.managment.ui.viewmodels.HomeViewModel
+import com.substituemanagment.managment.data.TeacherDataManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -482,12 +485,15 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                 color = MaterialTheme.colorScheme.tertiaryContainer
             )
 
-            // Recent Substitutions
+            // Current Classes Section - Enhanced with teacher info
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
                 Column(
                     modifier = Modifier
@@ -495,40 +501,655 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Improved header layout with better spacing and alignment
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
                     ) {
-                        Icon(
-                            Icons.Default.History,
-                            contentDescription = "Recent",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Recent Substitutions",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                Icons.Default.Schedule,
+                                contentDescription = "Current Classes",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Current Schedule",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        // Get current date/time
+                        val currentTime = remember {
+                            mutableStateOf(LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a")))
+                        }
+                        
+                        // Keep the time updated
+                        LaunchedEffect(Unit) {
+                            while(true) {
+                                currentTime.value = LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a"))
+                                delay(30000) // Update every 30 seconds
+                            }
+                        }
+                        
+                        // Improved date/time display with better alignment
+                        Column(
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(
+                                text = homeState.currentDate,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = currentTime.value,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                    )
+                    
+                    if (homeState.currentPeriod != null) {
+                        // Current Period Card with Teacher Info
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = "${homeState.currentPeriod}",
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    
+                                    Column {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Period ${homeState.currentPeriod}",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            
+                                            // If class has a substitute teacher, show a badge
+                                            homeState.currentClassInfo?.let { classInfo ->
+                                                if (classInfo.isSubstituted) {
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Badge(
+                                                        containerColor = MaterialTheme.colorScheme.tertiary,
+                                                        contentColor = MaterialTheme.colorScheme.onTertiary
+                                                    ) {
+                                                        Text(
+                                                            text = "SUB",
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            modifier = Modifier.padding(horizontal = 4.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        Text(
+                                            text = homeState.currentPeriodTimeRange,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    
+                                    // NOW badge
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        shape = RoundedCornerShape(16.dp),
+                                        modifier = Modifier.padding(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "ACTIVE",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            color = MaterialTheme.colorScheme.onTertiary
+                                        )
+                                    }
+                                }
+                                
+                                Divider(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)
+                                )
+                                
+                                // Display current class information from HomeViewModel
+                                Column(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    homeState.currentClassInfo?.let { classInfo ->
+                                        // Subject and Grade Information
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 8.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                            )
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.School,
+                                                    contentDescription = "Subject",
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Column {
+                                                    Text(
+                                                        text = classInfo.subject,
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    Text(
+                                                        text = classInfo.grade,
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Teacher Information with substitution status
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 8.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = 
+                                                    if (classInfo.isSubstituted) 
+                                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
+                                                    else
+                                                        MaterialTheme.colorScheme.surfaceVariant
+                                            )
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Person,
+                                                    contentDescription = "Teacher",
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = if (classInfo.isSubstituted) 
+                                                        MaterialTheme.colorScheme.tertiary 
+                                                    else 
+                                                        MaterialTheme.colorScheme.primary
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                if (classInfo.isSubstituted) {
+                                                    Column {
+                                                        Text(
+                                                            text = "Substitute Teacher",
+                                                            style = MaterialTheme.typography.labelMedium,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            Text(
+                                                                text = classInfo.teacherName,
+                                                                style = MaterialTheme.typography.bodyMedium,
+                                                                textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                                            )
+                                                            Text(
+                                                                text = " → ",
+                                                                style = MaterialTheme.typography.bodyMedium
+                                                            )
+                                                            Text(
+                                                                text = classInfo.substituteTeacher ?: "",
+                                                                style = MaterialTheme.typography.titleMedium,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = MaterialTheme.colorScheme.tertiary
+                                                            )
+                                                        }
+                                                    }
+                                                } else {
+                                                    Column {
+                                                        Text(
+                                                            text = "Teacher",
+                                                            style = MaterialTheme.typography.labelMedium,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                        Text(
+                                                            text = classInfo.teacherName,
+                                                            style = MaterialTheme.typography.titleMedium,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Room Information
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                                            )
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Room,
+                                                    contentDescription = "Room",
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = MaterialTheme.colorScheme.secondary
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Column {
+                                                    Text(
+                                                        text = "Location",
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                    Text(
+                                                        text = classInfo.room,
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } ?: run {
+                                        // Fallback if no class info available
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                                            )
+                                        ) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(16.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Info,
+                                                    contentDescription = "No Information",
+                                                    tint = MaterialTheme.colorScheme.error,
+                                                    modifier = Modifier.size(32.dp)
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = "No class information available",
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (homeState.nextPeriod != null) {
+                        // No current period, but next period exists
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = "${homeState.nextPeriod}",
+                                                color = MaterialTheme.colorScheme.onSecondary,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    
+                                    Column {
+                                        Text(
+                                            text = "Next Period",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        val startTime = homeState.nextPeriodTimeRange.split("-")[0].trim()
+                                        Text(
+                                            text = "Starting at $startTime",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    
+                                    // Upcoming badge
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        shape = RoundedCornerShape(16.dp),
+                                        modifier = Modifier.padding(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "UPCOMING",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            color = MaterialTheme.colorScheme.onSecondary
+                                        )
+                                    }
+                                }
+                                
+                                Divider(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp),
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f)
+                                )
+                                
+                                // Countdown to next period
+                                if (homeState.nextPeriodTimeRange.isNotEmpty()) {
+                                    val startTimeParts = homeState.nextPeriodTimeRange.split("-")[0].trim().split(":")
+                                    if (startTimeParts.size == 2) {
+                                        val startHour = startTimeParts[0].toIntOrNull() ?: 0
+                                        val startMinute = startTimeParts[1].toIntOrNull() ?: 0
+                                        val now = LocalTime.now()
+                                        
+                                        // Calculate minutes until next period
+                                        val startTimeObj = LocalTime.of(startHour, startMinute)
+                                        val minutesUntil = if (startTimeObj.isAfter(now)) {
+                                            (startTimeObj.hour - now.hour) * 60 + (startTimeObj.minute - now.minute)
+                                        } else {
+                                            0
+                                        }
+                                        
+                                        if (minutesUntil > 0) {
+                                            Surface(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                                                shape = RoundedCornerShape(12.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(12.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.Timelapse,
+                                                        contentDescription = "Time Remaining",
+                                                        tint = MaterialTheme.colorScheme.secondary
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = "Starts in $minutesUntil minute${if (minutesUntil != 1) "s" else ""}",
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
+                                            }
+                                            
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                        }
+                                    }
+                                }
+                                
+                                // Display upcoming class information
+                                val nextPeriodNumber = homeState.nextPeriod
+                                if (nextPeriodNumber != null) {
+                                    // Determine subject, teacher, and room for next period
+                                    val subject = when (nextPeriodNumber) {
+                                        1 -> "Mathematics"
+                                        2 -> "Physics"
+                                        3 -> "Chemistry"
+                                        4 -> "Biology"
+                                        5 -> "English"
+                                        6 -> "History"
+                                        7 -> "Computer Science"
+                                        8 -> "Physical Education"
+                                        else -> "Unknown Subject"
+                                    }
+                                    
+                                    val teacher = when (subject) {
+                                        "Mathematics" -> "Ms. Johnson"
+                                        "Physics" -> "Mr. Thomas"
+                                        "Chemistry" -> "Dr. Rodriguez"
+                                        "Biology" -> "Ms. Chen"
+                                        "English" -> "Ms. Williams"
+                                        "History" -> "Dr. Ahmed"
+                                        "Computer Science" -> "Mr. Patel"
+                                        "Physical Education" -> "Coach Davis"
+                                        else -> "Unknown Teacher"
+                                    }
+                                    
+                                    val room = when (nextPeriodNumber) {
+                                        1 -> "Room 101"
+                                        2 -> "Lab 201"
+                                        3 -> "Lab 202"
+                                        4 -> "Lab 203"
+                                        5 -> "Room 104"
+                                        6 -> "Room 105"
+                                        7 -> "Computer Lab"
+                                        8 -> "Gymnasium"
+                                        else -> "Unknown Room"
+                                    }
+                                    
+                                    // Check if teacher is absent
+                                    val teacherDataManager = TeacherDataManager(LocalContext.current)
+                                    val isTeacherAbsent = teacherDataManager.isTeacherAbsent(teacher)
+                                    val hasSubstitute = if (isTeacherAbsent) teacherDataManager.isTeacherAssigned(teacher) else false
+                                    
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 12.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+                                        )
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.School,
+                                                    contentDescription = "Subject",
+                                                    modifier = Modifier.size(20.dp),
+                                                    tint = MaterialTheme.colorScheme.secondary
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = subject,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                            
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Person,
+                                                    contentDescription = "Teacher",
+                                                    modifier = Modifier.size(20.dp),
+                                                    tint = if (hasSubstitute) 
+                                                        MaterialTheme.colorScheme.tertiary 
+                                                    else 
+                                                        MaterialTheme.colorScheme.secondary
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                if (hasSubstitute) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Text(
+                                                            text = teacher,
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                                        )
+                                                        Text(
+                                                            text = " → Substitute",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            color = MaterialTheme.colorScheme.tertiary,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                        
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        
+                                                        Badge(
+                                                            containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                                                            contentColor = MaterialTheme.colorScheme.tertiary
+                                                        ) {
+                                                            Text("SUB", 
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                modifier = Modifier.padding(horizontal = 4.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                } else {
+                                                    Text(
+                                                        text = teacher,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
+                                            }
+                                            
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Room,
+                                                    contentDescription = "Room",
+                                                    modifier = Modifier.size(20.dp),
+                                                    tint = MaterialTheme.colorScheme.secondary
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = room,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                Text(
+                                    text = "You have a break until the next period starts",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    } else {
+                        // No current or next period
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    Icons.Default.EventBusy,
+                                    contentDescription = "No Classes",
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                Text(
+                                    text = "No Active Classes",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                Text(
+                                    text = "There are no classes scheduled at this time",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     }
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    Text(
-                        text = "No recent substitutions found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
-                    
                     TextButton(
-                        onClick = { /* TODO: View all */ },
+                        onClick = { navController.navigate(Screen.Schedule.route) },
                         modifier = Modifier.align(Alignment.End)
                     ) {
-                        Text("View All")
+                        Text("View Schedule")
+                        Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             Icons.Default.ArrowForward,
-                            contentDescription = "View All",
+                            contentDescription = "View Schedule",
                             modifier = Modifier.size(16.dp)
                         )
                     }
