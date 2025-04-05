@@ -267,7 +267,7 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                     QuickActionButton(
                         icon = Icons.Default.CalendarViewDay,
                         text = "View Schedule",
-                        onClick = { /* TODO: Implement view schedule */ },
+                        onClick = { navController.navigate(Screen.Schedule.route) },
                         modifier = Modifier.weight(1f),
                         color = MaterialTheme.colorScheme.secondary
                     )

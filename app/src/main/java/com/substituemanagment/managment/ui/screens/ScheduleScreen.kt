@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.substituemanagment.managment.navigation.Screen
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
@@ -156,7 +157,7 @@ fun ScheduleScreen(navController: NavController) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { navController.navigate("process") },
+                        onClick = { navController.navigate(Screen.Process.route) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
@@ -168,7 +169,7 @@ fun ScheduleScreen(navController: NavController) {
                 }
             } else if (scheduleData.isEmpty()) {
                 EmptyScheduleView(onProcessClick = {
-                    navController.navigate("process")
+                    navController.navigate(Screen.Process.route)
                 })
             } else {
                 ScheduleContent(
@@ -184,6 +185,7 @@ fun ScheduleScreen(navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleContent(
     scheduleData: Map<String, List<ScheduleEntry>>,
@@ -205,9 +207,11 @@ fun ScheduleContent(
         )
         
         // Teacher dropdown
+        var dropdownExpanded by remember { mutableStateOf(false) }
+        
         ExposedDropdownMenuBox(
-            expanded = false,
-            onExpandedChange = { },
+            expanded = dropdownExpanded,
+            onExpandedChange = { dropdownExpanded = it },
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
@@ -215,7 +219,7 @@ fun ScheduleContent(
                 onValueChange = { },
                 readOnly = true,
                 trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = false)
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded)
                 },
                 modifier = Modifier
                     .menuAnchor()
@@ -223,14 +227,17 @@ fun ScheduleContent(
             )
             
             ExposedDropdownMenu(
-                expanded = false,
-                onDismissRequest = { },
+                expanded = dropdownExpanded,
+                onDismissRequest = { dropdownExpanded = false },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 teachersList.forEach { teacher ->
                     DropdownMenuItem(
                         text = { Text(teacher) },
-                        onClick = { onTeacherSelected(teacher) }
+                        onClick = { 
+                            onTeacherSelected(teacher)
+                            dropdownExpanded = false
+                        }
                     )
                 }
             }
