@@ -9,10 +9,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.substituemanagment.managment.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController = rememberNavController()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -79,6 +82,14 @@ fun HomeScreen() {
                 ) {
                     Text("View Schedule")
                 }
+            }
+            
+            // Algorithm Testing Button
+            Button(
+                onClick = { navController.navigate(Screen.AlgorithmTesting.route) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("algorithem_testing")
             }
 
             // Recent Substitutions
