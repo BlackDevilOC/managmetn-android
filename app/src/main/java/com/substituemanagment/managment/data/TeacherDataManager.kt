@@ -113,7 +113,7 @@ class TeacherDataManager(private val context: Context) {
         return getAbsentTeachers().find { it.name == teacherName }?.assignedSubstitute ?: false
     }
 
-    private fun getAbsentTeachers(): Set<AbsentTeacherData> {
+    fun getAbsentTeachers(): Set<AbsentTeacherData> {
         return try {
             if (!absentTeachersFile.exists()) {
                 return emptySet()

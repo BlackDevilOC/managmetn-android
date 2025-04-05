@@ -7,9 +7,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -34,7 +37,8 @@ fun BottomNav(navController: NavController) {
         Screen.Home.route -> 0
         Screen.Teachers.route -> 1
         Screen.Substitutions.route -> 2
-        Screen.Settings.route -> 3
+        Screen.SmsSend.route -> 3
+        Screen.Settings.route -> 4
         else -> lastSelectedItemIndex
     }
     
@@ -46,7 +50,8 @@ fun BottomNav(navController: NavController) {
         val items = listOf(
             Triple(Screen.Home, "Home", Icons.Default.Home),
             Triple(Screen.Teachers, "Teachers", Icons.Default.Person),
-            Triple(Screen.Substitutions, "Substitutions", Icons.Default.SwapHoriz),
+            Triple(Screen.Substitutions, "Assign", Icons.Default.AssignmentInd),
+            Triple(Screen.SmsSend, "SMS", Icons.Default.Send),
             Triple(Screen.Settings, "Settings", Icons.Default.Settings)
         )
 
@@ -78,7 +83,7 @@ fun BottomNav(navController: NavController) {
                 icon = { 
                     Icon(
                         icon, 
-                        contentDescription = label,
+                        contentDescription = if (screen == Screen.Substitutions) "Assign Substitutes" else label,
                         modifier = Modifier
                             .size(24.dp)
                             .graphicsLayer {

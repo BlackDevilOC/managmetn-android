@@ -21,18 +21,27 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.substituemanagment.managment.navigation.Screen
+import com.substituemanagment.managment.ui.viewmodels.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController = rememberNavController()) {
+    val context = LocalContext.current
+    val homeViewModel: HomeViewModel = viewModel(
+        factory = HomeViewModel.Factory(context)
+    )
+    val homeState = homeViewModel.state
+    
     val scope = rememberCoroutineScope()
     var refreshing by remember { mutableStateOf(false) }
     var showWelcomeAnimation by remember { mutableStateOf(true) }
@@ -57,7 +66,8 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
     val refreshFunction = {
         scope.launch {
             refreshing = true
-            delay(1500) // Simulate refresh
+            homeViewModel.refreshData()
+            delay(1500) // Animation time
             refreshing = false
         }
     }
@@ -158,6 +168,161 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                 }
             }
             
+            // Current Period Widget (New)
+            AnimatedVisibility(
+                visible = homeState.currentPeriod != null || homeState.nextPeriod != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                Icons.Default.AccessTime,
+                                contentDescription = "Current Period",
+                                tint = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Class Schedule",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        if (homeState.currentPeriod != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(40.dp),
+                                    contentColor = MaterialTheme.colorScheme.onTertiary
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "${homeState.currentPeriod}",
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.width(12.dp))
+                                
+                                Column {
+                                    Text(
+                                        text = "Current Period",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = homeState.currentPeriodTimeRange,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.weight(1f))
+                                
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.7f),
+                                    contentColor = MaterialTheme.colorScheme.onTertiary
+                                ) {
+                                    Text(
+                                        text = "NOW",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                    )
+                                }
+                            }
+                            
+                            Divider(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 12.dp),
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f)
+                            )
+                        }
+                        
+                        if (homeState.nextPeriod != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f),
+                                    modifier = Modifier.size(40.dp),
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "${homeState.nextPeriod}",
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.width(12.dp))
+                                
+                                Column {
+                                    Text(
+                                        text = if (homeState.currentPeriod == null) "Next Period" else "Up Next",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = homeState.nextPeriodTimeRange,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+                        
+                        if (homeState.currentPeriod == null && homeState.nextPeriod == null) {
+                            Text(
+                                text = "No active periods at this time",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        
+                        TextButton(
+                            onClick = { navController.navigate(Screen.Schedule.route) },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text("View Schedule")
+                            Icon(
+                                Icons.Default.ArrowForward,
+                                contentDescription = "View Schedule",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            
             // Today's Statistics Card with Animation
             Card(
                 modifier = Modifier
@@ -198,7 +363,7 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Statistics Row
+                    // Statistics Row - Now using dynamic data
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -206,29 +371,32 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                         StatCard(
                             icon = Icons.Default.Person,
                             title = "Absent",
-                            value = "0",
+                            value = "${homeState.absentTeachersCount}",
                             color = MaterialTheme.colorScheme.error
                         )
                         
                         StatCard(
                             icon = Icons.Default.SwapHoriz,
                             title = "Substitutions",
-                            value = "0",
+                            value = "${homeState.substitutionsCount}",
                             color = MaterialTheme.colorScheme.tertiary
                         )
                         
                         StatCard(
                             icon = Icons.Default.School,
                             title = "Classes",
-                            value = "15",
+                            value = "${homeState.classesCount}",
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
+                    // Dynamic message based on absent teachers
                     Text(
-                        text = "No absences reported for today",
+                        text = if (homeState.absentTeachersCount > 0) 
+                            "${homeState.absentTeachersCount} teacher(s) reported absent today" 
+                            else "No absences reported for today",
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 8.dp)

@@ -1,15 +1,25 @@
 package com.substituemanagment.managment.ui.screens
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +54,8 @@ fun SubstituteScreen(
     var absentTeachers by remember { mutableStateOf<List<AbsentTeacherData>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var assignmentResults by remember { mutableStateOf<Map<String, List<Any>>>(emptyMap()) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
     
     // Get today's day of the week
     val today = remember {
@@ -77,6 +89,10 @@ fun SubstituteScreen(
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading absent teachers", e)
+                snackbarHostState.showSnackbar(
+                    message = "Error: ${e.message}",
+                    duration = SnackbarDuration.Long
+                )
             }
         }
     }
@@ -99,10 +115,15 @@ fun SubstituteScreen(
                         
                         // Refresh the list
                         loadAbsentTeachers()
+                        successMessage = "Substitutes assigned for $teacherName"
                     }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error assigning substitute", e)
+                snackbarHostState.showSnackbar(
+                    message = "Error assigning substitute: ${e.message}",
+                    duration = SnackbarDuration.Long
+                )
             } finally {
                 isLoading = false
             }
@@ -132,8 +153,16 @@ fun SubstituteScreen(
                     // Refresh the list
                     loadAbsentTeachers()
                 }
+                snackbarHostState.showSnackbar(
+                    message = "All substitutes assigned successfully",
+                    duration = SnackbarDuration.Short
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "Error assigning all substitutes", e)
+                snackbarHostState.showSnackbar(
+                    message = "Error: ${e.message}",
+                    duration = SnackbarDuration.Long
+                )
             } finally {
                 isLoading = false
             }
@@ -145,16 +174,42 @@ fun SubstituteScreen(
         loadAbsentTeachers()
     }
 
+    // Show success message if there is one
+    LaunchedEffect(successMessage) {
+        if (successMessage != null) {
+            snackbarHostState.showSnackbar(
+                message = successMessage!!,
+                duration = SnackbarDuration.Short
+            )
+            successMessage = null
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Manage Absences") }
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.PersonOff,
+                            contentDescription = "Absent Teachers",
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Attendance Management") 
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         },
         bottomBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                tonalElevation = 2.dp
+                tonalElevation = 2.dp,
+                shadowElevation = 8.dp
             ) {
                 Button(
                     onClick = { navController.navigate(Screen.ViewSubstitutions.route) },
@@ -164,6 +219,10 @@ fun SubstituteScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 4.dp,
+                        pressedElevation = 0.dp
                     )
                 ) {
                     Icon(
@@ -172,113 +231,233 @@ fun SubstituteScreen(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("View Assigned Substitutes")
+                    Text("View Assigned Substitutes", fontWeight = FontWeight.Bold)
                 }
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Assigning substitutes...")
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                // Header Section with Date and Assign Button
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    tonalElevation = 2.dp
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = "Absent Teachers Today",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = formattedDate,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(56.dp),
+                            strokeWidth = 4.dp
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { assignAllSubstitutes() },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            enabled = absentTeachers.isNotEmpty()
-                        ) {
-                            Icon(
-                                Icons.Default.PersonAdd,
-                                contentDescription = "Assign Substitutes",
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Assign All Substitutes")
-                        }
+                        Text(
+                            "Assigning substitutes...",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
                 }
-
-                // Absent Teachers List
-                if (absentTeachers.isEmpty()) {
-                    Box(
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Header Section with Date and Assign Button
+                    Card(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .padding(16.dp),
-                        contentAlignment = Alignment.Center
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 4.dp
+                        ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
                     ) {
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
                         ) {
-                            Text(
-                                text = "No Teachers Need Substitutes",
-                                style = MaterialTheme.typography.titleLarge,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "All absent teachers have been assigned substitutes.",
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    Icons.Default.CalendarToday,
+                                    contentDescription = "Calendar",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Absent Teacher Management",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = formattedDate,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            OutlinedCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = "${absentTeachers.size}",
+                                                style = MaterialTheme.typography.titleLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Teachers Requiring Substitutes",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = if (absentTeachers.isEmpty()) 
+                                                "No absent teachers need substitutes" 
+                                            else 
+                                                "${absentTeachers.size} teacher(s) need substitutes assigned",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Button(
+                                onClick = { assignAllSubstitutes() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                ),
+                                enabled = absentTeachers.isNotEmpty()
+                            ) {
+                                Icon(
+                                    Icons.Default.PersonAdd,
+                                    contentDescription = "Assign Substitutes",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Assign All Substitutes", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(absentTeachers) { teacher ->
-                            AbsentTeacherCard(
-                                teacher = teacher,
-                                onAssignClick = { assignSubstituteToTeacher(teacher.name) }
-                            )
+
+                    // Absent Teachers List
+                    if (absentTeachers.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "All Assigned",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(72.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "All Teachers Covered",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "All absent teachers have been assigned substitutes.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.People,
+                                    contentDescription = "Teachers",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Teachers Requiring Substitutes",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            itemsIndexed(absentTeachers) { index, teacher ->
+                                val slideIn = slideInVertically(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    ),
+                                    initialOffsetY = { it * (index + 1) }
+                                )
+                                
+                                AbsentTeacherCard(
+                                    teacher = teacher,
+                                    onAssignClick = { assignSubstituteToTeacher(teacher.name) },
+                                    modifier = Modifier
+                                        .animateContentSize()
+                                )
+                            }
+                            // Add bottom space to avoid FAB overlap
+                            item { Spacer(modifier = Modifier.height(80.dp)) }
                         }
                     }
                 }
@@ -291,7 +470,8 @@ fun SubstituteScreen(
 @Composable
 fun AbsentTeacherCard(
     teacher: AbsentTeacherData,
-    onAssignClick: () -> Unit
+    onAssignClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val timestamp = remember(teacher.timestamp) {
         Instant.parse(teacher.timestamp)
@@ -300,8 +480,11 @@ fun AbsentTeacherCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
@@ -313,26 +496,71 @@ fun AbsentTeacherCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = teacher.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    // Teacher avatar
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = teacher.name.first().toString(),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    Column {
+                        Text(
+                            text = teacher.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Schedule,
+                                contentDescription = "Time",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Marked absent at: $timestamp",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
                 FilledTonalButton(
                     onClick = onAssignClick,
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Text("Assign")
+                    Icon(
+                        Icons.Default.AssignmentInd,
+                        contentDescription = "Assign",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Assign", fontWeight = FontWeight.Bold)
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Marked absent at: $timestamp",
-                style = MaterialTheme.typography.bodyMedium
-            )
         }
     }
 }

@@ -77,6 +77,27 @@ import java.io.File
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBarDefaults
+import com.substituemanagment.managment.navigation.Screen
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.ui.text.style.TextOverflow
 
 data class SubstituteAssignmentUI(
     val originalTeacher: String,
@@ -104,6 +125,7 @@ fun SubstitutionsScreen(navController: NavController) {
     var assignmentsByTeacher by remember { mutableStateOf<Map<String, List<SubstituteAssignmentUI>>>(emptyMap()) }
     var expandedTeachers by remember { mutableStateOf<Set<String>>(emptySet()) }
     var showClearConfirmDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
     
     // Track unassigned classes
     var unassignedClasses by remember { mutableStateOf<List<UnassignedClassUI>>(emptyList()) }
@@ -207,9 +229,17 @@ fun SubstitutionsScreen(navController: NavController) {
                     expandedTeachers = emptySet()
                     errorMessage = null
                 }
+                snackbarHostState.showSnackbar(
+                    message = "All assignments cleared successfully",
+                    duration = SnackbarDuration.Short
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "Error clearing assignments: ${e.message}", e)
                 errorMessage = "Error clearing assignments: ${e.message}"
+                snackbarHostState.showSnackbar(
+                    message = "Error: ${e.message}",
+                    duration = SnackbarDuration.Long
+                )
             } finally {
                 isLoading = false
             }
@@ -262,115 +292,446 @@ fun SubstitutionsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Substitutions") },
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AssignmentTurnedIn,
+                            contentDescription = "Assigned Substitutes",
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Assigned Substitutes") 
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showClearConfirmDialog = true }) {
-                        Icon(
-                            Icons.Default.Delete, 
-                            contentDescription = "Clear All Assignments",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
                     IconButton(onClick = { loadAssignments() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when {
-                isLoading -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Loading assignments...")
-                    }
-                }
-                errorMessage != null -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Error",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = errorMessage ?: "Unknown error",
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-                assignmentsByTeacher.isEmpty() && unassignedClasses.isEmpty() -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "No substitutions found",
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp)
-                    ) {
-                        // Show summary at the top
-                        item {
-                            SummaryCard(
-                                teacherCount = assignmentsByTeacher.size,
-                                assignmentCount = assignmentsByTeacher.values.sumOf { it.size },
-                                unassignedCount = unassignedClasses.size
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        
-                        // Show unassigned classes warning if any exist
-                        if (unassignedClasses.isNotEmpty()) {
-                            item {
-                                UnassignedClassesWarning(unassignedClasses = unassignedClasses)
-                                Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Badge indicating unassigned classes
+                    if (unassignedClasses.isNotEmpty()) {
+                        BadgedBox(
+                            badge = {
+                                Badge {
+                                    Text(
+                                        text = "${unassignedClasses.size}",
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            }
+                        ) {
+                            IconButton(onClick = { showClearConfirmDialog = true }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Clear Assignments")
                             }
                         }
+                    } else {
+                        IconButton(onClick = { showClearConfirmDialog = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Clear Assignments")
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            // Enhanced floating action button to navigate to SMS screen
+            FloatingActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "Navigating to SMS notification screen",
+                            duration = SnackbarDuration.Short
+                        )
+                        navController.navigate(Screen.SmsSend.route)
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.NotificationsActive, 
+                        contentDescription = "Send SMS",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text("Notify Teachers", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    ) { paddingValues ->
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(56.dp),
+                        strokeWidth = 4.dp
+                    )
+                    Text(
+                        "Loading assignments...", 
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+        } else if (errorMessage != null && assignmentsByTeacher.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(
+                        Icons.Default.ErrorOutline,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(72.dp)
+                    )
+                    Text(
+                        errorMessage ?: "Unknown error",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = { loadAssignments() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Retry")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Retry")
+                    }
+                }
+            }
+        } else {
+            @OptIn(ExperimentalFoundationApi::class)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    AnimatedContent(
+                        targetState = assignmentsByTeacher.isNotEmpty(),
+                        label = "Header Animation"
+                    ) { hasAssignments ->
+                        if (hasAssignments) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Substitute Assignments Dashboard",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        // Teachers with substitutes count
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "${assignmentsByTeacher.size}",
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = "Teachers",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                        
+                                        // Total assignments count
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "${assignmentsByTeacher.values.flatten().size}",
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.secondary
+                                            )
+                                            Text(
+                                                text = "Classes",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                        
+                                        // Unassigned classes count
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "${unassignedClasses.size}",
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (unassignedClasses.isEmpty()) 
+                                                    MaterialTheme.colorScheme.tertiary 
+                                                else 
+                                                    MaterialTheme.colorScheme.error
+                                            )
+                                            Text(
+                                                text = "Unassigned",
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    
+                                    Text(
+                                        "Tap on a teacher to view assigned substitutes",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        "Use the notification button to send SMS alerts",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        } else {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        Icons.Default.Assignment,
+                                        contentDescription = "No Assignments",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        "No Assignments Found",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        "Generate substitute assignments from the Attendance Management screen first",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                                    )
+                                    
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    
+                                    Button(
+                                        onClick = { navController.navigateUp() },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                        )
+                                    ) {
+                                        Text("Go to Attendance Page")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (unassignedClasses.isNotEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Text(
+                                    "Unassigned Classes (${unassignedClasses.size})",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                unassignedClasses.forEach { unassigned ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            "•",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.padding(end = 8.dp)
+                                        )
+                                        Text(
+                                            "${unassigned.className} (Period ${unassigned.period}) - ${unassigned.teacher}",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (assignmentsByTeacher.isNotEmpty()) {
+                    items(assignmentsByTeacher.keys.toList()) { teacher ->
+                        val isExpanded = expandedTeachers.contains(teacher)
+                        val assignments = assignmentsByTeacher[teacher] ?: emptyList()
                         
-                        // Show each absent teacher with their substitutes
-                        items(assignmentsByTeacher.entries.toList().sortedBy { it.key }) { (teacher, assignments) ->
-                            val isExpanded = expandedTeachers.contains(teacher)
-                            TeacherCard(
-                                teacherName = teacher,
-                                assignments = assignments,
-                                isExpanded = isExpanded,
-                                onToggleExpand = { toggleTeacherExpanded(teacher) }
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { toggleTeacherExpanded(teacher) }
+                                .animateItemPlacement(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessMedium
+                                    )
+                                ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 2.dp
                             )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primary),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = teacher.firstOrNull()?.toString() ?: "?",
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = teacher,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "${assignments.size} ${if (assignments.size == 1) "class" else "classes"} requiring substitutes",
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
+                                    }
+                                    
+                                    Icon(
+                                        if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                
+                                AnimatedVisibility(
+                                    visible = isExpanded,
+                                    enter = expandVertically(
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioLowBouncy,
+                                            stiffness = Spring.StiffnessLow
+                                        )
+                                    ) + fadeIn(),
+                                    exit = shrinkVertically() + fadeOut()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        // Sort assignments by period
+                                        val sortedAssignments = assignments.sortedBy { it.period }
+                                        
+                                        sortedAssignments.forEachIndexed { index, assignment ->
+                                            AssignmentRow(assignment = assignment)
+                                            
+                                            if (index < sortedAssignments.size - 1) {
+                                                HorizontalDivider(
+                                                    modifier = Modifier.padding(vertical = 8.dp),
+                                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -645,74 +1006,57 @@ fun TeacherCard(
 
 @Composable
 fun AssignmentRow(assignment: SubstituteAssignmentUI) {
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
-        // Period indicator
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.tertiaryContainer),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.padding(12.dp)
         ) {
             Text(
-                text = "${assignment.period}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
+                text = "Period ${assignment.period}: ${assignment.className}",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
             )
-        }
-        
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp)
-        ) {
-            Row {
-                Text(
-                    text = "Class: ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = "Substitute",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = assignment.className,
+                    text = "Substitute: ${assignment.substitute}",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
             
-            Row {
-                Text(
-                    text = "Substitute: ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Phone,
+                    contentDescription = "Phone",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = assignment.substitute,
+                    text = assignment.substitutePhone.ifEmpty { "No phone number" },
                     style = MaterialTheme.typography.bodyMedium
                 )
-            }
-            
-            if (assignment.substitutePhone.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.Phone,
-                        contentDescription = "Phone",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = assignment.substitutePhone,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 4.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
             }
         }
     }
