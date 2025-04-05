@@ -240,28 +240,30 @@ class SubstituteManager(private val context: Context) {
             val assignedType = object : TypeToken<Map<String, Any>>() {}.type
             val assignedData: Map<String, Any> = Gson().fromJson(content, assignedType)
             
+            // Clear unassigned classes before loading
+            unassignedClasses.clear()
+            
             if (assignedData.containsKey("assignments")) {
                 val assignments = assignedData["assignments"] as? List<*> ?: emptyList<Any>()
                 val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
                 
                 for (assignment in assignments) {
                     if (assignment is Map<*, *>) {
-                        val originalTeacher = (assignment["originalTeacher"] as? String)?.lowercase() ?: continue
+                        val originalTeacher = assignment["originalTeacher"] as? String ?: continue
                         val period = (assignment["period"] as? Double)?.toInt() 
                             ?: (assignment["period"] as? Int) ?: continue
                         val className = assignment["className"] as? String ?: continue
-                        val substitute = (assignment["substitute"] as? String)?.lowercase() ?: continue
+                        val substitute = assignment["substitute"] as? String ?: continue
                         val substitutePhone = assignment["substitutePhone"] as? String ?: ""
                         
                         // Record the original teacher as absent (for Saturday by default)
-                        absentTeachers.getOrPut("saturday") { mutableSetOf() }.add(originalTeacher)
+                        absentTeachers.getOrPut("saturday") { mutableSetOf() }.add(originalTeacher.lowercase())
                         
-                        // Create an assignment object
                         val assignmentObj = Assignment(
-                            day = "saturday", // Default to Saturday for existing assignments
+                            day = "saturday", // Default day for now
                             period = period,
                             className = className,
-                            originalTeacher = originalTeacher,
+                            originalTeacher = originalTeacher.lowercase(),
                             substitute = substitute
                         )
                         
@@ -280,6 +282,32 @@ class SubstituteManager(private val context: Context) {
                 }
                 
                 Log.d(TAG, "Loaded ${allAssignments.size} assignments from assigned_substitute.json")
+            }
+            
+            // Load unassigned classes
+            if (assignedData.containsKey("unassignedClasses")) {
+                val unassigned = assignedData["unassignedClasses"] as? List<*> ?: emptyList<Any>()
+                
+                for (item in unassigned) {
+                    if (item is Map<*, *>) {
+                        val teacher = item["teacher"] as? String ?: continue
+                        val day = item["day"] as? String ?: continue
+                        val period = (item["period"] as? Double)?.toInt() 
+                            ?: (item["period"] as? Int) ?: continue
+                        val className = item["className"] as? String ?: continue
+                        
+                        unassignedClasses.add(
+                            UnassignedClass(
+                                teacher = teacher,
+                                day = day,
+                                period = period,
+                                className = className
+                            )
+                        )
+                    }
+                }
+                
+                Log.d(TAG, "Loaded ${unassignedClasses.size} unassigned classes from assigned_substitute.json")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing assigned_substitute.json: ${e.message}")
@@ -959,6 +987,7 @@ class SubstituteManager(private val context: Context) {
                 className = className
             )
         )
+        lastAssignedDay[substitute.lowercase()] = date
     }
 
     private fun findAvailableSubstitutes(day: String, period: Int, absentTeacher: String): List<Pair<String, String>> {
