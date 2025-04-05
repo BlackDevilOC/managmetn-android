@@ -341,7 +341,7 @@ class ReportingService : Service() {
         const val REPORT_INTERVAL_MINUTES = 30L
         
         // How often to check if reports need to be generated (in milliseconds)
-        private const val PERIODIC_CHECK_INTERVAL_MS = TimeUnit.MINUTES.toMillis(15)
+        private val PERIODIC_CHECK_INTERVAL_MS = TimeUnit.MINUTES.toMillis(15)
         
         // How many consecutive errors before we notify the user
         private const val MAX_ERRORS_BEFORE_NOTIFY = 3
