@@ -14,32 +14,11 @@ data class TeacherData(
     val variations: List<String> = emptyList()
 )
 
-data class SubstituteInfo(
-    val name: String,
-    val phone: String = "",
-    val assignmentDate: String = "",
-    val periods: List<TeacherAssignmentInfo> = emptyList()
-)
-
-data class TeacherAssignmentInfo(
-    val period: Int,
-    val className: String
-)
-
 data class AbsentTeacherData(
     val id: Int,
     val name: String,
     val timestamp: String,
     val assignedSubstitute: Boolean = false
-)
-
-data class AssignmentRecord(
-    val absentTeacher: String,
-    val substituteTeacher: String,
-    val substitutePhone: String = "",
-    val assignmentDate: String,
-    val timestamp: String,
-    val periods: List<TeacherAssignmentInfo> = emptyList()
 )
 
 class TeacherDataManager(private val context: Context) {
@@ -48,7 +27,6 @@ class TeacherDataManager(private val context: Context) {
     private val baseDir = File("/storage/emulated/0/Android/data/com.substituemanagment.managment/files/substitute_data")
     private val processedDir = File(baseDir, "processed")
     private val absentTeachersFile = File(baseDir, "absent_teachers.json")
-    private val assignedTeachersFile = File(baseDir, "assigned_teachers.json")
     private val totalTeachersFile = File(processedDir, "total_teacher.json")
     private var nextId = 1
 
@@ -79,24 +57,9 @@ class TeacherDataManager(private val context: Context) {
         }
     }
 
-    fun getAbsentTeachersWithoutSubstitutes(): Set<AbsentTeacherData> {
-        return getAbsentTeachers().filter { !it.assignedSubstitute }.toSet()
-    }
-
-    fun getAbsentTeachersWithSubstitutes(): Set<AbsentTeacherData> {
-        return getAbsentTeachers().filter { it.assignedSubstitute }.toSet()
-    }
-
-    fun markTeacherAbsent(teacherName: String): Boolean {
+    fun markTeacherAbsent(teacherName: String) {
         try {
             val absentTeachers = getAbsentTeachers().toMutableSet()
-            
-            // Check if teacher is already marked as absent to prevent duplicates
-            if (absentTeachers.any { it.name == teacherName }) {
-                Log.i(TAG, "Teacher $teacherName is already marked as absent")
-                return false
-            }
-            
             val timestamp = java.time.Instant.now().toString()
             absentTeachers.add(AbsentTeacherData(
                 id = nextId++,
@@ -106,29 +69,19 @@ class TeacherDataManager(private val context: Context) {
             ))
             saveAbsentTeachers(absentTeachers)
             Log.i(TAG, "Marked teacher as absent: $teacherName")
-            return true
         } catch (e: Exception) {
             Log.e(TAG, "Error marking teacher as absent", e)
-            return false
         }
     }
 
-    fun markTeacherPresent(teacherName: String): Boolean {
+    fun markTeacherPresent(teacherName: String) {
         try {
             val absentTeachers = getAbsentTeachers().toMutableSet()
-            val wasRemoved = absentTeachers.removeIf { it.name == teacherName }
-            
-            if (wasRemoved) {
-                saveAbsentTeachers(absentTeachers)
-                Log.i(TAG, "Marked teacher as present: $teacherName")
-                return true
-            } else {
-                Log.i(TAG, "Teacher $teacherName was not marked as absent")
-                return false
-            }
+            absentTeachers.removeIf { it.name == teacherName }
+            saveAbsentTeachers(absentTeachers)
+            Log.i(TAG, "Marked teacher as present: $teacherName")
         } catch (e: Exception) {
             Log.e(TAG, "Error marking teacher as present", e)
-            return false
         }
     }
 
@@ -136,85 +89,7 @@ class TeacherDataManager(private val context: Context) {
         return getAbsentTeachers().any { it.name == teacherName }
     }
 
-    fun updateTeacherWithSubstitute(
-        teacherName: String, 
-        substitute: SubstituteInfo
-    ): Boolean {
-        try {
-            val absentTeachers = getAbsentTeachers().toMutableSet()
-            val teacher = absentTeachers.find { it.name == teacherName }
-            
-            if (teacher != null) {
-                // Mark the teacher as having a substitute assigned, but don't store assignment details here
-                absentTeachers.remove(teacher)
-                absentTeachers.add(AbsentTeacherData(
-                    id = teacher.id,
-                    name = teacher.name,
-                    timestamp = teacher.timestamp,
-                    assignedSubstitute = true
-                ))
-                saveAbsentTeachers(absentTeachers)
-                
-                // Store the full assignment record in the assigned_teachers.json file
-                val assignmentRecord = AssignmentRecord(
-                    absentTeacher = teacher.name,
-                    substituteTeacher = substitute.name,
-                    substitutePhone = substitute.phone,
-                    assignmentDate = substitute.assignmentDate,
-                    timestamp = java.time.Instant.now().toString(),
-                    periods = substitute.periods
-                )
-                addAssignmentRecord(assignmentRecord)
-                
-                Log.i(TAG, "Updated teacher with substitute: ${teacher.name} -> ${substitute.name}")
-                return true
-            } else {
-                Log.w(TAG, "Teacher $teacherName not found in absent teachers list")
-                return false
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating teacher with substitute", e)
-            return false
-        }
-    }
-
-    private fun addAssignmentRecord(record: AssignmentRecord) {
-        try {
-            val records = getAssignmentRecords().toMutableList()
-            records.add(record)
-            saveAssignmentRecords(records)
-            Log.i(TAG, "Added assignment record: ${record.absentTeacher} -> ${record.substituteTeacher}")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error adding assignment record", e)
-        }
-    }
-
-    fun getAssignmentRecords(): List<AssignmentRecord> {
-        return try {
-            if (!assignedTeachersFile.exists()) {
-                return emptyList()
-            }
-            val type = object : TypeToken<List<AssignmentRecord>>() {}.type
-            FileReader(assignedTeachersFile).use { reader ->
-                gson.fromJson(reader, type) ?: emptyList()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error reading assignment records", e)
-            emptyList()
-        }
-    }
-
-    private fun saveAssignmentRecords(records: List<AssignmentRecord>) {
-        try {
-            FileOutputStream(assignedTeachersFile).use { outputStream ->
-                outputStream.write(gson.toJson(records).toByteArray())
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error saving assignment records", e)
-        }
-    }
-
-    fun setTeacherAssigned(teacherName: String, isAssigned: Boolean): Boolean {
+    fun setTeacherAssigned(teacherName: String, isAssigned: Boolean) {
         try {
             val absentTeachers = getAbsentTeachers().toMutableSet()
             val teacher = absentTeachers.find { it.name == teacherName }
@@ -228,14 +103,9 @@ class TeacherDataManager(private val context: Context) {
                 ))
                 saveAbsentTeachers(absentTeachers)
                 Log.i(TAG, "Updated teacher assignment status: $teacherName = $isAssigned")
-                return true
-            } else {
-                Log.w(TAG, "Teacher $teacherName not found in absent teachers list")
-                return false
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error updating teacher assignment status", e)
-            return false
         }
     }
 
@@ -243,14 +113,14 @@ class TeacherDataManager(private val context: Context) {
         return getAbsentTeachers().find { it.name == teacherName }?.assignedSubstitute ?: false
     }
 
-    fun getAbsentTeachers(): Set<AbsentTeacherData> {
+    private fun getAbsentTeachers(): Set<AbsentTeacherData> {
         return try {
             if (!absentTeachersFile.exists()) {
                 return emptySet()
             }
             val type = object : TypeToken<Set<AbsentTeacherData>>() {}.type
             FileReader(absentTeachersFile).use { reader ->
-                gson.fromJson(reader, type) ?: emptySet()
+                gson.fromJson(reader, type)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error reading absent teachers", e)

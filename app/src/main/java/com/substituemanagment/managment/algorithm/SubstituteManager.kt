@@ -3,6 +3,7 @@ package com.substituemanagment.managment.algorithm
 import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.substituemanagment.managment.algorithm.models.*
 import java.io.File
@@ -28,6 +29,7 @@ const val PROCESSED_SCHEDULES_PATH = "$PROCESSED_DIR/teacher_schedules.json"
 const val PROCESSED_CLASS_SCHEDULES_PATH = "$PROCESSED_DIR/class_schedules.json"
 const val PROCESSED_DAY_SCHEDULES_PATH = "$PROCESSED_DIR/day_schedules.json"
 const val PROCESSED_PERIOD_SCHEDULES_PATH = "$PROCESSED_DIR/period_schedules.json"
+const val PROCESSED_ASSIGNED_SUBSTITUTES_PATH = "$EXTERNAL_STORAGE_PATH/assigned_substitute.json"
 
 // Constants
 const val MAX_DAILY_WORKLOAD = 6
@@ -92,22 +94,29 @@ class SubstituteManager(private val context: Context) {
                 loadSchedulesFromJson(schedulesContent)
             }
             
-            // Load assigned teachers
-            try {
-                val assignedTeachersFile = File(assignedTeachersPath)
-                if (assignedTeachersFile.exists()) {
-                    Log.d(TAG, "Loading previously assigned teachers")
-                    loadAssignedTeachers(assignedTeachersFile.readText())
-                } else {
-                    try {
-                        val assignedContent = context.assets.open(assignedTeachersPath).bufferedReader().use { it.readText() }
-                        loadAssignedTeachers(assignedContent)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "No previous assignments found in assets: ${e.message}")
+            // First try to load from assigned_substitute.json (this is the primary source now)
+            val assignedSubstitutesFile = File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH)
+            if (assignedSubstitutesFile.exists()) {
+                Log.d(TAG, "Loading assignments from: $PROCESSED_ASSIGNED_SUBSTITUTES_PATH")
+                loadAssignedSubstitutes(assignedSubstitutesFile.readText())
+            } else {
+                // Fall back to checking the old location if needed
+                try {
+                    val assignedTeachersFile = File(assignedTeachersPath)
+                    if (assignedTeachersFile.exists()) {
+                        Log.d(TAG, "Loading previously assigned teachers from legacy file")
+                        loadAssignedTeachers(assignedTeachersFile.readText())
+                    } else {
+                        try {
+                            val assignedContent = context.assets.open(assignedTeachersPath).bufferedReader().use { it.readText() }
+                            loadAssignedTeachers(assignedContent)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "No previous assignments found in assets: ${e.message}")
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error loading previous assignments: ${e.message}")
                 }
-            } catch (e: Exception) {
-                Log.w(TAG, "Error loading previous assignments: ${e.message}")
             }
 
             Log.d(TAG, "Loaded ${substitutes.size} substitutes, ${allTeachers.size} teachers, schedules for ${teacherClasses.size} teachers")
@@ -208,6 +217,57 @@ class SubstituteManager(private val context: Context) {
         }
     }
     
+    private fun loadAssignedSubstitutes(content: String) {
+        try {
+            val assignedType = object : TypeToken<Map<String, Any>>() {}.type
+            val assignedData: Map<String, Any> = Gson().fromJson(content, assignedType)
+            
+            if (assignedData.containsKey("assignments")) {
+                val assignments = assignedData["assignments"] as? List<*> ?: emptyList<Any>()
+                val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+                
+                for (assignment in assignments) {
+                    if (assignment is Map<*, *>) {
+                        val originalTeacher = (assignment["originalTeacher"] as? String)?.lowercase() ?: continue
+                        val period = (assignment["period"] as? Double)?.toInt() 
+                            ?: (assignment["period"] as? Int) ?: continue
+                        val className = assignment["className"] as? String ?: continue
+                        val substitute = (assignment["substitute"] as? String)?.lowercase() ?: continue
+                        val substitutePhone = assignment["substitutePhone"] as? String ?: ""
+                        
+                        // Record the original teacher as absent (for Saturday by default)
+                        absentTeachers.getOrPut("saturday") { mutableSetOf() }.add(originalTeacher)
+                        
+                        // Create an assignment object
+                        val assignmentObj = Assignment(
+                            day = "saturday", // Default to Saturday for existing assignments
+                            period = period,
+                            className = className,
+                            originalTeacher = originalTeacher,
+                            substitute = substitute
+                        )
+                        
+                        // Add to our assignments list
+                        allAssignments.add(assignmentObj)
+                        
+                        // Update assignments and workload tracking
+                        substituteAssignments
+                            .getOrPut(substitute) { ArrayList() }
+                            .add(assignmentObj)
+                        
+                        teacherWorkload[substitute] = (teacherWorkload[substitute] ?: 0) + 1
+                        teacherAssignmentCount[substitute] = (teacherAssignmentCount[substitute] ?: 0) + 1
+                        lastAssignedDay[substitute] = currentDate
+                    }
+                }
+                
+                Log.d(TAG, "Loaded ${allAssignments.size} assignments from assigned_substitute.json")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing assigned_substitute.json: ${e.message}")
+        }
+    }
+    
     private fun clearData() {
         schedule.clear()
         substitutes.clear()
@@ -248,21 +308,15 @@ class SubstituteManager(private val context: Context) {
 
         val assignments = mutableListOf<SubstituteAssignment>()
         val classesByPeriod = classes.groupBy { it.period }
-        val assignedSubstitutes = mutableMapOf<Int, String>() // Track which substitute is assigned to each period
 
-        // Process each period separately to get the best substitute for each period
-        classesByPeriod.entries.sortedBy { it.key }.forEach { (period, classList) ->
+        classesByPeriod.forEach { (period, classList) ->
             val availableSubs = findAvailableSubstitutes(normalizedDay, period, normalizedTeacherName)
             
             if (availableSubs.isNotEmpty()) {
                 val bestSubstitute = selectOptimalSubstitute(availableSubs, normalizedDay, period)
                 val subName = bestSubstitute.first
                 val subPhone = bestSubstitute.second
-                
-                // Track which substitute is used for this period
-                assignedSubstitutes[period] = subName
 
-                // Create assignments for each class in this period
                 classList.forEach { clazz ->
                     val assignment = SubstituteAssignment(
                         originalTeacher = normalizedTeacherName,
@@ -276,8 +330,6 @@ class SubstituteManager(private val context: Context) {
                     updateAssignmentRecords(subName, normalizedDay, period, clazz.className, normalizedTeacherName)
                     updateTeacherWorkload(subName)
                     recordSubstitution(currentDate, normalizedTeacherName, subName, period, clazz.className)
-                    
-                    Log.d(TAG, "Assigned $subName to substitute for $normalizedTeacherName in period $period, class ${clazz.className}")
                 }
             } else {
                 Log.w(TAG, "No available substitutes for period $period")
@@ -285,13 +337,6 @@ class SubstituteManager(private val context: Context) {
         }
 
         saveAssignments(assignments)
-        
-        // Log the final assignments
-        val substituteSummary = assignedSubstitutes.entries.joinToString(", ") { 
-            "Period ${it.key}: ${it.value}" 
-        }
-        Log.i(TAG, "Summary of substitutes for $normalizedTeacherName: $substituteSummary")
-        
         return assignments
     }
 
@@ -362,21 +407,11 @@ class SubstituteManager(private val context: Context) {
                 val nameLower = teacher.name.lowercase()
                 
                 when {
-                    // Don't assign the absent teacher to themselves
                     nameLower == absentTeacher.lowercase() -> false
-                    
-                    // Don't assign other absent teachers
                     absentTeachers[day]?.contains(nameLower) == true -> false
-                    
-                    // Don't assign teachers who have their own class at this period
                     isTeacherScheduled(day, period, nameLower) -> false
-                    
-                    // Check workload limits - different for substitute vs regular teachers
                     isOverworked(teacher, nameLower) -> false
-                    
-                    // Don't assign teachers who already have a substitution at this period
                     hasExistingAssignment(day, period, nameLower) -> false
-                    
                     else -> true
                 }
             }
@@ -385,37 +420,16 @@ class SubstituteManager(private val context: Context) {
     }
 
     private fun isTeacherScheduled(day: String, period: Int, teacherName: String): Boolean {
-        // Check if the teacher has their own class during this period
-        val hasRegularClass = teacherClasses[teacherName]?.any {
-            it.day == day && it.period == period
-        } ?: false
-        
-        // Check the general schedule
-        val isInGeneralSchedule = schedule[day]?.get(period)?.any { 
-            it.lowercase() == teacherName 
-        } ?: false
-        
-        return hasRegularClass || isInGeneralSchedule
+        return schedule[day]?.get(period)?.any { it.lowercase() == teacherName } == true
     }
 
     private fun isOverworked(teacher: Teacher, normalizedName: String): Boolean {
-        val currentWorkload = teacherWorkload[normalizedName] ?: 0
-        
-        // Different limits for substitute vs regular teachers
         val maxAssignments = if (teacher.isSubstitute) {
             MAX_SUBSTITUTE_ASSIGNMENTS
         } else {
-            // More strict limit for regular teachers
             MAX_REGULAR_TEACHER_ASSIGNMENTS
         }
-        
-        // If not a designated substitute and already has an assignment, don't assign more
-        if (!teacher.isSubstitute && currentWorkload > 0) {
-            Log.d(TAG, "Regular teacher $normalizedName has reached maximum workload")
-            return true
-        }
-        
-        return currentWorkload >= maxAssignments
+        return (teacherWorkload[normalizedName] ?: 0) >= maxAssignments
     }
 
     private fun hasExistingAssignment(day: String, period: Int, teacherName: String): Boolean {
@@ -424,21 +438,80 @@ class SubstituteManager(private val context: Context) {
 
     private fun saveAssignments(assignments: List<SubstituteAssignment>) {
         try {
-            val assignmentsMap = mapOf(
-                "assignments" to assignments,
-                "timestamp" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
+            // Read existing assignments if file exists
+            val existingAssignments = mutableListOf<SubstituteAssignment>()
+            
+            val assignedSubstitutesFile = File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH)
+            if (assignedSubstitutesFile.exists()) {
+                try {
+                    val content = assignedSubstitutesFile.readText()
+                    val assignedType = object : TypeToken<Map<String, Any>>() {}.type
+                    val assignedData: Map<String, Any> = Gson().fromJson(content, assignedType)
+                    
+                    if (assignedData.containsKey("assignments")) {
+                        val previousAssignments = assignedData["assignments"] as? List<*> ?: emptyList<Any>()
+                        
+                        for (assignment in previousAssignments) {
+                            if (assignment is Map<*, *>) {
+                                val originalTeacher = assignment["originalTeacher"] as? String ?: continue
+                                val period = (assignment["period"] as? Double)?.toInt() 
+                                    ?: (assignment["period"] as? Int) ?: continue
+                                val className = assignment["className"] as? String ?: continue
+                                val substitute = assignment["substitute"] as? String ?: continue
+                                val substitutePhone = assignment["substitutePhone"] as? String ?: ""
+                                
+                                existingAssignments.add(
+                                    SubstituteAssignment(
+                                        originalTeacher = originalTeacher,
+                                        period = period,
+                                        className = className,
+                                        substitute = substitute,
+                                        substitutePhone = substitutePhone
+                                    )
+                                )
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error reading existing assignments: ${e.message}")
+                    // Continue with empty list if there was an error
+                }
+            }
+            
+            // Add new assignments
+            existingAssignments.addAll(assignments)
+            
+            // Create output structure
+            val outputData = mapOf(
+                "assignments" to existingAssignments,
+                "warnings" to emptyList<String>()
             )
             
-            val json = Gson().toJson(assignmentsMap)
+            // Ensure directory exists
             val baseDir = File(EXTERNAL_STORAGE_PATH)
             if (!baseDir.exists()) {
                 baseDir.mkdirs()
             }
             
-            val file = File(baseDir, "assigned_teachers.json")
-            file.writeText(json)
+            // Write the combined assignments to file
+            val json = GsonBuilder().setPrettyPrinting().create().toJson(outputData)
+            File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH).writeText(json)
             
-            Log.d(TAG, "Saved ${assignments.size} assignments")
+            // Update all assignments list
+            allAssignments.clear()
+            for (assignment in existingAssignments) {
+                allAssignments.add(
+                    Assignment(
+                        day = "saturday", // Default day for now
+                        period = assignment.period,
+                        className = assignment.className,
+                        originalTeacher = assignment.originalTeacher.lowercase(),
+                        substitute = assignment.substitute.lowercase()
+                    )
+                )
+            }
+            
+            Log.d(TAG, "Saved ${existingAssignments.size} assignments (${assignments.size} new) to $PROCESSED_ASSIGNED_SUBSTITUTES_PATH")
         } catch (e: Exception) {
             Log.e(TAG, "Error saving assignments: ${e.message}")
         }

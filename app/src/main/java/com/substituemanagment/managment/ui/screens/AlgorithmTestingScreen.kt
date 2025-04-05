@@ -257,7 +257,7 @@ fun AlgorithmTestingScreen() {
                                                 selected = selectedDay == day,
                                                 onClick = { selectedDay = day }
                                             )
-                                            Text(day.capitalize())
+                                            Text(day.capitalizeWord())
                                         }
                                     }
                                 }
@@ -549,7 +549,7 @@ private fun saveResultsToFile(results: Map<String, List<SubstituteAssignment>>, 
 }
 
 // Helper to capitalize the first letter of a string
-private fun String.capitalize(): String {
+private fun String.capitalizeWord(): String {
     return this.replaceFirstChar { 
         if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() 
     }
