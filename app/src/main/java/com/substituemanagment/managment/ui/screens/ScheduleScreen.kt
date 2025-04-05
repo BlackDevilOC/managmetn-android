@@ -3,10 +3,13 @@ package com.substituemanagment.managment.ui.screens
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,11 +31,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.substituemanagment.managment.navigation.Screen
+import com.substituemanagment.managment.data.PeriodSettings
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,10 +51,21 @@ fun ScheduleScreen(navController: NavController) {
     // State variables
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var selectedDay by remember { mutableStateOf("monday") }
+    
+    // Get current day from device
+    val today = LocalDate.now().dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault()).lowercase()
+    var selectedDay by remember { mutableStateOf(today) }
+    
+    // View mode (list or grid)
+    var viewMode by remember { mutableStateOf("list") } // "list" or "grid"
+    
     var selectedTeacher by remember { mutableStateOf<String?>(null) }
     var scheduleData by remember { mutableStateOf<Map<String, List<ScheduleEntry>>>(emptyMap()) }
     var teachersList by remember { mutableStateOf<List<String>>(emptyList()) }
+    
+    // Get periods from PeriodSettings
+    val periods by remember { mutableStateOf(PeriodSettings.getPeriodsSettings(context)) }
+    var selectedPeriod by remember { mutableStateOf<Int?>(PeriodSettings.getCurrentPeriod(context)) }
     
     // Load the schedule data
     LaunchedEffect(Unit) {
@@ -113,6 +131,18 @@ fun ScheduleScreen(navController: NavController) {
                     }
                 },
                 actions = {
+                    // Toggle view mode button
+                    IconButton(onClick = { viewMode = if (viewMode == "list") "grid" else "list" }) {
+                        Icon(
+                            if (viewMode == "list") Icons.Default.GridView else Icons.Default.ViewList,
+                            contentDescription = "Change View"
+                        )
+                    }
+                    // Settings button
+                    IconButton(onClick = { navController.navigate(Screen.PeriodSettings.route) }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Period Settings")
+                    }
+                    // Refresh button
                     IconButton(onClick = {
                         scope.launch {
                             snackbarHostState.showSnackbar(
@@ -177,8 +207,12 @@ fun ScheduleScreen(navController: NavController) {
                     teachersList = teachersList,
                     selectedTeacher = selectedTeacher,
                     selectedDay = selectedDay,
+                    viewMode = viewMode,
+                    periods = periods,
+                    selectedPeriod = selectedPeriod,
                     onTeacherSelected = { selectedTeacher = it },
-                    onDaySelected = { selectedDay = it }
+                    onDaySelected = { selectedDay = it },
+                    onPeriodSelected = { selectedPeriod = it }
                 )
             }
         }
@@ -192,8 +226,12 @@ fun ScheduleContent(
     teachersList: List<String>,
     selectedTeacher: String?,
     selectedDay: String,
+    viewMode: String,
+    periods: List<com.substituemanagment.managment.data.PeriodSetting>,
+    selectedPeriod: Int?,
     onTeacherSelected: (String) -> Unit,
-    onDaySelected: (String) -> Unit
+    onDaySelected: (String) -> Unit,
+    onPeriodSelected: (Int?) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -245,16 +283,18 @@ fun ScheduleContent(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Days of week tabs
+        // Days of week tabs - exclude Sunday unless there are entries for it
+        val activeDays = getActiveDaysOfWeek(scheduleData, selectedTeacher)
+        
         ScrollableTabRow(
-            selectedTabIndex = getDayIndex(selectedDay),
+            selectedTabIndex = getDayIndex(selectedDay, activeDays),
             edgePadding = 0.dp
         ) {
-            daysOfWeek.forEachIndexed { index, day ->
+            activeDays.forEachIndexed { index, day ->
                 Tab(
-                    selected = selectedDay == day.lowercase(),
+                    selected = selectedDay.equals(day, ignoreCase = true),
                     onClick = { onDaySelected(day.lowercase()) },
-                    text = { Text(day) }
+                    text = { Text(day.capitalize()) }
                 )
             }
         }
@@ -271,12 +311,26 @@ fun ScheduleContent(
             if (daySchedule.isEmpty()) {
                 EmptyDaySchedule()
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(daySchedule) { entry ->
-                        ScheduleEntryCard(entry)
+                if (viewMode == "list") {
+                    // List view
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(daySchedule) { entry ->
+                            ScheduleEntryCard(
+                                entry = entry,
+                                isCurrentPeriod = entry.period == selectedPeriod
+                            )
+                        }
                     }
+                } else {
+                    // Grid view
+                    GridScheduleView(
+                        scheduleEntries = daySchedule,
+                        periods = periods,
+                        currentPeriod = selectedPeriod,
+                        onPeriodSelected = onPeriodSelected
+                    )
                 }
             }
         }
@@ -284,12 +338,194 @@ fun ScheduleContent(
 }
 
 @Composable
-fun ScheduleEntryCard(entry: ScheduleEntry) {
+fun GridScheduleView(
+    scheduleEntries: List<ScheduleEntry>,
+    periods: List<com.substituemanagment.managment.data.PeriodSetting>,
+    currentPeriod: Int?,
+    onPeriodSelected: (Int?) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+    ) {
+        // Header - shows the time periods
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Empty cell for the period number column
+            Box(
+                modifier = Modifier
+                    .width(48.dp)
+                    .height(48.dp)
+                    .padding(4.dp)
+            ) {
+                Text(
+                    text = "Period",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            
+            // Column for class information
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp)
+                    .padding(4.dp)
+            ) {
+                Text(
+                    text = "Class",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            
+            // Column for teacher
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp)
+                    .padding(4.dp)
+            ) {
+                Text(
+                    text = "Teacher",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        }
+        
+        Divider()
+        
+        // Grid rows for each period
+        for (periodSetting in periods.sortedBy { it.periodNumber }) {
+            val entry = scheduleEntries.find { it.period == periodSetting.periodNumber }
+            val isCurrentPeriod = periodSetting.periodNumber == currentPeriod
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onPeriodSelected(periodSetting.periodNumber) }
+                    .background(
+                        if (isCurrentPeriod) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        else MaterialTheme.colorScheme.background
+                    )
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Period number column
+                Box(
+                    modifier = Modifier
+                        .width(48.dp)
+                        .height(64.dp)
+                        .padding(4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "${periodSetting.periodNumber}",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = periodSetting.formatTimeRange(),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+                
+                // Class name column
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp)
+                        .padding(4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = entry?.className ?: "No Class",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (entry != null) FontWeight.Normal else FontWeight.Light,
+                        color = if (entry != null) 
+                            MaterialTheme.colorScheme.onSurface 
+                        else 
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
+                
+                // Teacher column
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp)
+                        .padding(4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (entry != null) {
+                            Text(
+                                text = entry.originalTeacher,
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            
+                            if (entry.substitute.isNotEmpty()) {
+                                Text(
+                                    text = "Sub: ${entry.substitute}",
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "—",
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
+            }
+            
+            Divider()
+        }
+    }
+}
+
+@Composable
+fun ScheduleEntryCard(
+    entry: ScheduleEntry,
+    isCurrentPeriod: Boolean = false
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isCurrentPeriod) 
+                MaterialTheme.colorScheme.primaryContainer 
+            else 
+                MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
@@ -301,13 +537,21 @@ fun ScheduleEntryCard(entry: ScheduleEntry) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(
+                        if (isCurrentPeriod)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.primaryContainer
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "P${entry.period}",
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = if (isCurrentPeriod)
+                        MaterialTheme.colorScheme.onPrimary
+                    else
+                        MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
             
@@ -319,7 +563,11 @@ fun ScheduleEntryCard(entry: ScheduleEntry) {
                 Text(
                     text = entry.className,
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isCurrentPeriod)
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    else
+                        MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
@@ -329,7 +577,10 @@ fun ScheduleEntryCard(entry: ScheduleEntry) {
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = if (isCurrentPeriod)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -338,7 +589,11 @@ fun ScheduleEntryCard(entry: ScheduleEntry) {
                         } else {
                             entry.originalTeacher
                         },
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isCurrentPeriod)
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSurface
                     )
                 }
                 
@@ -367,7 +622,10 @@ fun ScheduleEntryCard(entry: ScheduleEntry) {
             Icon(
                 imageVector = Icons.Default.Info,
                 contentDescription = "Details",
-                tint = MaterialTheme.colorScheme.primary
+                tint = if (isCurrentPeriod)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -456,17 +714,33 @@ data class ScheduleEntry(
     val substitute: String = ""
 )
 
-private val daysOfWeek = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+// Helper function to capitalize first letter
+private fun String.capitalize(): String {
+    return this.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+}
 
-private fun getDayIndex(day: String): Int {
-    return when (day.lowercase()) {
-        "monday" -> 0
-        "tuesday" -> 1
-        "wednesday" -> 2
-        "thursday" -> 3
-        "friday" -> 4
-        "saturday" -> 5
-        "sunday" -> 6
-        else -> 0
+// Helper function to get all active days that have schedule entries
+private fun getActiveDaysOfWeek(scheduleData: Map<String, List<ScheduleEntry>>, selectedTeacher: String?): List<String> {
+    if (selectedTeacher == null) return listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday")
+    
+    val teacherEntries = scheduleData[selectedTeacher] ?: return listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday")
+    val activeDays = teacherEntries.map { it.day.lowercase() }.distinct().sorted()
+    
+    // If there are no entries for any day, return the default weekdays
+    return if (activeDays.isEmpty()) {
+        listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday")
+    } else {
+        // Only include Sunday if there are entries for it
+        val standardDays = listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday")
+        val result = standardDays.toMutableList()
+        if (activeDays.contains("sunday")) {
+            result.add("sunday")
+        }
+        result
     }
+}
+
+private fun getDayIndex(day: String, days: List<String>): Int {
+    val normalizedDay = day.lowercase()
+    return days.indexOf(normalizedDay).takeIf { it >= 0 } ?: 0
 } 

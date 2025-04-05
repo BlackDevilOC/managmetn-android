@@ -167,7 +167,7 @@ fun PeriodSettingsScreen(navController: NavController) {
             // Restore defaults button
             Button(
                 onClick = {
-                    periods = PeriodSettings.DEFAULT_PERIODS
+                    periods = PeriodSettings.getPeriodsSettings(context)
                     scope.launch {
                         snackbarHostState.showSnackbar(
                             message = "Default periods restored",
