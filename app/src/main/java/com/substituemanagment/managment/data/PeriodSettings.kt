@@ -1,12 +1,9 @@
 package com.substituemanagment.managment.data
 
 import android.content.Context
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
-import java.io.FileOutputStream
-import java.io.FileReader
 import java.io.IOException
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -38,7 +35,6 @@ data class PeriodSetting(
 }
 
 object PeriodSettings {
-    private const val TAG = "PeriodSettings"
     private const val SETTINGS_FILE_NAME = "period_settings.json"
     private val DEFAULT_PERIODS = listOf(
         PeriodSetting(1, "08:00", "08:45"),
@@ -52,28 +48,20 @@ object PeriodSettings {
     )
     
     fun getPeriodsSettings(context: Context): List<PeriodSetting> {
-        // Use the standard data directory where other timetable files are stored
-        val baseDir = File("/storage/emulated/0/Android/data/com.substituemanagment.managment/files/substitute_data")
+        val baseDir = File(context.getExternalFilesDir(null), "substitute_data")
         val processedDir = File(baseDir, "processed")
         val settingsFile = File(processedDir, SETTINGS_FILE_NAME)
-        
-        Log.d(TAG, "Looking for period settings file at: ${settingsFile.absolutePath}")
         
         return if (settingsFile.exists()) {
             try {
                 val gson = Gson()
                 val type = object : TypeToken<List<PeriodSetting>>() {}.type
-                val periods = gson.fromJson<List<PeriodSetting>>(FileReader(settingsFile), type)
-                Log.d(TAG, "Successfully loaded ${periods.size} periods from settings file")
-                periods
+                gson.fromJson(settingsFile.readText(), type)
             } catch (e: Exception) {
-                Log.e(TAG, "Error reading period settings file", e)
                 // If there's an error reading the file, use default periods
-                savePeriodsSettings(context, DEFAULT_PERIODS) // Try to recreate the file
                 DEFAULT_PERIODS
             }
         } else {
-            Log.d(TAG, "Period settings file not found. Creating with default values.")
             // If file doesn't exist, create it with default periods
             savePeriodsSettings(context, DEFAULT_PERIODS)
             DEFAULT_PERIODS
@@ -81,35 +69,20 @@ object PeriodSettings {
     }
     
     fun savePeriodsSettings(context: Context, periods: List<PeriodSetting>): Boolean {
-        val baseDir = File("/storage/emulated/0/Android/data/com.substituemanagment.managment/files/substitute_data")
+        val baseDir = File(context.getExternalFilesDir(null), "substitute_data")
         val processedDir = File(baseDir, "processed")
+        if (!processedDir.exists()) {
+            processedDir.mkdirs()
+        }
         
-        try {
-            // Ensure directories exist
-            if (!baseDir.exists()) {
-                Log.d(TAG, "Creating base directory: ${baseDir.absolutePath}")
-                baseDir.mkdirs()
-            }
-            
-            if (!processedDir.exists()) {
-                Log.d(TAG, "Creating processed directory: ${processedDir.absolutePath}")
-                processedDir.mkdirs()
-            }
-            
-            val settingsFile = File(processedDir, SETTINGS_FILE_NAME)
-            
+        val settingsFile = File(processedDir, SETTINGS_FILE_NAME)
+        return try {
             val gson = Gson()
             val json = gson.toJson(periods)
-            
-            FileOutputStream(settingsFile).use { outputStream ->
-                outputStream.write(json.toByteArray())
-            }
-            
-            Log.d(TAG, "Successfully saved ${periods.size} periods to ${settingsFile.absolutePath}")
-            return true
+            settingsFile.writeText(json)
+            true
         } catch (e: IOException) {
-            Log.e(TAG, "Error saving period settings", e)
-            return false
+            false
         }
     }
     
