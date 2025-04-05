@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.substituemanagment.managment.ui.viewmodel.SmsViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -38,6 +40,7 @@ fun SmsSendScreen(navController: NavController) {
     val scrollState = rememberScrollState()
     val viewModel: SmsViewModel = viewModel()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     
     var showTeacherSelection by remember { mutableStateOf(false) }
     var showTemplateSelection by remember { mutableStateOf(false) }
@@ -46,11 +49,28 @@ fun SmsSendScreen(navController: NavController) {
     val isLoading by remember { viewModel.isLoading }
     val errorMessage by remember { viewModel.errorMessage }
     
+    // For snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showSuccessBar by remember { mutableStateOf(false) }
+    var successMessage by remember { mutableStateOf("") }
+    
     // Effect to show error messages
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
-            // In a real app, you would show a Snackbar or Dialog here
-            println("Error: $it")
+            snackbarHostState.showSnackbar(
+                message = it,
+                duration = SnackbarDuration.Long
+            )
+        }
+    }
+    
+    // Function to show success message
+    fun showSuccess(message: String) {
+        successMessage = message
+        showSuccessBar = true
+        scope.launch {
+            delay(3000)
+            showSuccessBar = false
         }
     }
 
@@ -78,6 +98,9 @@ fun SmsSendScreen(navController: NavController) {
                     }
                 }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -88,6 +111,38 @@ fun SmsSendScreen(navController: NavController) {
                         .size(50.dp)
                         .align(Alignment.Center)
                 )
+            }
+            
+            // Success bar
+            AnimatedVisibility(
+                visible = showSuccessBar,
+                modifier = Modifier.align(Alignment.TopCenter)
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Success",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = successMessage,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
             }
             
             // Main SMS Compose Screen
@@ -339,17 +394,21 @@ fun SmsSendScreen(navController: NavController) {
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
+                            val messageLength = viewModel.customMessage.value.length
+                            val messageCount = (messageLength / 160) + if (messageLength % 160 > 0) 1 else 0
+                            
                             Text(
-                                text = "Character count: ${viewModel.customMessage.value.length} / Message count: ${(viewModel.customMessage.value.length / 160) + 1}",
+                                text = "Character count: $messageLength / Message count: $messageCount",
                                 style = MaterialTheme.typography.bodySmall,
                                 textAlign = TextAlign.End,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                color = if (messageLength > 160) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                             )
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Text(
-                                text = "Variables: {date}, {time}, {period} - Will be replaced with actual values when sent",
+                                text = "Available variables: {date}, {day}, {time}, {period}, {class}, {teacher}, {room}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -384,6 +443,18 @@ fun SmsSendScreen(navController: NavController) {
                                             .fillMaxWidth()
                                             .height(120.dp)
                                     )
+                                    
+                                    // Character count
+                                    val templateLength = newTemplateContent.length
+                                    val templateCount = (templateLength / 160) + if (templateLength % 160 > 0) 1 else 0
+                                    
+                                    Text(
+                                        text = "Character count: $templateLength / Message count: $templateCount",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        textAlign = TextAlign.End,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                        color = if (templateLength > 160) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                                    )
                                 }
                             },
                             confirmButton = {
@@ -391,11 +462,13 @@ fun SmsSendScreen(navController: NavController) {
                                     onClick = {
                                         if (newTemplateName.isNotBlank() && newTemplateContent.isNotBlank()) {
                                             viewModel.saveNewTemplate(newTemplateName, newTemplateContent)
+                                            showSuccess("Template saved successfully")
                                             showNewTemplateDialog = false
                                             newTemplateName = ""
                                             newTemplateContent = ""
                                         }
-                                    }
+                                    },
+                                    enabled = newTemplateName.isNotBlank() && newTemplateContent.isNotBlank()
                                 ) {
                                     Text("Save")
                                 }
@@ -425,8 +498,16 @@ fun SmsSendScreen(navController: NavController) {
                     
                     // Send Button
                     Button(
-                        onClick = { viewModel.sendSms() },
-                        enabled = viewModel.customMessage.value.isNotBlank() && viewModel.teachers.any { it.selected },
+                        onClick = { 
+                            viewModel.sendSms()
+                            scope.launch {
+                                delay(500) // Wait for the SMS to be sent
+                                if (viewModel.errorMessage.value == null) {
+                                    showSuccess("SMS sent successfully")
+                                }
+                            }
+                        },
+                        enabled = viewModel.customMessage.value.isNotBlank() && viewModel.teachers.any { it.selected } && !isLoading,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -440,6 +521,47 @@ fun SmsSendScreen(navController: NavController) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Send SMS Notifications")
+                    }
+                    
+                    // SMS sending info
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "SMS Sending Information",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                text = "• Messages are sent using your device's SMS service and carrier rates apply",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            
+                            Text(
+                                text = "• Standard SMS messages can contain up to 160 characters",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            
+                            Text(
+                                text = "• Longer messages may be split into multiple SMS messages",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            
+                            Text(
+                                text = "• Delivery status is based on carrier reporting and may not be 100% accurate",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                     
                     Spacer(modifier = Modifier.height(16.dp))
@@ -496,19 +618,16 @@ fun SmsSendScreen(navController: NavController) {
                                                 style = MaterialTheme.typography.bodySmall
                                             )
                                             
-                                            // Custom Chip implementation instead of the built-in Chip
+                                            // Custom Chip implementation for SMS status
                                             Surface(
                                                 modifier = Modifier
-                                                    .clip(RoundedCornerShape(16.dp))
-                                                    .background(
-                                                        when (sms.status) {
-                                                            "Sent" -> MaterialTheme.colorScheme.primaryContainer
-                                                            "Failed" -> MaterialTheme.colorScheme.errorContainer
-                                                            else -> MaterialTheme.colorScheme.surfaceVariant
-                                                        }
-                                                    )
-                                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                                                color = Color.Transparent
+                                                    .clip(RoundedCornerShape(16.dp)),
+                                                color = when (sms.status) {
+                                                    "Sent" -> MaterialTheme.colorScheme.primaryContainer
+                                                    "Failed" -> MaterialTheme.colorScheme.errorContainer
+                                                    "Partial" -> MaterialTheme.colorScheme.tertiaryContainer
+                                                    else -> MaterialTheme.colorScheme.surfaceVariant
+                                                }
                                             ) {
                                                 Text(
                                                     text = sms.status,
@@ -516,8 +635,10 @@ fun SmsSendScreen(navController: NavController) {
                                                     color = when (sms.status) {
                                                         "Sent" -> MaterialTheme.colorScheme.onPrimaryContainer
                                                         "Failed" -> MaterialTheme.colorScheme.onErrorContainer
+                                                        "Partial" -> MaterialTheme.colorScheme.onTertiaryContainer
                                                         else -> MaterialTheme.colorScheme.onSurfaceVariant
-                                                    }
+                                                    },
+                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                                 )
                                             }
                                         }

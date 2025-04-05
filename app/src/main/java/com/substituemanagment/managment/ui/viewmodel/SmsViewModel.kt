@@ -1,6 +1,7 @@
 package com.substituemanagment.managment.ui.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -16,25 +17,27 @@ import kotlinx.coroutines.withContext
 import java.util.*
 
 class SmsViewModel(application: Application) : AndroidViewModel(application) {
-    
-    // UI State
-    val templates = mutableStateListOf<SmsTemplate>()
+    // State holders
     val teachers = mutableStateListOf<TeacherContact>()
-    val smsHistory = mutableStateListOf<SmsHistory>()
-    val isLoading = mutableStateOf(false)
-    val errorMessage = mutableStateOf<String?>(null)
+    val templates = mutableStateListOf<MessageTemplate>()
+    val smsHistory = mutableStateListOf<SmsMessage>()
     
-    // Selected template and message
-    val selectedTemplate = mutableStateOf<SmsTemplate?>(null)
+    // Selected template
+    private val _selectedTemplate = mutableStateOf<MessageTemplate?>(null)
+    val selectedTemplate: State<MessageTemplate?> = _selectedTemplate
+    
+    // Custom message
     val customMessage = mutableStateOf("")
     
-    // Data classes for UI
-    data class SmsTemplate(
-        val id: String,
-        val name: String,
-        val content: String
-    )
+    // Loading state
+    private val _isLoading = mutableStateOf(false)
+    val isLoading: State<Boolean> = _isLoading
     
+    // Error message
+    private val _errorMessage = mutableStateOf<String?>(null)
+    val errorMessage: State<String?> = _errorMessage
+
+    // Data models for UI
     data class TeacherContact(
         val id: String,
         val name: String,
@@ -42,7 +45,13 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
         var selected: Boolean = false
     )
     
-    data class SmsHistory(
+    data class MessageTemplate(
+        val id: String,
+        val name: String,
+        val content: String
+    )
+    
+    data class SmsMessage(
         val id: String,
         val recipients: List<String>,
         val message: String,
@@ -51,233 +60,168 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
     )
     
     init {
-        loadData()
+        refreshData()
     }
     
-    private fun loadData() {
+    /**
+     * Load or refresh all data from storage
+     */
+    fun refreshData() {
         viewModelScope.launch {
-            isLoading.value = true
-            errorMessage.value = null
+            _isLoading.value = true
+            _errorMessage.value = null
             
             try {
-                withContext(Dispatchers.IO) {
-                    // Load templates
-                    val templateDtos = SmsDataManager.loadTemplates(getApplication())
-                    val uiTemplates = templateDtos.map { dto ->
-                        SmsTemplate(dto.id, dto.name, dto.content)
-                    }
-                    
-                    // Load teacher contacts
-                    val contactDtos = SmsDataManager.loadTeacherContacts(getApplication())
-                    val uiContacts = contactDtos.map { dto ->
-                        TeacherContact(dto.id, dto.name, dto.phone)
-                    }
-                    
-                    // Load SMS history
-                    val historyDtos = SmsDataManager.loadSmsHistory(getApplication())
-                    val uiHistory = historyDtos.map { dto ->
-                        SmsHistory(dto.id, dto.recipients, dto.message, dto.timestamp, dto.status)
-                    }
-                    
-                    withContext(Dispatchers.Main) {
-                        templates.clear()
-                        templates.addAll(uiTemplates)
-                        
-                        teachers.clear()
-                        teachers.addAll(uiContacts)
-                        
-                        smsHistory.clear()
-                        smsHistory.addAll(uiHistory)
-                    }
+                val context = getApplication<Application>()
+                
+                // Load templates
+                val templateDtos = SmsDataManager.loadTemplates(context)
+                val uiTemplates = templateDtos.map { dto ->
+                    MessageTemplate(dto.id, dto.name, dto.content)
                 }
+                
+                templates.clear()
+                templates.addAll(uiTemplates)
+                
+                // Load teacher contacts
+                val teacherDtos = SmsDataManager.loadTeacherContacts(context)
+                val uiTeachers = teacherDtos.map { dto ->
+                    TeacherContact(dto.id, dto.name, dto.phone)
+                }
+                
+                teachers.clear()
+                teachers.addAll(uiTeachers)
+                
+                // Load SMS history
+                val historyDtos = SmsDataManager.loadSmsHistory(context)
+                val uiHistory = historyDtos.map { dto ->
+                    SmsMessage(dto.id, dto.recipients, dto.message, dto.timestamp, dto.status)
+                }
+                
+                smsHistory.clear()
+                smsHistory.addAll(uiHistory)
+                
             } catch (e: Exception) {
-                errorMessage.value = "Failed to load data: ${e.message}"
+                _errorMessage.value = "Failed to load data: ${e.message}"
             } finally {
-                isLoading.value = false
+                _isLoading.value = false
             }
         }
     }
     
-    fun saveNewTemplate(name: String, content: String) {
-        viewModelScope.launch {
-            try {
-                val newId = UUID.randomUUID().toString()
-                val newTemplate = SmsTemplate(newId, name, content)
-                
-                templates.add(newTemplate)
-                
-                // Save to storage
-                withContext(Dispatchers.IO) {
-                    val templateDtos = templates.map { template ->
-                        SmsTemplateDto(template.id, template.name, template.content)
-                    }
-                    SmsDataManager.saveTemplates(getApplication(), templateDtos)
-                }
-            } catch (e: Exception) {
-                errorMessage.value = "Failed to save template: ${e.message}"
-            }
-        }
-    }
-    
-    fun deleteTemplate(templateId: String) {
-        viewModelScope.launch {
-            try {
-                val index = templates.indexOfFirst { it.id == templateId }
-                if (index != -1) {
-                    templates.removeAt(index)
-                    
-                    // Save to storage
-                    withContext(Dispatchers.IO) {
-                        val templateDtos = templates.map { template ->
-                            SmsTemplateDto(template.id, template.name, template.content)
-                        }
-                        SmsDataManager.saveTemplates(getApplication(), templateDtos)
-                    }
-                }
-            } catch (e: Exception) {
-                errorMessage.value = "Failed to delete template: ${e.message}"
-            }
-        }
-    }
-    
-    fun addTeacherContact(name: String, phone: String) {
-        viewModelScope.launch {
-            try {
-                val newId = UUID.randomUUID().toString()
-                val newContact = TeacherContact(newId, name, phone)
-                
-                teachers.add(newContact)
-                
-                // Save to storage
-                withContext(Dispatchers.IO) {
-                    val contactDtos = teachers.map { contact ->
-                        TeacherContactDto(contact.id, contact.name, contact.phone)
-                    }
-                    SmsDataManager.saveTeacherContacts(getApplication(), contactDtos)
-                }
-            } catch (e: Exception) {
-                errorMessage.value = "Failed to add teacher: ${e.message}"
-            }
-        }
-    }
-    
-    fun deleteTeacherContact(contactId: String) {
-        viewModelScope.launch {
-            try {
-                val index = teachers.indexOfFirst { it.id == contactId }
-                if (index != -1) {
-                    teachers.removeAt(index)
-                    
-                    // Save to storage
-                    withContext(Dispatchers.IO) {
-                        val contactDtos = teachers.map { contact ->
-                            TeacherContactDto(contact.id, contact.name, contact.phone)
-                        }
-                        SmsDataManager.saveTeacherContacts(getApplication(), contactDtos)
-                    }
-                }
-            } catch (e: Exception) {
-                errorMessage.value = "Failed to delete teacher: ${e.message}"
-            }
-        }
-    }
-    
-    fun selectTemplate(templateId: String?) {
-        if (templateId == null) {
-            selectedTemplate.value = null
-            customMessage.value = ""
-            return
-        }
-        
-        val template = templates.find { it.id == templateId }
-        selectedTemplate.value = template
-        if (template != null) {
-            customMessage.value = template.content
-        }
-    }
-    
+    /**
+     * Toggle selection of a teacher by ID
+     */
     fun toggleTeacherSelection(teacherId: String) {
         val index = teachers.indexOfFirst { it.id == teacherId }
-        if (index != -1) {
-            teachers[index] = teachers[index].copy(selected = !teachers[index].selected)
+        if (index >= 0) {
+            val teacher = teachers[index]
+            teachers[index] = teacher.copy(selected = !teacher.selected)
         }
     }
     
+    /**
+     * Select all teachers or deselect all
+     */
     fun selectAllTeachers(selected: Boolean) {
         for (i in teachers.indices) {
             teachers[i] = teachers[i].copy(selected = selected)
         }
     }
     
-    fun sendSms() {
+    /**
+     * Select a template by ID, or null for custom message
+     */
+    fun selectTemplate(templateId: String?) {
+        if (templateId == null) {
+            _selectedTemplate.value = null
+            return
+        }
+        
+        val template = templates.find { it.id == templateId }
+        _selectedTemplate.value = template
+        
+        // Update custom message field with template content
+        template?.let {
+            customMessage.value = it.content
+        }
+    }
+    
+    /**
+     * Save a new template
+     */
+    fun saveNewTemplate(name: String, content: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            
             try {
-                isLoading.value = true
+                val newId = UUID.randomUUID().toString()
+                val newTemplate = MessageTemplate(newId, name, content)
                 
-                // Collect selected teachers
+                templates.add(newTemplate)
+                
+                // Save to storage
+                val templateDtos = templates.map { template ->
+                    SmsTemplateDto(template.id, template.name, template.content)
+                }
+                
+                SmsDataManager.saveTemplates(getApplication(), templateDtos)
+                
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to save template: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    /**
+     * Send SMS to selected teachers
+     */
+    fun sendSms() {
+        if (teachers.none { it.selected }) {
+            _errorMessage.value = "No recipients selected"
+            return
+        }
+        
+        if (customMessage.value.isBlank()) {
+            _errorMessage.value = "Message is empty"
+            return
+        }
+        
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            
+            try {
+                val context = getApplication<Application>()
                 val selectedTeachers = teachers.filter { it.selected }
-                if (selectedTeachers.isEmpty()) {
-                    errorMessage.value = "No teachers selected"
-                    return@launch
-                }
                 
-                // Check if we have a message
-                if (customMessage.value.isBlank()) {
-                    errorMessage.value = "Message is empty"
-                    return@launch
-                }
-                
-                // Use the SmsSender utility to send the SMS
                 val (success, error) = SmsSender.sendSms(
-                    context = getApplication(),
+                    context = context,
                     recipients = selectedTeachers,
-                    message = customMessage.value,
-                    saveToHistory = true
+                    message = customMessage.value
                 )
                 
                 if (!success) {
-                    errorMessage.value = error ?: "Failed to send SMS"
-                    return@launch
-                }
-                
-                // Reload SMS history
-                reloadSmsHistory()
-                
-                // Reset UI state after successful sending
-                customMessage.value = ""
-                selectAllTeachers(false)
-                selectedTemplate.value = null
-                
-            } catch (e: Exception) {
-                errorMessage.value = "Failed to send SMS: ${e.message}"
-            } finally {
-                isLoading.value = false
-            }
-        }
-    }
-    
-    private fun reloadSmsHistory() {
-        viewModelScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    // Load SMS history
-                    val historyDtos = SmsDataManager.loadSmsHistory(getApplication())
-                    val uiHistory = historyDtos.map { dto ->
-                        SmsHistory(dto.id, dto.recipients, dto.message, dto.timestamp, dto.status)
+                    _errorMessage.value = error ?: "Failed to send SMS"
+                } else {
+                    // Refresh history after sending
+                    refreshData()
+                    
+                    // Reset UI state if no template selected
+                    if (_selectedTemplate.value == null) {
+                        customMessage.value = ""
                     }
                     
-                    withContext(Dispatchers.Main) {
-                        smsHistory.clear()
-                        smsHistory.addAll(uiHistory)
-                    }
+                    // Deselect all teachers
+                    selectAllTeachers(false)
                 }
             } catch (e: Exception) {
-                errorMessage.value = "Failed to reload SMS history: ${e.message}"
+                _errorMessage.value = "Error sending SMS: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
-    }
-    
-    fun refreshData() {
-        loadData()
     }
 } 
