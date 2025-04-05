@@ -251,20 +251,20 @@ fun SubstituteScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
                 .padding(paddingValues)
         ) {
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(56.dp),
                             strokeWidth = 4.dp
@@ -293,18 +293,18 @@ fun SubstituteScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // Main content list
-                        if (absentTeachers.isEmpty()) {
+                if (absentTeachers.isEmpty()) {
                             item {
-                                Box(
-                                    modifier = Modifier
+                    Box(
+                        modifier = Modifier
                                         .fillMaxWidth()
                                         .height(300.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
                                         Icon(
                                             imageVector = Icons.Default.CheckCircle,
                                             contentDescription = "All Assigned",
@@ -312,23 +312,23 @@ fun SubstituteScreen(
                                             modifier = Modifier.size(72.dp)
                                         )
                                         Spacer(modifier = Modifier.height(16.dp))
-                                        Text(
+                            Text(
                                             text = "All Teachers Covered",
-                                            style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleLarge,
                                             textAlign = TextAlign.Center,
                                             fontWeight = FontWeight.Bold
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = "All absent teachers have been assigned substitutes.",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            textAlign = TextAlign.Center,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                        )
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "All absent teachers have been assigned substitutes.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
                                     }
-                                }
-                            }
-                        } else {
+                        }
+                    }
+                } else {
                             // Teacher cards
                             itemsIndexed(absentTeachers) { index, teacher ->
                                 AbsentTeacherCard(
@@ -492,9 +492,9 @@ fun AbsentTeacherCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     
                     Column {
-                        Text(
-                            text = teacher.name,
-                            style = MaterialTheme.typography.titleLarge,
+                Text(
+                    text = teacher.name,
+                    style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,7 @@ import com.substituemanagment.managment.data.PeriodSettings
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.BorderStroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,21 +100,21 @@ fun PeriodSettingsScreen(navController: NavController) {
                             strokeWidth = 2.dp
                         )
                     } else {
-                        IconButton(onClick = {
-                            scope.launch {
+                    IconButton(onClick = {
+                        scope.launch {
                                 isSaving = true
-                                if (PeriodSettings.savePeriodsSettings(context, periods)) {
-                                    snackbarHostState.showSnackbar(
-                                        message = "Settings saved successfully",
-                                        duration = SnackbarDuration.Short
-                                    )
+                            if (PeriodSettings.savePeriodsSettings(context, periods)) {
+                                snackbarHostState.showSnackbar(
+                                    message = "Settings saved successfully",
+                                    duration = SnackbarDuration.Short
+                                )
                                     hasUnsavedChanges = false
-                                } else {
-                                    snackbarHostState.showSnackbar(
-                                        message = "Failed to save settings",
-                                        duration = SnackbarDuration.Short
-                                    )
-                                }
+                            } else {
+                                snackbarHostState.showSnackbar(
+                                    message = "Failed to save settings",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
                                 isSaving = false
                             }
                         }) {
@@ -268,25 +271,25 @@ fun PeriodSettingsScreen(navController: NavController) {
                 Icon(Icons.Default.Refresh, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Restore Defaults")
-            }
-            
+        }
+        
             // Add Period Dialog
-            if (showAddDialog) {
+        if (showAddDialog) {
                 var newPeriodNumber by remember { mutableStateOf((periods.maxOfOrNull { it.periodNumber } ?: 0) + 1) }
                 var newStartTime by remember { mutableStateOf("08:00") }
                 var newEndTime by remember { mutableStateOf("08:45") }
                 var newIsActive by remember { mutableStateOf(true) }
                 var startTimeError by remember { mutableStateOf(false) }
                 var endTimeError by remember { mutableStateOf(false) }
-                
-                AlertDialog(
-                    onDismissRequest = { showAddDialog = false },
-                    title = { Text("Add New Period") },
-                    text = {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
+            
+            AlertDialog(
+                onDismissRequest = { showAddDialog = false },
+                title = { Text("Add New Period") },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
                             Text(
                                 text = "Enter details for the new period",
                                 style = MaterialTheme.typography.bodyMedium
@@ -371,7 +374,7 @@ fun PeriodSettingsScreen(navController: NavController) {
                             // Active Switch
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
@@ -382,12 +385,12 @@ fun PeriodSettingsScreen(navController: NavController) {
                                     checked = newIsActive,
                                     onCheckedChange = { newIsActive = it }
                                 )
-                            }
                         }
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
                                 // Basic validation
                                 try {
                                     val startTime = LocalTime.parse(newStartTime, timeFormat)
@@ -406,8 +409,8 @@ fun PeriodSettingsScreen(navController: NavController) {
                                     }
                                     
                                     // All validation passed, add new period
-                                    val newPeriod = PeriodSetting(
-                                        periodNumber = newPeriodNumber,
+                            val newPeriod = PeriodSetting(
+                                periodNumber = newPeriodNumber,
                                         startTime = newStartTime,
                                         endTime = newEndTime,
                                         isActive = newIsActive
@@ -418,7 +421,7 @@ fun PeriodSettingsScreen(navController: NavController) {
                                     // Sort by period number
                                     periods = newList.sortedBy { it.periodNumber }
                                     hasUnsavedChanges = true
-                                    showAddDialog = false
+                            showAddDialog = false
                                 } catch (e: Exception) {
                                     scope.launch {
                                         snackbarHostState.showSnackbar(
@@ -430,16 +433,16 @@ fun PeriodSettingsScreen(navController: NavController) {
                             }
                         ) {
                             Text("Add Period")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(
-                            onClick = { showAddDialog = false }
-                        ) {
-                            Text("Cancel")
-                        }
                     }
-                )
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showAddDialog = false }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
             }
         }
     }
@@ -468,15 +471,15 @@ fun PeriodItem(
     // Update parent when our local state changes
     LaunchedEffect(startTime, endTime, isActive) {
         try {
-            val updatedPeriod = period.copy(
-                startTime = startTime,
-                endTime = endTime,
-                isActive = isActive
-            )
+        val updatedPeriod = period.copy(
+            startTime = startTime,
+            endTime = endTime,
+            isActive = isActive
+        )
             
             // Only update if something actually changed
-            if (updatedPeriod != period) {
-                onUpdate(updatedPeriod)
+        if (updatedPeriod != period) {
+            onUpdate(updatedPeriod)
             }
         } catch (e: Exception) {
             // Handle error, don't update
