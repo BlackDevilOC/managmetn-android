@@ -605,13 +605,10 @@ fun SmsSendScreen(navController: NavController) {
                         Button(
                             onClick = { 
                                 if (viewModel.checkSmsPermissions()) {
-                                    viewModel.sendSms()
-                                    scope.launch {
-                                        delay(500) // Wait for the SMS to be sent
-                                        if (viewModel.errorMessage.value == null && !viewModel.needsPermission.value) {
-                                            showSuccess("SMS sent successfully")
-                                        }
-                                    }
+                                    // First prepare teachers for SMS process
+                                    viewModel.prepareTeachersForSmsProcess()
+                                    // Then navigate to the SMS process screen
+                                    navController.navigate(Screen.SmsProcess.route)
                                 } else {
                                     showPermissionDialog = true
                                 }
@@ -635,7 +632,7 @@ fun SmsSendScreen(navController: NavController) {
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "Send SMS Notifications",
+                                "Verify & Send SMS",
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium
                             )

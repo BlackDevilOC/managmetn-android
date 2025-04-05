@@ -15,6 +15,7 @@ import com.substituemanagment.managment.ui.screens.ProcessScreen
 import com.substituemanagment.managment.ui.screens.ScheduleScreen
 import com.substituemanagment.managment.ui.screens.PeriodSettingsScreen
 import com.substituemanagment.managment.ui.screens.SmsSendScreen
+import com.substituemanagment.managment.ui.screens.SmsProcessScreen
 import com.substituemanagment.managment.ui.screens.AttendanceReportsScreen
 
 sealed class Screen(val route: String) {
@@ -33,6 +34,7 @@ sealed class Screen(val route: String) {
     object Schedule : Screen("schedule")
     object PeriodSettings : Screen("period_settings")
     object AttendanceReports : Screen("attendance_reports")
+    object SmsProcess : Screen("sms_process") // Phone number verification for SMS
 }
 
 @Composable
@@ -74,6 +76,9 @@ fun NavGraph(
         }
         composable(Screen.SmsSend.route) {
             SmsSendScreen(navController)
+        }
+        composable(Screen.SmsProcess.route) {
+            SmsProcessScreen(navController)
         }
         composable(Screen.AttendanceReports.route) {
             AttendanceReportsScreen(navController)
