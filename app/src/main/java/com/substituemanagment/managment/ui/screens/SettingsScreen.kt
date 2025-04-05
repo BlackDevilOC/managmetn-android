@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -83,6 +84,17 @@ fun SettingsScreen(navController: NavController) {
                 title = "Process Data",
                 description = "Process uploaded data files",
                 onClick = { navController.navigate(Screen.Process.route) }
+            )
+            
+            // Reports section
+            SectionHeader(title = "Reports")
+            
+            // Attendance Reports Button
+            SettingCard(
+                icon = Icons.Default.Assessment,
+                title = "Attendance Reports",
+                description = "View teacher attendance and substitute assignment reports",
+                onClick = { navController.navigate(Screen.AttendanceReports.route) }
             )
             
             // Teacher Management section
