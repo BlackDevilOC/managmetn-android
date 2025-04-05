@@ -1,8 +1,18 @@
 package com.substituemanagment.managment.utils
 
+import android.Manifest
+import android.app.Activity
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.telephony.SmsManager
 import android.util.Log
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.substituemanagment.managment.data.SmsHistoryDto
 import com.substituemanagment.managment.data.SmsDataManager
 import com.substituemanagment.managment.ui.viewmodel.SmsViewModel
@@ -11,10 +21,39 @@ import java.util.*
 
 /**
  * Utility class for sending SMS messages.
- * This implementation logs messages and prepares for actual SMS sending.
+ * This implementation uses the device's SMS functionality.
  */
 object SmsSender {
     private const val TAG = "SmsSender"
+    private const val SMS_SENT_ACTION = "SMS_SENT"
+    private const val SMS_DELIVERED_ACTION = "SMS_DELIVERED"
+    private const val SMS_PERMISSION_REQUEST_CODE = 101
+    
+    /**
+     * Check if the app has the necessary permissions to send SMS.
+     * This should be called before attempting to send SMS.
+     *
+     * @param context The application context
+     * @param activity The activity from which to request permissions if needed
+     * @return True if permissions are granted, false otherwise
+     */
+    fun checkSmsPermission(context: Context, activity: Activity?): Boolean {
+        val hasSmsPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.SEND_SMS
+        ) == PackageManager.PERMISSION_GRANTED
+        
+        if (!hasSmsPermission && activity != null) {
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf(Manifest.permission.SEND_SMS),
+                SMS_PERMISSION_REQUEST_CODE
+            )
+            return false
+        }
+        
+        return hasSmsPermission
+    }
     
     /**
      * Send SMS messages to the specified recipients.
@@ -39,7 +78,18 @@ object SmsSender {
             return Pair(false, "Message is empty")
         }
         
+        // Check if we have permission to send SMS
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.SEND_SMS
+            ) != PackageManager.PERMISSION_GRANTED) {
+            return Pair(false, "SMS permission not granted")
+        }
+        
         try {
+            // Get the SMS manager
+            val smsManager = SmsManager.getDefault()
+            
             // Count successful sends
             var successCount = 0
             
@@ -59,41 +109,121 @@ object SmsSender {
                     
                     Log.d(TAG, "Sending SMS to: ${recipient.name} (${recipient.phone}): $processedMessage")
                     
-                    // Simulate SMS sending (would be real in production)
-                    // For long messages, we'd use divideMessage:
-                    // val parts = smsManager.divideMessage(processedMessage)
-                    // smsManager.sendMultipartTextMessage(recipient.phone, null, parts, null, null)
+                    // Generate unique IDs for this SMS
+                    val smsId = UUID.randomUUID().toString()
+                    val timestamp = System.currentTimeMillis()
                     
-                    // For simple messages:
-                    // smsManager.sendTextMessage(recipient.phone, null, processedMessage, null, null)
-                    
-                    // Simulate successful send for most recipients
-                    val randomSuccess = Math.random() > 0.1 // 90% success rate for simulation
-                    if (randomSuccess) {
-                        successCount++
+                    try {
+                        // Create sent and delivered intents
+                        val sentPI = PendingIntent.getBroadcast(
+                            context, 0, Intent(SMS_SENT_ACTION),
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
                         
-                        // Save individual SMS to history
-                        if (saveToHistory) {
-                            val smsId = UUID.randomUUID().toString()
-                            val timestamp = System.currentTimeMillis()
+                        val deliveredPI = PendingIntent.getBroadcast(
+                            context, 0, Intent(SMS_DELIVERED_ACTION),
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
+                        
+                        // Register broadcast receivers for sent and delivered status
+                        context.registerReceiver(object : BroadcastReceiver() {
+                            override fun onReceive(context: Context, intent: Intent) {
+                                when (resultCode) {
+                                    Activity.RESULT_OK -> {
+                                        Log.d(TAG, "SMS sent successfully to ${recipient.phone}")
+                                        successCount++
+                                        
+                                        // Save to history
+                                        if (saveToHistory) {
+                                            val historyEntry = SmsHistoryDto(
+                                                id = smsId,
+                                                recipients = listOf(recipient.name),
+                                                message = processedMessage,
+                                                timestamp = timestamp,
+                                                status = "Sent"
+                                            )
+                                            SmsDataManager.addSmsToHistory(context, historyEntry)
+                                        }
+                                    }
+                                    SmsManager.RESULT_ERROR_GENERIC_FAILURE -> {
+                                        Log.e(TAG, "Generic failure for ${recipient.phone}")
+                                        failedRecipients.add(recipient.name)
+                                        saveFailedSms(context, smsId, recipient.name, processedMessage, timestamp, saveToHistory)
+                                    }
+                                    SmsManager.RESULT_ERROR_NO_SERVICE -> {
+                                        Log.e(TAG, "No service for ${recipient.phone}")
+                                        failedRecipients.add(recipient.name)
+                                        saveFailedSms(context, smsId, recipient.name, processedMessage, timestamp, saveToHistory)
+                                    }
+                                    SmsManager.RESULT_ERROR_NULL_PDU -> {
+                                        Log.e(TAG, "Null PDU for ${recipient.phone}")
+                                        failedRecipients.add(recipient.name)
+                                        saveFailedSms(context, smsId, recipient.name, processedMessage, timestamp, saveToHistory)
+                                    }
+                                    SmsManager.RESULT_ERROR_RADIO_OFF -> {
+                                        Log.e(TAG, "Radio off for ${recipient.phone}")
+                                        failedRecipients.add(recipient.name)
+                                        saveFailedSms(context, smsId, recipient.name, processedMessage, timestamp, saveToHistory)
+                                    }
+                                }
+                                context.unregisterReceiver(this)
+                            }
+                        }, IntentFilter(SMS_SENT_ACTION))
+                        
+                        context.registerReceiver(object : BroadcastReceiver() {
+                            override fun onReceive(context: Context, intent: Intent) {
+                                when (resultCode) {
+                                    Activity.RESULT_OK -> {
+                                        Log.d(TAG, "SMS delivered to ${recipient.phone}")
+                                        // Update status if needed
+                                    }
+                                    Activity.RESULT_CANCELED -> {
+                                        Log.d(TAG, "SMS not delivered to ${recipient.phone}")
+                                        // Update status if needed
+                                    }
+                                }
+                                context.unregisterReceiver(this)
+                            }
+                        }, IntentFilter(SMS_DELIVERED_ACTION))
+                        
+                        // Send the SMS using SmsManager API
+                        if (messageLength > 160) {
+                            // For longer messages, use divideMessage
+                            val messageParts = smsManager.divideMessage(processedMessage)
+                            val sentIntents = ArrayList<PendingIntent>()
+                            val deliveredIntents = ArrayList<PendingIntent>()
                             
-                            val historyEntry = SmsHistoryDto(
-                                id = smsId,
-                                recipients = listOf(recipient.name),
-                                message = processedMessage,
-                                timestamp = timestamp,
-                                status = "Sent"
+                            for (i in messageParts.indices) {
+                                sentIntents.add(sentPI)
+                                deliveredIntents.add(deliveredPI)
+                            }
+                            
+                            smsManager.sendMultipartTextMessage(
+                                recipient.phone,
+                                null,
+                                messageParts,
+                                sentIntents,
+                                deliveredIntents
                             )
-                            
-                            SmsDataManager.addSmsToHistory(context, historyEntry)
+                        } else {
+                            // For short messages, use sendTextMessage
+                            smsManager.sendTextMessage(
+                                recipient.phone,
+                                null,
+                                processedMessage,
+                                sentPI,
+                                deliveredPI
+                            )
                         }
-                    } else {
+                        
+                        // Show a toast notification
+                        Toast.makeText(context, "Sending SMS to ${recipient.name}...", Toast.LENGTH_SHORT).show()
+                        
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to send SMS to ${recipient.phone}: ${e.message}")
                         failedRecipients.add(recipient.name)
                         
                         if (saveToHistory) {
-                            val smsId = UUID.randomUUID().toString()
-                            val timestamp = System.currentTimeMillis()
-                            
                             val historyEntry = SmsHistoryDto(
                                 id = smsId,
                                 recipients = listOf(recipient.name),
@@ -106,24 +236,40 @@ object SmsSender {
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to send SMS to ${recipient.phone}: ${e.message}")
+                    Log.e(TAG, "Failed to process SMS to ${recipient.phone}: ${e.message}")
                     failedRecipients.add(recipient.name)
                 }
             }
             
-            // Determine overall status
-            val overallStatus = if (failedRecipients.isEmpty()) "Sent" else "Partial"
-            val statusMessage = if (failedRecipients.isEmpty()) 
-                "SMS sent to all recipients" 
-            else 
-                "Failed to send to: ${failedRecipients.joinToString(", ")}"
-            
-            Log.i(TAG, "SMS sending completed: $successCount/${recipients.size} successful")
-            return Pair(successCount > 0, if (successCount == 0) "Failed to send any messages" else null)
+            return Pair(true, "Sending SMS messages...")
             
         } catch (e: Exception) {
             Log.e(TAG, "Error in SMS sending process: ${e.message}")
             return Pair(false, "SMS sending error: ${e.message}")
+        }
+    }
+    
+    /**
+     * Helper function to save a failed SMS to history
+     */
+    private fun saveFailedSms(
+        context: Context, 
+        smsId: String, 
+        recipientName: String, 
+        message: String, 
+        timestamp: Long, 
+        saveToHistory: Boolean
+    ) {
+        if (saveToHistory) {
+            val historyEntry = SmsHistoryDto(
+                id = smsId,
+                recipients = listOf(recipientName),
+                message = message,
+                timestamp = timestamp,
+                status = "Failed"
+            )
+            
+            SmsDataManager.addSmsToHistory(context, historyEntry)
         }
     }
     

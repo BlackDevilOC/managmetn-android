@@ -1,5 +1,8 @@
 package com.substituemanagment.managment.ui.screens
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -48,11 +51,86 @@ fun SmsSendScreen(navController: NavController) {
     
     val isLoading by remember { viewModel.isLoading }
     val errorMessage by remember { viewModel.errorMessage }
+    val needsPermission by remember { viewModel.needsPermission }
     
     // For snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     var showSuccessBar by remember { mutableStateOf(false) }
     var successMessage by remember { mutableStateOf("") }
+    
+    // For permission explanation dialog
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    
+    // Permission request handling
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                // Permission granted, proceed with sending SMS
+                viewModel.sendSms()
+            } else {
+                // Permission denied, show error message
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "SMS permission denied. Cannot send messages.",
+                        duration = SnackbarDuration.Long
+                    )
+                }
+            }
+        }
+    )
+    
+    // Show permission dialog if needed
+    LaunchedEffect(needsPermission) {
+        if (needsPermission) {
+            showPermissionDialog = true
+        }
+    }
+    
+    // Permission explanation dialog
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDialog = false },
+            title = { Text("SMS Permission Required") },
+            text = { 
+                Column {
+                    Text(
+                        "This app needs permission to send SMS messages directly from your device to notify teachers about substitution assignments."
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Standard SMS rates from your carrier will apply.",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showPermissionDialog = false
+                        permissionLauncher.launch(Manifest.permission.SEND_SMS)
+                    }
+                ) {
+                    Text("Grant Permission")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { 
+                        showPermissionDialog = false
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "SMS permission is required to send messages.",
+                                duration = SnackbarDuration.Long
+                            )
+                        }
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
     
     // Effect to show error messages
     LaunchedEffect(errorMessage) {
@@ -500,12 +578,16 @@ fun SmsSendScreen(navController: NavController) {
                     // Send Button
                     Button(
                         onClick = { 
-                            viewModel.sendSms()
-                            scope.launch {
-                                delay(500) // Wait for the SMS to be sent
-                                if (viewModel.errorMessage.value == null) {
-                                    showSuccess("SMS sent successfully")
+                            if (viewModel.checkSmsPermissions()) {
+                                viewModel.sendSms()
+                                scope.launch {
+                                    delay(500) // Wait for the SMS to be sent
+                                    if (viewModel.errorMessage.value == null && !viewModel.needsPermission.value) {
+                                        showSuccess("SMS sent successfully")
+                                    }
                                 }
+                            } else {
+                                showPermissionDialog = true
                             }
                         },
                         enabled = viewModel.customMessage.value.isNotBlank() && viewModel.teachers.any { it.selected } && !isLoading,
@@ -544,7 +626,7 @@ fun SmsSendScreen(navController: NavController) {
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Text(
-                                text = "• Messages are sent using your device's SMS service and carrier rates apply",
+                                text = "• Messages are sent using your device's SIM card and carrier rates apply",
                                 style = MaterialTheme.typography.bodySmall
                             )
                             
@@ -554,12 +636,23 @@ fun SmsSendScreen(navController: NavController) {
                             )
                             
                             Text(
-                                text = "• Longer messages may be split into multiple SMS messages",
+                                text = "• Longer messages will be split into multiple SMS messages",
                                 style = MaterialTheme.typography.bodySmall
                             )
                             
                             Text(
-                                text = "• Delivery status is based on carrier reporting and may not be 100% accurate",
+                                text = "• Delivery status depends on your network carrier and may not be 100% accurate",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+
+                            Text(
+                                text = "• SMS permission is required for this feature to work",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            Text(
+                                text = "• Ensure your device has sufficient balance/credit for sending SMS",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

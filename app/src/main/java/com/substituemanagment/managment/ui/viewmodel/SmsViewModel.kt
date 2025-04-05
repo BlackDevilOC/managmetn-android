@@ -1,9 +1,14 @@
 package com.substituemanagment.managment.ui.viewmodel
 
+import android.Manifest
+import android.app.Activity
 import android.app.Application
+import android.content.pm.PackageManager
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.substituemanagment.managment.data.SmsDataManager
@@ -36,6 +41,10 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
     // Error message
     private val _errorMessage = mutableStateOf<String?>(null)
     val errorMessage: State<String?> = _errorMessage
+    
+    // Permission request state
+    private val _needsPermission = mutableStateOf(false)
+    val needsPermission: State<Boolean> = _needsPermission
 
     // Data models for UI
     data class TeacherContact(
@@ -176,6 +185,50 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     /**
+     * Check if SMS permissions are granted
+     * @return true if permissions are granted, false otherwise
+     */
+    fun checkSmsPermissions(): Boolean {
+        val context = getApplication<Application>()
+        val hasSmsPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.SEND_SMS
+        ) == PackageManager.PERMISSION_GRANTED
+        
+        _needsPermission.value = !hasSmsPermission
+        return hasSmsPermission
+    }
+    
+    /**
+     * Request SMS permissions
+     * @param activity The activity to request permissions from
+     */
+    fun requestSmsPermissions(activity: Activity) {
+        ActivityCompat.requestPermissions(
+            activity,
+            arrayOf(Manifest.permission.SEND_SMS),
+            SMS_PERMISSION_REQUEST_CODE
+        )
+    }
+    
+    /**
+     * Handle permission result
+     * @param requestCode The request code
+     * @param grantResults The grant results
+     */
+    fun handlePermissionResult(requestCode: Int, grantResults: IntArray) {
+        if (requestCode == SMS_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                _needsPermission.value = false
+                // Permission was granted, try sending SMS again
+                sendSms()
+            } else {
+                _errorMessage.value = "SMS permission denied. Cannot send messages."
+            }
+        }
+    }
+    
+    /**
      * Send SMS to selected teachers
      */
     fun sendSms() {
@@ -189,6 +242,12 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         
+        // Check for SMS permission first
+        if (!checkSmsPermissions()) {
+            // Permission request will be handled by the UI
+            return
+        }
+        
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -197,14 +256,14 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                 val context = getApplication<Application>()
                 val selectedTeachers = teachers.filter { it.selected }
                 
-                val (success, error) = SmsSender.sendSms(
+                val (success, message) = SmsSender.sendSms(
                     context = context,
                     recipients = selectedTeachers,
                     message = customMessage.value
                 )
                 
                 if (!success) {
-                    _errorMessage.value = error ?: "Failed to send SMS"
+                    _errorMessage.value = message ?: "Failed to send SMS"
                 } else {
                     // Refresh history after sending
                     refreshData()
@@ -223,5 +282,9 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                 _isLoading.value = false
             }
         }
+    }
+    
+    companion object {
+        private const val SMS_PERMISSION_REQUEST_CODE = 101
     }
 } 
