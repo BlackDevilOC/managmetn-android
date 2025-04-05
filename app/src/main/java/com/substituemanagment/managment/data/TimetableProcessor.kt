@@ -22,37 +22,29 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.abs
 
-data class ClassSchedule(
-    val className: String,
-    val schedules: List<Schedule>
-)
-
-data class DaySchedule(
-    val day: String,
-    val schedules: List<Schedule>
-)
-
-data class TeacherSchedule(
+data class ClassAssignment(
+    val period: Int,
     val teacherName: String,
-    val schedules: List<Schedule>
-)
-
-data class PeriodSchedule(
-    val period: Int,
-    val schedules: List<Schedule>
-)
-
-data class Schedule(
-    val id: Int,
-    val day: String,
-    val period: Int,
     val className: String
 )
 
-data class Teacher(
-    val name: String,
-    val phone: String = "",
-    val variations: List<String>
+data class DayPeriodSchedules(
+    val period: Int,
+    val teacherName: String,
+    val className: String
+)
+
+data class PeriodAssignment(
+    val className: String,
+    val teacherName: String
+)
+
+data class TeacherAssignment(
+    val day: String,
+    val period: Int,
+    val className: String,
+    val originalTeacher: String,
+    val substitute: String = ""
 )
 
 class TeacherNormalizer {
@@ -244,6 +236,9 @@ class TimetableProcessor(private val context: Context) {
     private val rawDir = File(baseDir, "raw")
     private val processedDir = File(baseDir, "processed")
     private val teacherNormalizer = TeacherNormalizer()
+    
+    // Standard order of days for consistent sorting
+    private val dayOrder = listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 
     init {
         // Create necessary directories if they don't exist
@@ -283,11 +278,12 @@ class TimetableProcessor(private val context: Context) {
             Log.i(TAG, "Processing ${validClasses.size} classes")
 
             // Initialize data structures
-            val classSchedules = mutableMapOf<String, MutableList<Schedule>>()
-            val daySchedules = mutableMapOf<String, MutableList<Schedule>>()
-            val teacherSchedules = mutableMapOf<String, MutableList<Schedule>>()
-            val periodSchedules = mutableMapOf<Int, MutableList<Schedule>>()
-            var scheduleId = 1
+            val teacherAssignmentsByClass = mutableMapOf<String, MutableList<ClassAssignment>>()
+            val teacherAssignmentsByDay = mutableMapOf<String, MutableMap<Int, MutableList<DayPeriodSchedules>>>()
+            val teacherAssignmentsByTeacher = mutableMapOf<String, MutableList<TeacherAssignment>>()
+            
+            // For period schedules - organized by period number
+            val periodAssignments = mutableMapOf<Int, MutableList<PeriodAssignment>>()
 
             // Process each row
             for (i in 1 until records.size) {
@@ -304,9 +300,27 @@ class TimetableProcessor(private val context: Context) {
                     Log.w(TAG, "Skipping row $i: invalid period '$periodStr'")
                     continue
                 }
+                
+                // Initialize period in day structure if needed
+                if (!teacherAssignmentsByDay.containsKey(day)) {
+                    teacherAssignmentsByDay[day] = mutableMapOf()
+                }
+                if (!teacherAssignmentsByDay[day]!!.containsKey(period)) {
+                    teacherAssignmentsByDay[day]!![period] = mutableListOf()
+                }
+                
+                // Initialize period structure if needed
+                if (!periodAssignments.containsKey(period)) {
+                    periodAssignments[period] = mutableListOf()
+                }
 
                 // Process teacher assignments
                 for (j in 2 until row.size) {
+                    if (j - 2 >= validClasses.size) {
+                        Log.w(TAG, "Skipping column $j: no corresponding class in header")
+                        continue
+                    }
+                    
                     val teacherName = row[j].trim()
                     if (teacherName.isNotEmpty() && teacherName.lowercase() != "empty") {
                         // Register teacher with normalizer
@@ -314,54 +328,55 @@ class TimetableProcessor(private val context: Context) {
                         
                         val className = validClasses[j - 2]
 
-                        val schedule = Schedule(
-                            id = scheduleId++,
-                            day = day,
+                        // Create assignment objects
+                        val classAssignment = ClassAssignment(
                             period = period,
+                            teacherName = teacherName,
                             className = className
                         )
+                        
+                        val dayPeriodSchedule = DayPeriodSchedules(
+                            period = period,
+                            teacherName = teacherName,
+                            className = className
+                        )
+                        
+                        val teacherAssignment = TeacherAssignment(
+                            day = day,
+                            period = period,
+                            className = className,
+                            originalTeacher = teacherName
+                        )
+                        
+                        val periodAssignment = PeriodAssignment(
+                            className = className,
+                            teacherName = teacherName
+                        )
 
-                        // Add to class schedules
-                        classSchedules.getOrPut(className) { mutableListOf() }.add(schedule)
+                        // Add to class assignments
+                        teacherAssignmentsByClass.getOrPut(className) { mutableListOf() }.add(classAssignment)
 
                         // Add to day schedules
-                        daySchedules.getOrPut(day) { mutableListOf() }.add(schedule)
+                        teacherAssignmentsByDay[day]!![period]!!.add(dayPeriodSchedule)
 
-                        // Add to teacher schedules using teacher name
-                        teacherSchedules.getOrPut(teacherName.lowercase()) { mutableListOf() }.add(schedule)
+                        // Add to teacher schedules
+                        teacherAssignmentsByTeacher.getOrPut(teacherName.lowercase()) { mutableListOf() }.add(teacherAssignment)
 
-                        // Add to period schedules
-                        periodSchedules.getOrPut(period) { mutableListOf() }.add(schedule)
+                        // Add to period assignments
+                        periodAssignments[period]!!.add(periodAssignment)
                     }
                 }
             }
 
-            Log.i(TAG, "Generated ${scheduleId - 1} schedules")
+            Log.i(TAG, "Generated assignments for ${teacherAssignmentsByClass.size} classes")
             Log.i(TAG, "Found ${teacherNormalizer.getTeachers().size} unique teachers")
-
-            // Convert to final data structures
-            val finalClassSchedules = classSchedules.map { (className, schedules) ->
-                ClassSchedule(className, schedules)
-            }
-
-            val finalDaySchedules = daySchedules.map { (day, schedules) ->
-                DaySchedule(day, schedules)
-            }
-
-            val finalTeacherSchedules = teacherSchedules.map { (teacherName, schedules) ->
-                TeacherSchedule(teacherName, schedules)
-            }
-
-            val finalPeriodSchedules = periodSchedules.map { (period, schedules) ->
-                PeriodSchedule(period, schedules)
-            }
 
             // Save processed data
             saveProcessedData(
-                finalClassSchedules,
-                finalDaySchedules,
-                finalTeacherSchedules,
-                finalPeriodSchedules
+                teacherAssignmentsByClass,
+                teacherAssignmentsByDay,
+                teacherAssignmentsByTeacher,
+                periodAssignments
             )
 
             // Generate and save total_teacher.json
@@ -378,10 +393,11 @@ class TimetableProcessor(private val context: Context) {
 
     private fun generateTotalTeacherJson() {
         val teachers = teacherNormalizer.getTeachers().map { teacher ->
-            Teacher(
-                name = teacher.canonicalName,
-                phone = teacher.phone,
-                variations = teacher.variations.toList()
+            mapOf(
+                "name" to teacher.canonicalName,
+                "phone" to teacher.phone,
+                "isSubstitute" to false,
+                "variations" to teacher.variations.toList()
             )
         }
 
@@ -393,55 +409,66 @@ class TimetableProcessor(private val context: Context) {
     }
 
     private fun saveProcessedData(
-        classSchedules: List<ClassSchedule>,
-        daySchedules: List<DaySchedule>,
-        teacherSchedules: List<TeacherSchedule>,
-        periodSchedules: List<PeriodSchedule>
+        teacherAssignmentsByClass: Map<String, List<ClassAssignment>>,
+        teacherAssignmentsByDay: Map<String, Map<Int, List<DayPeriodSchedules>>>,
+        teacherAssignmentsByTeacher: Map<String, List<TeacherAssignment>>,
+        periodAssignments: Map<Int, List<PeriodAssignment>>
     ) {
         Log.i(TAG, "Saving processed data...")
         
-        // Save class schedules
-        saveJsonFile("class_schedules.json", classSchedules)
-        Log.i(TAG, "Saved ${classSchedules.size} class schedules")
+        // Save class schedules - format: { className: [{ period, teacherName, className }] }
+        saveJsonFile("class_schedules.json", teacherAssignmentsByClass)
+        Log.i(TAG, "Saved schedules for ${teacherAssignmentsByClass.size} classes")
 
-        // Save day schedules
-        saveJsonFile("day_schedules.json", daySchedules)
-        Log.i(TAG, "Saved ${daySchedules.size} day schedules")
+        // Save day schedules - format: { day: { period: [{ period, teacherName, className }] } }
+        val sortedDaySchedules = teacherAssignmentsByDay.toSortedMap(Comparator { a, b ->
+            val indexA = dayOrder.indexOf(a)
+            val indexB = dayOrder.indexOf(b)
+            if (indexA != -1 && indexB != -1) indexA - indexB
+            else if (indexA != -1) -1
+            else if (indexB != -1) 1
+            else a.compareTo(b)
+        })
+        saveJsonFile("day_schedules.json", sortedDaySchedules)
+        Log.i(TAG, "Saved schedules for ${sortedDaySchedules.size} days")
 
-        // Save teacher schedules
-        saveJsonFile("teacher_schedules.json", teacherSchedules)
-        Log.i(TAG, "Saved ${teacherSchedules.size} teacher schedules")
+        // Save period schedules - format: { period: [{ className, teacherName }] }
+        // This is now different from day_schedules.json
+        val sortedPeriodSchedules = periodAssignments.toSortedMap()
+        saveJsonFile("period_schedules.json", sortedPeriodSchedules)
+        Log.i(TAG, "Saved period schedules with ${sortedPeriodSchedules.size} periods")
 
-        // Save period schedules
-        saveJsonFile("period_schedules.json", periodSchedules)
-        Log.i(TAG, "Saved ${periodSchedules.size} period schedules")
-
-        // Create and save teacher schedules with names
-        createTeacherSchedulesWithNames(teacherSchedules)
+        // Create and save teacher schedules - format: { teacherName: [{ day, period, className, originalTeacher, substitute }] }
+        createTeacherSchedulesWithNames(teacherAssignmentsByTeacher)
     }
 
-    private fun createTeacherSchedulesWithNames(teacherSchedules: List<TeacherSchedule>) {
-        val teacherSchedulesWithNames = mutableMapOf<String, List<Map<String, Any>>>()
+    private fun createTeacherSchedulesWithNames(teacherAssignmentsByTeacher: Map<String, List<TeacherAssignment>>) {
+        val processedTeacherSchedules = mutableMapOf<String, List<Map<String, Any>>>()
         
-        for (schedule in teacherSchedules) {
-            val teacherName = schedule.teacherName.lowercase()
-            val scheduleList = schedule.schedules
-                .sortedWith(compareBy<Schedule> { it.day }.thenBy { it.period })
-                .map { schedule ->
-                    mapOf(
-                        "day" to schedule.day,
-                        "period" to schedule.period,
-                        "className" to schedule.className
-                    )
-                }
-            teacherSchedulesWithNames[teacherName] = scheduleList
+        for ((teacherName, assignments) in teacherAssignmentsByTeacher) {
+            // Sort assignments by day (in standard order) then by period
+            val sortedAssignments = assignments.sortedWith(compareBy<TeacherAssignment> { 
+                val dayIndex = dayOrder.indexOf(it.day)
+                if (dayIndex != -1) dayIndex else Int.MAX_VALUE
+            }.thenBy { it.period })
+            
+            val assignmentMaps = sortedAssignments.map { assignment ->
+                mapOf(
+                    "day" to assignment.day,
+                    "period" to assignment.period,
+                    "className" to assignment.className,
+                    "originalTeacher" to assignment.originalTeacher,
+                    "substitute" to assignment.substitute
+                )
+            }
+            processedTeacherSchedules[teacherName] = assignmentMaps
         }
 
         val file = File(processedDir, "teacher_schedules.json")
         FileOutputStream(file).use { outputStream ->
-            outputStream.write(gson.toJson(teacherSchedulesWithNames).toByteArray())
+            outputStream.write(gson.toJson(processedTeacherSchedules).toByteArray())
         }
-        Log.i(TAG, "Saved teacher schedules with names to: ${file.absolutePath}")
+        Log.i(TAG, "Saved teacher schedules to: ${file.absolutePath}")
     }
 
     private fun saveJsonFile(filename: String, data: Any) {
@@ -454,9 +481,5 @@ class TimetableProcessor(private val context: Context) {
 
     private fun normalizeDay(day: String): String {
         return day.lowercase().trim()
-    }
-
-    private fun normalizeTeacherName(teacherName: String): String {
-        return teacherName.lowercase().trim()
     }
 } 
