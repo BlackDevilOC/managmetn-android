@@ -3,7 +3,9 @@ package com.substituemanagment.managment.data
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -27,10 +29,14 @@ class FileStorageManager(private val context: Context) {
         return try {
             Log.d(TAG, "Starting file save for type: $fileType")
             
+            // Detect if it's a JSON or CSV file by checking content
+            val isJson = detectIfJsonFile(uri)
+            Log.d(TAG, "File detected as ${if (isJson) "JSON" else "CSV"}")
+            
             // Create standardized file names
             val targetFile = when (fileType) {
-                FileType.TIMETABLE -> File(rawDir, "timetable.csv")
-                FileType.SUBSTITUTE -> File(rawDir, "substitute.csv")
+                FileType.TIMETABLE -> File(rawDir, if (isJson) "timetable.json" else "timetable.csv")
+                FileType.SUBSTITUTE -> File(rawDir, if (isJson) "substitutes.json" else "substitutes.csv")
             }
             Log.d(TAG, "Target file path: ${targetFile.absolutePath}")
 
@@ -48,13 +54,27 @@ class FileStorageManager(private val context: Context) {
                 }
             } ?: throw Exception("Could not read file content")
 
-            val message = "File uploaded successfully to ${targetFile.absolutePath}"
+            val message = "File uploaded successfully as ${targetFile.name}"
             Log.d(TAG, message)
             Result.success(message)
         } catch (e: Exception) {
             val errorMsg = "Failed to save file: ${e.message}"
             Log.e(TAG, errorMsg, e)
             Result.failure(Exception(errorMsg))
+        }
+    }
+    
+    private fun detectIfJsonFile(uri: Uri): Boolean {
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                val reader = BufferedReader(InputStreamReader(input))
+                val firstLine = reader.readLine()?.trim() ?: ""
+                // Basic check: JSON usually starts with { or [ 
+                firstLine.startsWith("{") || firstLine.startsWith("[")
+            } ?: false
+        } catch (e: Exception) {
+            Log.e(TAG, "Error detecting file type", e)
+            false  // Default to CSV if we can't detect
         }
     }
 
@@ -67,11 +87,7 @@ class FileStorageManager(private val context: Context) {
                 Log.d(TAG, "Creating backup folder ${backupFolder.absolutePath}: $created")
             }
 
-            val backupFile = when (fileType) {
-                FileType.TIMETABLE -> File(backupFolder, "timetable.csv")
-                FileType.SUBSTITUTE -> File(backupFolder, "substitute.csv")
-            }
-
+            val backupFile = File(backupFolder, file.name)
             file.copyTo(backupFile, overwrite = true)
             Log.d(TAG, "Backup created successfully at ${backupFile.absolutePath}")
         } catch (e: Exception) {
@@ -81,22 +97,45 @@ class FileStorageManager(private val context: Context) {
     }
 
     fun getFile(fileType: FileType): File? {
-        val file = when (fileType) {
-            FileType.TIMETABLE -> File(rawDir, "timetable.csv")
-            FileType.SUBSTITUTE -> File(rawDir, "substitute.csv")
+        // Try JSON first, then CSV
+        val jsonFile = when (fileType) {
+            FileType.TIMETABLE -> File(rawDir, "timetable.json")
+            FileType.SUBSTITUTE -> File(rawDir, "substitutes.json")
         }
-        val exists = file.exists()
-        Log.d(TAG, "Checking file ${file.absolutePath}, exists: $exists")
-        return if (exists) file else null
+        
+        if (jsonFile.exists()) {
+            Log.d(TAG, "Found JSON file: ${jsonFile.absolutePath}")
+            return jsonFile
+        }
+        
+        val csvFile = when (fileType) {
+            FileType.TIMETABLE -> File(rawDir, "timetable.csv")
+            FileType.SUBSTITUTE -> File(rawDir, "substitutes.csv")
+        }
+        
+        if (csvFile.exists()) {
+            Log.d(TAG, "Found CSV file: ${csvFile.absolutePath}")
+            return csvFile
+        }
+        
+        Log.d(TAG, "No file found for type: $fileType")
+        return null
     }
 
     fun doesFileExist(fileType: FileType): Boolean {
-        val file = when (fileType) {
-            FileType.TIMETABLE -> File(rawDir, "timetable.csv")
-            FileType.SUBSTITUTE -> File(rawDir, "substitute.csv")
+        // Check both JSON and CSV files
+        val jsonFile = when (fileType) {
+            FileType.TIMETABLE -> File(rawDir, "timetable.json")
+            FileType.SUBSTITUTE -> File(rawDir, "substitutes.json")
         }
-        val exists = file.exists()
-        Log.d(TAG, "Checking if file exists ${file.absolutePath}: $exists")
+        
+        val csvFile = when (fileType) {
+            FileType.TIMETABLE -> File(rawDir, "timetable.csv")
+            FileType.SUBSTITUTE -> File(rawDir, "substitutes.csv")
+        }
+        
+        val exists = jsonFile.exists() || csvFile.exists()
+        Log.d(TAG, "Checking if file exists for type $fileType: $exists")
         return exists
     }
 

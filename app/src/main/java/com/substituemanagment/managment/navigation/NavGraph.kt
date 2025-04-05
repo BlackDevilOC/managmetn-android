@@ -60,7 +60,7 @@ fun NavGraph(
             FileUploadScreen(navController)
         }
         composable(Screen.Process.route) {
-            ProcessScreen()
+            ProcessScreen(navController)
         }
         composable(Screen.AlgorithmTesting.route) {
             AlgorithmTestingScreen()
