@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,12 +46,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,11 +65,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.substituemanagment.managment.algorithm.PROCESSED_ASSIGNED_SUBSTITUTES_PATH
+import com.substituemanagment.managment.algorithm.SubstituteManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.HorizontalDivider
 
 data class SubstituteAssignmentUI(
@@ -75,54 +85,133 @@ data class SubstituteAssignmentUI(
     val substitutePhone: String
 )
 
+// Add this new class to track unassigned classes
+data class UnassignedClassUI(
+    val teacher: String,
+    val period: Int,
+    val className: String
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubstitutionsScreen(navController: NavController) {
     val TAG = "SubstitutionsScreen"
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var assignmentsByTeacher by remember { mutableStateOf<Map<String, List<SubstituteAssignmentUI>>>(emptyMap()) }
     var expandedTeachers by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var showClearConfirmDialog by remember { mutableStateOf(false) }
+    
+    // Track unassigned classes
+    var unassignedClasses by remember { mutableStateOf<List<UnassignedClassUI>>(emptyList()) }
     
     // Function to load assignments from the file
-    LaunchedEffect(Unit) {
-        try {
-            withContext(Dispatchers.IO) {
-                val file = File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH)
-                if (file.exists()) {
-                    val content = file.readText()
-                    val type = object : TypeToken<Map<String, Any>>() {}.type
-                    val data: Map<String, Any> = Gson().fromJson(content, type)
-                    
-                    if (data.containsKey("assignments")) {
-                        val assignments = data["assignments"] as? List<*> ?: emptyList<Any>()
-                        val uiAssignments = assignments.mapNotNull { assignment ->
-                            if (assignment is Map<*, *>) {
-                                SubstituteAssignmentUI(
-                                    originalTeacher = (assignment["originalTeacher"] as? String ?: "").capitalizeWords(),
-                                    period = (assignment["period"] as? Double)?.toInt() 
-                                        ?: (assignment["period"] as? Int) ?: 0,
-                                    className = assignment["className"] as? String ?: "",
-                                    substitute = (assignment["substitute"] as? String ?: "").capitalizeWords(),
-                                    substitutePhone = assignment["substitutePhone"] as? String ?: ""
-                                )
-                            } else null
+    fun loadAssignments() {
+        coroutineScope.launch {
+            isLoading = true
+            try {
+                withContext(Dispatchers.IO) {
+                    val file = File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH)
+                    if (file.exists()) {
+                        val content = file.readText()
+                        val type = object : TypeToken<Map<String, Any>>() {}.type
+                        val data: Map<String, Any> = Gson().fromJson(content, type)
+                        
+                        if (data.containsKey("assignments")) {
+                            val assignments = data["assignments"] as? List<*> ?: emptyList<Any>()
+                            val uiAssignments = assignments.mapNotNull { assignment ->
+                                if (assignment is Map<*, *>) {
+                                    SubstituteAssignmentUI(
+                                        originalTeacher = (assignment["originalTeacher"] as? String ?: "").capitalizeWords(),
+                                        period = (assignment["period"] as? Double)?.toInt() 
+                                            ?: (assignment["period"] as? Int) ?: 0,
+                                        className = assignment["className"] as? String ?: "",
+                                        substitute = (assignment["substitute"] as? String ?: "").capitalizeWords(),
+                                        substitutePhone = assignment["substitutePhone"] as? String ?: ""
+                                    )
+                                } else null
+                            }
+                            
+                            // Group assignments by originalTeacher
+                            assignmentsByTeacher = uiAssignments.groupBy { it.originalTeacher }
+                        } else {
+                            errorMessage = "No assignments found in the file"
+                            assignmentsByTeacher = emptyMap()
                         }
                         
-                        // Group assignments by originalTeacher
-                        assignmentsByTeacher = uiAssignments.groupBy { it.originalTeacher }
+                        // Load unassigned classes if they exist
+                        unassignedClasses = if (data.containsKey("unassignedClasses")) {
+                            val unassigned = data["unassignedClasses"] as? List<*> ?: emptyList<Any>()
+                            unassigned.mapNotNull { item ->
+                                if (item is Map<*, *>) {
+                                    UnassignedClassUI(
+                                        teacher = (item["teacher"] as? String ?: "").capitalizeWords(),
+                                        period = (item["period"] as? Double)?.toInt() 
+                                            ?: (item["period"] as? Int) ?: 0,
+                                        className = item["className"] as? String ?: ""
+                                    )
+                                } else null
+                            }
+                        } else {
+                            emptyList()
+                        }
                     } else {
-                        errorMessage = "No assignments found in the file"
+                        errorMessage = "Assignments file not found"
+                        assignmentsByTeacher = emptyMap()
+                        unassignedClasses = emptyList()
                     }
-                } else {
-                    errorMessage = "Assignments file not found"
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading assignments: ${e.message}", e)
+                errorMessage = "Error loading assignments: ${e.message}"
+            } finally {
+                isLoading = false
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error loading assignments: ${e.message}", e)
-            errorMessage = "Error loading assignments: ${e.message}"
-        } finally {
-            isLoading = false
+        }
+    }
+    
+    // Function to clear all assignments
+    fun clearAllAssignments() {
+        coroutineScope.launch {
+            isLoading = true
+            try {
+                withContext(Dispatchers.IO) {
+                    // Create a new SubstituteManager instance and clear assignments
+                    val substituteManager = SubstituteManager(context)
+                    substituteManager.loadData()
+                    substituteManager.clearAssignments()
+                    
+                    // Instead of deleting the file, write an empty assignments structure
+                    val file = File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH)
+                    // Create proper empty structure with assignments array
+                    val emptyAssignments = mapOf(
+                        "assignments" to emptyList<Any>(),
+                        "unassignedClasses" to emptyList<Any>(),
+                        "warnings" to emptyList<String>()
+                    )
+                    val gson = GsonBuilder().setPrettyPrinting().create()
+                    
+                    // Create directory if it doesn't exist
+                    file.parentFile?.mkdirs()
+                    
+                    // Write the empty structure to file
+                    file.writeText(gson.toJson(emptyAssignments))
+                    Log.d(TAG, "Successfully cleared assignments file with empty structure")
+                    
+                    // Clear the UI state
+                    assignmentsByTeacher = emptyMap()
+                    unassignedClasses = emptyList()
+                    expandedTeachers = emptySet()
+                    errorMessage = null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error clearing assignments: ${e.message}", e)
+                errorMessage = "Error clearing assignments: ${e.message}"
+            } finally {
+                isLoading = false
+            }
         }
     }
     
@@ -135,6 +224,40 @@ fun SubstitutionsScreen(navController: NavController) {
         }
     }
     
+    // Load assignments when the screen is first displayed
+    LaunchedEffect(Unit) {
+        loadAssignments()
+    }
+    
+    // Confirmation dialog for clearing assignments
+    if (showClearConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirmDialog = false },
+            title = { Text("Clear All Assignments") },
+            text = { Text("Are you sure you want to clear all substitute assignments? This action cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showClearConfirmDialog = false
+                        clearAllAssignments()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Clear All")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showClearConfirmDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -145,7 +268,14 @@ fun SubstitutionsScreen(navController: NavController) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { isLoading = true }) {
+                    IconButton(onClick = { showClearConfirmDialog = true }) {
+                        Icon(
+                            Icons.Default.Delete, 
+                            contentDescription = "Clear All Assignments",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    IconButton(onClick = { loadAssignments() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
                 }
@@ -190,7 +320,7 @@ fun SubstitutionsScreen(navController: NavController) {
                         )
                     }
                 }
-                assignmentsByTeacher.isEmpty() -> {
+                assignmentsByTeacher.isEmpty() && unassignedClasses.isEmpty() -> {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -217,9 +347,18 @@ fun SubstitutionsScreen(navController: NavController) {
                         item {
                             SummaryCard(
                                 teacherCount = assignmentsByTeacher.size,
-                                assignmentCount = assignmentsByTeacher.values.sumOf { it.size }
+                                assignmentCount = assignmentsByTeacher.values.sumOf { it.size },
+                                unassignedCount = unassignedClasses.size
                             )
                             Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        
+                        // Show unassigned classes warning if any exist
+                        if (unassignedClasses.isNotEmpty()) {
+                            item {
+                                UnassignedClassesWarning(unassignedClasses = unassignedClasses)
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
                         }
                         
                         // Show each absent teacher with their substitutes
@@ -240,7 +379,11 @@ fun SubstitutionsScreen(navController: NavController) {
 }
 
 @Composable
-fun SummaryCard(teacherCount: Int, assignmentCount: Int) {
+fun SummaryCard(
+    teacherCount: Int, 
+    assignmentCount: Int,
+    unassignedCount: Int = 0
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -285,7 +428,118 @@ fun SummaryCard(teacherCount: Int, assignmentCount: Int) {
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
+                
+                // Add unassigned classes count if there are any
+                if (unassignedCount > 0) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$unassignedCount",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            text = "Unassigned",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
+            
+            // Warning about high absenteeism if relevant
+            if (teacherCount > 10) {  // Customize this threshold as needed
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = "Warning: High number of absent teachers may lead to insufficient substitutes. Consider prioritizing higher-grade classes.",
+                        modifier = Modifier.padding(8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun UnassignedClassesWarning(unassignedClasses: List<UnassignedClassUI>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Classes Without Substitutes",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "The following classes could not be assigned substitutes due to insufficient available teachers:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Group by teacher for better organization
+            val byTeacher = unassignedClasses.groupBy { it.teacher }
+            
+            byTeacher.forEach { (teacher, classes) ->
+                Text(
+                    text = teacher,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+                
+                classes.forEach { unassigned ->
+                    Text(
+                        text = "• Period ${unassigned.period}: ${unassigned.className}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Recommendation
+            Text(
+                text = "Recommendation: Consider manually assigning teachers to these classes or prioritizing them based on grade level.",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
         }
     }
 }
