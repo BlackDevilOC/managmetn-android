@@ -26,7 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.substituemanagment.managment.navigation.NavGraph
 import com.substituemanagment.managment.navigation.Screen
-import com.substituemanagment.managment.ui.components.BottomNavigationBar
+import com.substituemanagment.managment.ui.components.BottomNav
 import com.substituemanagment.managment.ui.theme.SubstitutionManagementTheme
 import com.substituemanagment.managment.utils.FileChecker
 import kotlinx.coroutines.delay
@@ -97,10 +97,13 @@ class MainActivity : ComponentActivity() {
                                 Screen.Home.route,
                                 Screen.Schedule.route,
                                 Screen.Teachers.route,
-                                Screen.Assign.route
+                                Screen.Assign.route,
+                                Screen.Settings.route,
+                                Screen.ViewSubstitutions.route,
+                                Screen.SmsSend.route
                             )
                         ) {
-                            BottomNavigationBar(navController = navController)
+                            BottomNav(navController = navController)
                         }
                     }
                 ) { paddingValues ->

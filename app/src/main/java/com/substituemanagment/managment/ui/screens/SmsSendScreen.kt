@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.substituemanagment.managment.navigation.Screen
 import com.substituemanagment.managment.ui.viewmodel.SmsViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -128,7 +129,7 @@ fun SmsSendScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("SMS Notifications") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = { navController.navigate(Screen.Home.route) }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },

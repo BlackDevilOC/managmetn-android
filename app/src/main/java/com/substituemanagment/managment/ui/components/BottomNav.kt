@@ -36,7 +36,7 @@ fun BottomNav(navController: NavController) {
     val selectedItemIndex = when (currentRoute) {
         Screen.Home.route -> 0
         Screen.Teachers.route -> 1
-        Screen.Assign.route -> 2
+        Screen.Assign.route, Screen.ViewSubstitutions.route -> 2 // Group related screens
         Screen.SmsSend.route -> 3
         Screen.Settings.route -> 4
         else -> lastSelectedItemIndex
@@ -95,7 +95,14 @@ fun BottomNav(navController: NavController) {
                 label = { Text(label) },
                 selected = selected,
                 onClick = {
-                    if (currentRoute != screen.route) {
+                    // Check if we're already on this tab or a related screen
+                    val isAlreadySelected = when (screen) {
+                        Screen.Assign -> currentRoute == Screen.Assign.route || currentRoute == Screen.ViewSubstitutions.route
+                        Screen.SmsSend -> currentRoute == Screen.SmsSend.route
+                        else -> currentRoute == screen.route
+                    }
+                    
+                    if (!isAlreadySelected) {
                         // Always navigate to home first to reset the navigation state
                         if (screen.route != Screen.Home.route) {
                             scope.launch {
