@@ -15,6 +15,7 @@ import com.substituemanagment.managment.ui.screens.ProcessScreen
 import com.substituemanagment.managment.ui.screens.AlgorithmTestingScreen
 import com.substituemanagment.managment.ui.screens.ScheduleScreen
 import com.substituemanagment.managment.ui.screens.PeriodSettingsScreen
+import com.substituemanagment.managment.ui.screens.SmsSendScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -27,6 +28,7 @@ sealed class Screen(val route: String) {
     object AlgorithmTesting : Screen("algorithm_testing")
     object Schedule : Screen("schedule")
     object PeriodSettings : Screen("period_settings")
+    object SmsSend : Screen("sms_send")
 }
 
 @Composable
@@ -68,6 +70,9 @@ fun NavGraph(
         }
         composable(Screen.PeriodSettings.route) {
             PeriodSettingsScreen(navController)
+        }
+        composable(Screen.SmsSend.route) {
+            SmsSendScreen(navController)
         }
     }
 } 

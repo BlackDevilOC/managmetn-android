@@ -68,6 +68,14 @@ fun SettingsScreen(navController: NavController) {
                 onClick = { navController.navigate(Screen.Process.route) }
             )
             
+            // SMS Send Button
+            SettingCard(
+                icon = Icons.Default.Send,
+                title = "SMS Notifications",
+                description = "Send SMS notifications to teachers",
+                onClick = { navController.navigate(Screen.SmsSend.route) }
+            )
+            
             Spacer(modifier = Modifier.height(32.dp))
         }
     }

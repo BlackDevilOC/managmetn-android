@@ -313,6 +313,14 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                 onClick = { navController.navigate(Screen.ViewSubstitutions.route) },
                 color = MaterialTheme.colorScheme.secondaryContainer
             )
+            
+            FeatureButton(
+                title = "SMS Notifications",
+                description = "Send SMS notifications to teachers",
+                icon = Icons.Default.Send,
+                onClick = { navController.navigate(Screen.SmsSend.route) },
+                color = MaterialTheme.colorScheme.tertiaryContainer
+            )
 
             // Recent Substitutions
             Card(
