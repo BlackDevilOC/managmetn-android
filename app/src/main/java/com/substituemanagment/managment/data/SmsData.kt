@@ -84,18 +84,18 @@ object SmsDataManager {
         return listOf(
             SmsTemplateDto(
                 "1", 
-                "Standard Substitution", 
-                "[SCHOOL] You have been assigned as substitute for Class {class} on {date} ({day}), Period {period}, Room {room}. Please confirm."
+                "Standard Assignment", 
+                "Dear {substitute_teacher}, you have been assigned to cover {class} Period {period} for {original_teacher} on {date} ({day}). Please confirm your availability."
             ),
             SmsTemplateDto(
                 "2", 
-                "Urgent Substitution", 
-                "[URGENT] Immediate substitution required today ({day}) for Class {class}, Period {period}, Room {room}. Please reply with Y/N as soon as possible."
+                "Urgent Assignment", 
+                "URGENT: Dear {substitute_teacher}, you have been assigned to cover {class} Period {period} for {original_teacher} today ({day}). Please reply Y/N ASAP."
             ),
             SmsTemplateDto(
                 "3", 
-                "Detailed Substitution", 
-                "[SCHOOL] Substitution Assignment: Class {class}, Teacher: {teacher}, Date: {date} ({day}), Period: {period}, Room: {room}. Please arrive 10 minutes early."
+                "Detailed Assignment", 
+                "Dear {substitute_teacher},\n\nYou have been assigned to substitute for:\n\nClass: {class}\nOriginal Teacher: {original_teacher}\nDate: {date} ({day})\nPeriod: {period}\nRoom: {room}\n\nPlease arrive 10 minutes early and confirm your availability."
             )
         )
     }

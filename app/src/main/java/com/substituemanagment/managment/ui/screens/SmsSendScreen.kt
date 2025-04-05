@@ -408,9 +408,10 @@ fun SmsSendScreen(navController: NavController) {
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Text(
-                                text = "Available variables: {date}, {day}, {time}, {period}, {class}, {teacher}, {room}",
+                                text = "Available variables: {date}, {day}, {time}, {period}, {class}, {substitute_teacher}, {original_teacher}, {room}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             )
                         }
                     }

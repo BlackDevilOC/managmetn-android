@@ -40,24 +40,23 @@ object SmsSender {
         }
         
         try {
-            // Process message templates
-            val processedMessage = processMessageVariables(message)
-            
-            // Check message length - standard SMS is 160 characters
-            val messageLength = processedMessage.length
-            val messageParts = (messageLength / 160) + if (messageLength % 160 > 0) 1 else 0
-            Log.d(TAG, "Message length: $messageLength chars (${messageParts} part(s))")
-            
             // Count successful sends
             var successCount = 0
             
             // List to track failed recipients
             val failedRecipients = mutableListOf<String>()
             
-            // In a real implementation, we'd use SmsManager to send messages
-            // SmsManager smsManager = SmsManager.getDefault();
+            // Process messages for each recipient individually (personalized)
             recipients.forEach { recipient ->
                 try {
+                    // Process message templates with recipient-specific variables
+                    val processedMessage = processMessageVariables(message, recipient.name)
+                    
+                    // Check message length - standard SMS is 160 characters
+                    val messageLength = processedMessage.length
+                    val messageParts = (messageLength / 160) + if (messageLength % 160 > 0) 1 else 0
+                    Log.d(TAG, "Message length: $messageLength chars (${messageParts} part(s))")
+                    
                     Log.d(TAG, "Sending SMS to: ${recipient.name} (${recipient.phone}): $processedMessage")
                     
                     // Simulate SMS sending (would be real in production)
@@ -72,8 +71,39 @@ object SmsSender {
                     val randomSuccess = Math.random() > 0.1 // 90% success rate for simulation
                     if (randomSuccess) {
                         successCount++
+                        
+                        // Save individual SMS to history
+                        if (saveToHistory) {
+                            val smsId = UUID.randomUUID().toString()
+                            val timestamp = System.currentTimeMillis()
+                            
+                            val historyEntry = SmsHistoryDto(
+                                id = smsId,
+                                recipients = listOf(recipient.name),
+                                message = processedMessage,
+                                timestamp = timestamp,
+                                status = "Sent"
+                            )
+                            
+                            SmsDataManager.addSmsToHistory(context, historyEntry)
+                        }
                     } else {
                         failedRecipients.add(recipient.name)
+                        
+                        if (saveToHistory) {
+                            val smsId = UUID.randomUUID().toString()
+                            val timestamp = System.currentTimeMillis()
+                            
+                            val historyEntry = SmsHistoryDto(
+                                id = smsId,
+                                recipients = listOf(recipient.name),
+                                message = processedMessage,
+                                timestamp = timestamp,
+                                status = "Failed"
+                            )
+                            
+                            SmsDataManager.addSmsToHistory(context, historyEntry)
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to send SMS to ${recipient.phone}: ${e.message}")
@@ -88,23 +118,6 @@ object SmsSender {
             else 
                 "Failed to send to: ${failedRecipients.joinToString(", ")}"
             
-            // Save to history if requested
-            if (saveToHistory) {
-                val smsId = UUID.randomUUID().toString()
-                val timestamp = System.currentTimeMillis()
-                val recipientNames = recipients.map { it.name }
-                
-                val historyEntry = SmsHistoryDto(
-                    id = smsId,
-                    recipients = recipientNames,
-                    message = processedMessage,
-                    timestamp = timestamp,
-                    status = overallStatus
-                )
-                
-                SmsDataManager.addSmsToHistory(context, historyEntry)
-            }
-            
             Log.i(TAG, "SMS sending completed: $successCount/${recipients.size} successful")
             return Pair(successCount > 0, if (successCount == 0) "Failed to send any messages" else null)
             
@@ -116,18 +129,24 @@ object SmsSender {
     
     /**
      * Process message template variables and replace them with actual values.
+     * 
+     * @param message The message template with variables
+     * @param recipientName The name of the teacher receiving the SMS
+     * @return The processed message with all variables replaced
      */
-    private fun processMessageVariables(message: String): String {
+    private fun processMessageVariables(message: String, recipientName: String = ""): String {
         val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
         val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault()) // Full day name e.g., "Monday"
         val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
         val today = Date()
         
         // Mock data for substitution details (in a real app, these would come from actual data)
-        val schoolName = "Springfield High"
         val className = getRandomClassName()
-        val teacherName = getRandomTeacherName()
+        val originalTeacher = getRandomTeacherName()
         val roomNumber = "Room " + (101 + Random().nextInt(20))
+        
+        // The substitute teacher name is the SMS recipient
+        val substituteTeacher = if (recipientName.isNotEmpty()) recipientName else "Teacher"
         
         // Replace template variables
         return message
@@ -137,9 +156,8 @@ object SmsSender {
             .replace("{period}", getCurrentPeriod())
             .replace("{room}", roomNumber)
             .replace("{class}", className)
-            .replace("{teacher}", teacherName)
-            .replace("[SCHOOL]", schoolName)
-            .replace("[URGENT]", "URGENT: $schoolName")
+            .replace("{original_teacher}", originalTeacher)
+            .replace("{substitute_teacher}", substituteTeacher)
     }
     
     /**
