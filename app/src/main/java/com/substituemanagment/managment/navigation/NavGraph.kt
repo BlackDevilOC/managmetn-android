@@ -17,11 +17,11 @@ import com.substituemanagment.managment.ui.screens.AlgorithmTestingScreen
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Teachers : Screen("teachers")
-    object Substitutions : Screen("substitutions")
+    object Substitutions : Screen("substitutions") // For managing absences
     object Settings : Screen("settings")
     object FileUpload : Screen("file_upload")
     object Process : Screen("process")
-    object ViewSubstitutions : Screen("view_substitutions")
+    object ViewSubstitutions : Screen("view_substitutions") // For viewing assignments
     object AlgorithmTesting : Screen("algorithm_testing")
 }
 

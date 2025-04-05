@@ -248,15 +248,21 @@ class SubstituteManager(private val context: Context) {
 
         val assignments = mutableListOf<SubstituteAssignment>()
         val classesByPeriod = classes.groupBy { it.period }
+        val assignedSubstitutes = mutableMapOf<Int, String>() // Track which substitute is assigned to each period
 
-        classesByPeriod.forEach { (period, classList) ->
+        // Process each period separately to get the best substitute for each period
+        classesByPeriod.entries.sortedBy { it.key }.forEach { (period, classList) ->
             val availableSubs = findAvailableSubstitutes(normalizedDay, period, normalizedTeacherName)
             
             if (availableSubs.isNotEmpty()) {
                 val bestSubstitute = selectOptimalSubstitute(availableSubs, normalizedDay, period)
                 val subName = bestSubstitute.first
                 val subPhone = bestSubstitute.second
+                
+                // Track which substitute is used for this period
+                assignedSubstitutes[period] = subName
 
+                // Create assignments for each class in this period
                 classList.forEach { clazz ->
                     val assignment = SubstituteAssignment(
                         originalTeacher = normalizedTeacherName,
@@ -270,6 +276,8 @@ class SubstituteManager(private val context: Context) {
                     updateAssignmentRecords(subName, normalizedDay, period, clazz.className, normalizedTeacherName)
                     updateTeacherWorkload(subName)
                     recordSubstitution(currentDate, normalizedTeacherName, subName, period, clazz.className)
+                    
+                    Log.d(TAG, "Assigned $subName to substitute for $normalizedTeacherName in period $period, class ${clazz.className}")
                 }
             } else {
                 Log.w(TAG, "No available substitutes for period $period")
@@ -277,6 +285,13 @@ class SubstituteManager(private val context: Context) {
         }
 
         saveAssignments(assignments)
+        
+        // Log the final assignments
+        val substituteSummary = assignedSubstitutes.entries.joinToString(", ") { 
+            "Period ${it.key}: ${it.value}" 
+        }
+        Log.i(TAG, "Summary of substitutes for $normalizedTeacherName: $substituteSummary")
+        
         return assignments
     }
 
@@ -347,11 +362,21 @@ class SubstituteManager(private val context: Context) {
                 val nameLower = teacher.name.lowercase()
                 
                 when {
+                    // Don't assign the absent teacher to themselves
                     nameLower == absentTeacher.lowercase() -> false
+                    
+                    // Don't assign other absent teachers
                     absentTeachers[day]?.contains(nameLower) == true -> false
+                    
+                    // Don't assign teachers who have their own class at this period
                     isTeacherScheduled(day, period, nameLower) -> false
+                    
+                    // Check workload limits - different for substitute vs regular teachers
                     isOverworked(teacher, nameLower) -> false
+                    
+                    // Don't assign teachers who already have a substitution at this period
                     hasExistingAssignment(day, period, nameLower) -> false
+                    
                     else -> true
                 }
             }
@@ -360,16 +385,37 @@ class SubstituteManager(private val context: Context) {
     }
 
     private fun isTeacherScheduled(day: String, period: Int, teacherName: String): Boolean {
-        return schedule[day]?.get(period)?.any { it.lowercase() == teacherName } == true
+        // Check if the teacher has their own class during this period
+        val hasRegularClass = teacherClasses[teacherName]?.any {
+            it.day == day && it.period == period
+        } ?: false
+        
+        // Check the general schedule
+        val isInGeneralSchedule = schedule[day]?.get(period)?.any { 
+            it.lowercase() == teacherName 
+        } ?: false
+        
+        return hasRegularClass || isInGeneralSchedule
     }
 
     private fun isOverworked(teacher: Teacher, normalizedName: String): Boolean {
+        val currentWorkload = teacherWorkload[normalizedName] ?: 0
+        
+        // Different limits for substitute vs regular teachers
         val maxAssignments = if (teacher.isSubstitute) {
             MAX_SUBSTITUTE_ASSIGNMENTS
         } else {
+            // More strict limit for regular teachers
             MAX_REGULAR_TEACHER_ASSIGNMENTS
         }
-        return (teacherWorkload[normalizedName] ?: 0) >= maxAssignments
+        
+        // If not a designated substitute and already has an assignment, don't assign more
+        if (!teacher.isSubstitute && currentWorkload > 0) {
+            Log.d(TAG, "Regular teacher $normalizedName has reached maximum workload")
+            return true
+        }
+        
+        return currentWorkload >= maxAssignments
     }
 
     private fun hasExistingAssignment(day: String, period: Int, teacherName: String): Boolean {
