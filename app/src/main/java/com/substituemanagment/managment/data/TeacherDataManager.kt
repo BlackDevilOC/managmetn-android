@@ -14,11 +14,24 @@ data class TeacherData(
     val variations: List<String> = emptyList()
 )
 
+data class SubstituteInfo(
+    val name: String,
+    val phone: String = "",
+    val assignmentDate: String = "",
+    val periods: List<TeacherAssignmentInfo> = emptyList()
+)
+
+data class TeacherAssignmentInfo(
+    val period: Int,
+    val className: String
+)
+
 data class AbsentTeacherData(
     val id: Int,
     val name: String,
     val timestamp: String,
-    val assignedSubstitute: Boolean = false
+    val assignedSubstitute: Boolean = false,
+    val substituteInfo: SubstituteInfo? = null
 )
 
 class TeacherDataManager(private val context: Context) {
@@ -57,6 +70,14 @@ class TeacherDataManager(private val context: Context) {
         }
     }
 
+    fun getAbsentTeachersWithoutSubstitutes(): Set<AbsentTeacherData> {
+        return getAbsentTeachers().filter { !it.assignedSubstitute }.toSet()
+    }
+
+    fun getAbsentTeachersWithSubstitutes(): Set<AbsentTeacherData> {
+        return getAbsentTeachers().filter { it.assignedSubstitute }.toSet()
+    }
+
     fun markTeacherAbsent(teacherName: String) {
         try {
             val absentTeachers = getAbsentTeachers().toMutableSet()
@@ -89,6 +110,30 @@ class TeacherDataManager(private val context: Context) {
         return getAbsentTeachers().any { it.name == teacherName }
     }
 
+    fun updateTeacherWithSubstitute(
+        teacherName: String, 
+        substitute: SubstituteInfo
+    ) {
+        try {
+            val absentTeachers = getAbsentTeachers().toMutableSet()
+            val teacher = absentTeachers.find { it.name == teacherName }
+            if (teacher != null) {
+                absentTeachers.remove(teacher)
+                absentTeachers.add(AbsentTeacherData(
+                    id = teacher.id,
+                    name = teacher.name,
+                    timestamp = teacher.timestamp,
+                    assignedSubstitute = true,
+                    substituteInfo = substitute
+                ))
+                saveAbsentTeachers(absentTeachers)
+                Log.i(TAG, "Updated teacher with substitute: $teacherName -> ${substitute.name}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating teacher with substitute", e)
+        }
+    }
+
     fun setTeacherAssigned(teacherName: String, isAssigned: Boolean) {
         try {
             val absentTeachers = getAbsentTeachers().toMutableSet()
@@ -99,7 +144,8 @@ class TeacherDataManager(private val context: Context) {
                     id = teacher.id,
                     name = teacher.name,
                     timestamp = teacher.timestamp,
-                    assignedSubstitute = isAssigned
+                    assignedSubstitute = isAssigned,
+                    substituteInfo = teacher.substituteInfo
                 ))
                 saveAbsentTeachers(absentTeachers)
                 Log.i(TAG, "Updated teacher assignment status: $teacherName = $isAssigned")
@@ -113,7 +159,7 @@ class TeacherDataManager(private val context: Context) {
         return getAbsentTeachers().find { it.name == teacherName }?.assignedSubstitute ?: false
     }
 
-    private fun getAbsentTeachers(): Set<AbsentTeacherData> {
+    fun getAbsentTeachers(): Set<AbsentTeacherData> {
         return try {
             if (!absentTeachersFile.exists()) {
                 return emptySet()
