@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="4dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/teacher_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="Teacher: John Smith" />
+
+        <TextView
+            android:id="@+id/period_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Period: 1" />
+
+        <TextView
+            android:id="@+id/class_name_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Class: Math 101" />
+
+        <TextView
+            android:id="@+id/substitute_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textColor="#007700"
+            android:text="Substitute: Jane Doe" />
+
+        <TextView
+            android:id="@+id/substitute_phone_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Phone: +1234567890" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
