@@ -1,206 +1,185 @@
 {
   "assignments": [
     {
-      "className": "6B",
-      "originalTeacher": "sir faiz hussain",
+      "className": "10A",
+      "originalTeacher": "sir bakir shah",
       "period": 1,
-      "substitute": "sir bakir Shah",
-      "substitutePhone": ""
-    },
-    {
-      "className": "6B",
-      "originalTeacher": "sir faiz hussain",
-      "period": 2,
       "substitute": "sir mushtaque ahmed",
       "substitutePhone": ""
     },
     {
-      "className": "8C",
-      "originalTeacher": "sir faiz hussain",
-      "period": 5,
+      "className": "10A",
+      "originalTeacher": "sir bakir shah",
+      "period": 2,
       "substitute": "sir Irshad Qureshi",
       "substitutePhone": ""
     },
     {
-      "className": "8B",
-      "originalTeacher": "sir faiz hussain",
-      "period": 7,
+      "className": "10B",
+      "originalTeacher": "sir bakir shah",
+      "period": 6,
       "substitute": "sir muhammad Taha",
       "substitutePhone": ""
     },
     {
-      "className": "6B",
-      "originalTeacher": "sir faiz hussain",
+      "className": "10A",
+      "originalTeacher": "sir bakir shah",
       "period": 8,
       "substitute": "sir shafique ahmed",
       "substitutePhone": ""
     },
     {
-      "className": "7B",
-      "originalTeacher": "sir amir shaikh junior",
+      "className": "10B",
+      "originalTeacher": "sir mushtaque ahmed",
       "period": 1,
       "substitute": "sir iqbal ahmed",
       "substitutePhone": ""
     },
     {
-      "className": "7B",
-      "originalTeacher": "sir amir shaikh junior",
+      "className": "10B",
+      "originalTeacher": "sir mushtaque ahmed",
       "period": 2,
       "substitute": "sir Asif Nawaz",
       "substitutePhone": ""
     },
     {
-      "className": "8C",
-      "originalTeacher": "sir amir shaikh junior",
-      "period": 3,
+      "className": "9C",
+      "originalTeacher": "sir mushtaque ahmed",
+      "period": 8,
       "substitute": "sir Amir Shaikh Senior",
       "substitutePhone": ""
     },
     {
-      "className": "8C",
-      "originalTeacher": "sir amir shaikh junior",
-      "period": 4,
+      "className": "10C",
+      "originalTeacher": "sir irshad qureshi",
+      "period": 1,
       "substitute": "Miss Romalia",
       "substitutePhone": ""
     },
     {
-      "className": "7C",
-      "originalTeacher": "sir amir shaikh junior",
-      "period": 7,
+      "className": "10C",
+      "originalTeacher": "sir irshad qureshi",
+      "period": 2,
       "substitute": "sir Jamalullah",
       "substitutePhone": ""
     },
     {
-      "className": "6A",
-      "originalTeacher": "miss anum hussain",
-      "period": 4,
+      "className": "10C",
+      "originalTeacher": "sir irshad qureshi",
+      "period": 3,
       "substitute": "sir abdul hameed",
       "substitutePhone": ""
     },
     {
-      "className": "7A",
-      "originalTeacher": "miss anum hussain",
-      "period": 5,
+      "className": "9A",
+      "originalTeacher": "sir muhammad taha",
+      "period": 1,
       "substitute": "sir abdul sami",
       "substitutePhone": ""
     },
     {
-      "className": "7B",
-      "originalTeacher": "miss anum hussain",
-      "period": 6,
+      "className": "9A",
+      "originalTeacher": "sir muhammad taha",
+      "period": 2,
+      "substitute": "sir faiz hussain",
+      "substitutePhone": ""
+    },
+    {
+      "className": "10A",
+      "originalTeacher": "sir muhammad taha",
+      "period": 7,
       "substitute": "sir usama",
       "substitutePhone": ""
     },
     {
-      "className": "6B",
-      "originalTeacher": "miss anum hussain",
-      "period": 7,
-      "substitute": "sir faraz ahmed",
-      "substitutePhone": ""
-    },
-    {
-      "className": "7B",
-      "originalTeacher": "miss anum hussain",
+      "className": "10B",
+      "originalTeacher": "sir muhammad taha",
       "period": 8,
-      "substitute": "sir waqar ali",
-      "substitutePhone": ""
-    },
-    {
-      "className": "8A",
-      "originalTeacher": "sir asif nawaz",
-      "period": 1,
-      "substitute": "sir faisal ali",
-      "substitutePhone": ""
-    },
-    {
-      "className": "8A",
-      "originalTeacher": "sir asif nawaz",
-      "period": 2,
-      "substitute": "sir Romanulabdin",
-      "substitutePhone": ""
-    },
-    {
-      "className": "8B",
-      "originalTeacher": "sir asif nawaz",
-      "period": 6,
-      "substitute": "sir rafaqat maseeh",
+      "substitute": "sir Amir Shaikh Junior",
       "substitutePhone": ""
     },
     {
       "className": "9B",
-      "originalTeacher": "sir asif nawaz",
-      "period": 7,
-      "substitute": "sir shabeer ahmed",
+      "originalTeacher": "sir shafique ahmed",
+      "period": 1,
+      "substitute": "sir faraz ahmed",
+      "substitutePhone": ""
+    },
+    {
+      "className": "9B",
+      "originalTeacher": "sir shafique ahmed",
+      "period": 2,
+      "substitute": "sir waqar ali",
+      "substitutePhone": ""
+    },
+    {
+      "className": "10A",
+      "originalTeacher": "sir shafique ahmed",
+      "period": 4,
+      "substitute": "sir faisal ali",
+      "substitutePhone": ""
+    },
+    {
+      "className": "10B",
+      "originalTeacher": "sir shafique ahmed",
+      "period": 5,
+      "substitute": "sir Romanulabdin",
       "substitutePhone": ""
     },
     {
       "className": "9C",
       "originalTeacher": "sir iqbal ahmed",
       "period": 1,
-      "substitute": "sir anwar ali",
+      "substitute": "sir rafaqat maseeh",
       "substitutePhone": ""
     },
     {
       "className": "9C",
       "originalTeacher": "sir iqbal ahmed",
       "period": 2,
-      "substitute": "sir Irshad Bhutto",
+      "substitute": "sir shabeer ahmed",
       "substitutePhone": ""
     },
     {
       "className": "10C",
       "originalTeacher": "sir iqbal ahmed",
       "period": 4,
-      "substitute": "sir abdul rehman",
+      "substitute": "sir anwar ali",
       "substitutePhone": ""
     },
     {
       "className": "9C",
       "originalTeacher": "sir iqbal ahmed",
       "period": 5,
+      "substitute": "sir Irshad Bhutto",
+      "substitutePhone": ""
+    },
+    {
+      "className": "8A",
+      "originalTeacher": "sir asif nawaz",
+      "period": 1,
+      "substitute": "miss anum hussain",
+      "substitutePhone": ""
+    },
+    {
+      "className": "8A",
+      "originalTeacher": "sir asif nawaz",
+      "period": 2,
+      "substitute": "sir abdul rehman",
+      "substitutePhone": ""
+    },
+    {
+      "className": "8B",
+      "originalTeacher": "sir asif nawaz",
+      "period": 6,
       "substitute": "sir Aman Arif",
       "substitutePhone": ""
     },
     {
-      "className": "7B",
-      "originalTeacher": "sir imran ahmed",
-      "period": 4,
-      "substitute": "sir khadim hussain",
-      "substitutePhone": ""
-    },
-    {
-      "className": "6B",
-      "originalTeacher": "sir imran ahmed",
-      "period": 5,
-      "substitute": "sir jawad ul haq",
-      "substitutePhone": ""
-    },
-    {
-      "className": "8A",
-      "originalTeacher": "sir khadim hussain",
-      "period": 3,
-      "substitute": "sir meer muhammad",
-      "substitutePhone": ""
-    },
-    {
-      "className": "8A",
-      "originalTeacher": "sir khadim hussain",
-      "period": 4,
-      "substitute": "sir shumail arsalan",
-      "substitutePhone": ""
-    },
-    {
-      "className": "9A",
-      "originalTeacher": "sir khadim hussain",
-      "period": 5,
-      "substitute": "sir shoaib",
-      "substitutePhone": ""
-    },
-    {
       "className": "9B",
-      "originalTeacher": "sir khadim hussain",
-      "period": 6,
-      "substitute": "sir farhan siddiqui",
+      "originalTeacher": "sir asif nawaz",
+      "period": 7,
+      "substitute": "sir khadim hussain",
       "substitutePhone": ""
     }
   ],
