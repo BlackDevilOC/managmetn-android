@@ -465,15 +465,7 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                 }
             }
             
-            // Big Feature Buttons
-            FeatureButton(
-                title = "Algorithm Testing",
-                description = "Test and run substitution algorithms",
-                icon = Icons.Default.Science,
-                onClick = { navController.navigate(Screen.AlgorithmTesting.route) },
-                color = MaterialTheme.colorScheme.primaryContainer
-            )
-            
+            // Big Feature Buttons - Removing Algorithm Testing button
             FeatureButton(
                 title = "View Substitutions",
                 description = "Check assigned substitutions for all teachers",

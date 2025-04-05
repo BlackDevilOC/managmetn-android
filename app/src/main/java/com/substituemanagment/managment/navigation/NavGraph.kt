@@ -12,17 +12,17 @@ import com.substituemanagment.managment.ui.screens.SubstitutionsScreen
 import com.substituemanagment.managment.ui.screens.SettingsScreen
 import com.substituemanagment.managment.ui.screens.FileUploadScreen
 import com.substituemanagment.managment.ui.screens.ProcessScreen
-import com.substituemanagment.managment.ui.screens.AlgorithmTestingScreen
 import com.substituemanagment.managment.ui.screens.ScheduleScreen
 import com.substituemanagment.managment.ui.screens.PeriodSettingsScreen
 import com.substituemanagment.managment.ui.screens.SmsSendScreen
+import com.substituemanagment.managment.ui.screens.TeacherDetailScreen
 
 sealed class Screen(val route: String) {
     // Main screens accessible from bottom navigation
     object Home : Screen("home")
     object Teachers : Screen("teachers")
     // Renamed from "Substitutions" to "Assign" in the UI
-    object Substitutions : Screen("substitutions") // Attendance Management Screen
+    object Assign : Screen("assign") // Attendance Management Screen
     object SmsSend : Screen("sms_send") // SMS Notifications
     object Settings : Screen("settings")
     
@@ -30,9 +30,11 @@ sealed class Screen(val route: String) {
     object FileUpload : Screen("file_upload")
     object Process : Screen("process")
     object ViewSubstitutions : Screen("view_substitutions") // Assigned Substitutes List
-    object AlgorithmTesting : Screen("algorithm_testing")
     object Schedule : Screen("schedule")
     object PeriodSettings : Screen("period_settings")
+    object TeacherDetail : Screen("teacher_detail/{teacherId}") {
+        fun createRoute(teacherId: String) = "teacher_detail/$teacherId"
+    }
 }
 
 @Composable
@@ -51,7 +53,7 @@ fun NavGraph(
         composable(Screen.Teachers.route) {
             TeachersScreen()
         }
-        composable(Screen.Substitutions.route) {
+        composable(Screen.Assign.route) {
             SubstituteScreen(navController = navController)
         }
         composable(Screen.ViewSubstitutions.route) {
@@ -66,9 +68,6 @@ fun NavGraph(
         composable(Screen.Process.route) {
             ProcessScreen(navController)
         }
-        composable(Screen.AlgorithmTesting.route) {
-            AlgorithmTestingScreen()
-        }
         composable(Screen.Schedule.route) {
             ScheduleScreen(navController)
         }
@@ -77,6 +76,10 @@ fun NavGraph(
         }
         composable(Screen.SmsSend.route) {
             SmsSendScreen(navController)
+        }
+        composable(Screen.TeacherDetail.route) { backStackEntry ->
+            val teacherId = backStackEntry.arguments?.getString("teacherId") ?: ""
+            TeacherDetailScreen(teacherId, navController)
         }
     }
 } 

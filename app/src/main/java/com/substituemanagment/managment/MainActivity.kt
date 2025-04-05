@@ -86,7 +86,18 @@ class MainActivity : ComponentActivity() {
                 }
                 
                 Scaffold(
-                    bottomBar = { BottomNav(navController) }
+                    bottomBar = {
+                        // Bottom Navigation Bar
+                        if (currentRoute in listOf(
+                                Screen.Home.route,
+                                Screen.Schedule.route,
+                                Screen.Teachers.route,
+                                Screen.Assign.route
+                            )
+                        ) {
+                            BottomNavigationBar(navController = navController)
+                        }
+                    }
                 ) { paddingValues ->
                     NavGraph(
                         navController = navController,
