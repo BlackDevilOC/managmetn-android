@@ -36,6 +36,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <!-- Report generation service -->
+        <service
+            android:name=".data.services.ReportingService"
+            android:exported="false" />
     </application>
 
 </manifest>

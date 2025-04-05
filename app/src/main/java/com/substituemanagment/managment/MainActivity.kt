@@ -1,6 +1,7 @@
 package com.substituemanagment.managment
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -24,6 +25,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.substituemanagment.managment.data.services.ReportingService
 import com.substituemanagment.managment.navigation.NavGraph
 import com.substituemanagment.managment.navigation.Screen
 import com.substituemanagment.managment.ui.components.BottomNav
@@ -58,6 +60,9 @@ class MainActivity : ComponentActivity() {
         
         // Create required directories (will also be called after permissions are granted)
         FileChecker.createRequiredDirectories(this)
+        
+        // Start the reporting service
+        startReportingService()
         
         setContent {
             SubstitutionManagementTheme {
@@ -114,6 +119,34 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // Stop the reporting service when the app is destroyed
+        stopReportingService()
+    }
+    
+    /**
+     * Start the reporting service for automatic report generation
+     */
+    private fun startReportingService() {
+        val intent = Intent(this, ReportingService::class.java).apply {
+            action = ReportingService.ACTION_APP_START
+        }
+        startService(intent)
+        Log.d(TAG, "Started ReportingService on app start")
+    }
+    
+    /**
+     * Stop the reporting service when the app is closed
+     */
+    private fun stopReportingService() {
+        val intent = Intent(this, ReportingService::class.java).apply {
+            action = ReportingService.ACTION_APP_END
+        }
+        startService(intent)
+        Log.d(TAG, "Sent stop signal to ReportingService on app end")
     }
     
     private fun checkAndRequestPermissions() {

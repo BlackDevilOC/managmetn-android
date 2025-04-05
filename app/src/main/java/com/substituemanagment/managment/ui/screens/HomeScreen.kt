@@ -482,12 +482,15 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                 color = MaterialTheme.colorScheme.tertiaryContainer
             )
 
-            // Recent Substitutions
+            // Current Teacher Schedule - Replaces Recent Substitutions
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                )
             ) {
                 Column(
                     modifier = Modifier
@@ -500,13 +503,13 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(
-                            Icons.Default.History,
-                            contentDescription = "Recent",
+                            Icons.Default.School,
+                            contentDescription = "Teacher Schedule",
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Recent Substitutions",
+                            text = "Current Teacher Schedule",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -514,21 +517,75 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    Text(
-                        text = "No recent substitutions found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
+                    if (homeState.currentPeriod == null) {
+                        Text(
+                            text = "No active period at this time",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    } else if (homeState.currentSchedules.isEmpty()) {
+                        Text(
+                            text = "No scheduled classes for this period",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    } else {
+                        // Display information about current period and time
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Period ${homeState.currentPeriod}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = homeState.currentPeriodTimeRange,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // List of current teachers and their classes
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            homeState.currentSchedules.forEachIndexed { index, schedule ->
+                                TeacherClassRow(
+                                    teacherName = schedule.teacherName,
+                                    className = schedule.className,
+                                    isAlternateRow = index % 2 == 1
+                                )
+                                
+                                if (index < homeState.currentSchedules.size - 1) {
+                                    Divider(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                                        thickness = 1.dp
+                                    )
+                                }
+                            }
+                        }
+                    }
                     
                     TextButton(
-                        onClick = { /* TODO: View all */ },
+                        onClick = { navController.navigate(Screen.Schedule.route) },
                         modifier = Modifier.align(Alignment.End)
                     ) {
-                        Text("View All")
+                        Text("View Full Schedule")
                         Icon(
                             Icons.Default.ArrowForward,
-                            contentDescription = "View All",
+                            contentDescription = "View Schedule",
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -698,6 +755,74 @@ fun FeatureButton(
         if (isPressed) {
             delay(100)
             isPressed = false
+        }
+    }
+}
+
+@Composable
+fun TeacherClassRow(
+    teacherName: String,
+    className: String,
+    isAlternateRow: Boolean = false
+) {
+    Surface(
+        color = if (isAlternateRow) 
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+        else
+            MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Teacher avatar and name
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                // Teacher avatar
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = teacherName.first().toString().uppercase(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                Text(
+                    text = teacherName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            
+            // Class badge
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text(
+                    text = className,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
         }
     }
 } 
