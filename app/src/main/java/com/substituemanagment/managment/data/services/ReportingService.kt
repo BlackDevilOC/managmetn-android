@@ -1,5 +1,6 @@
 package com.substituemanagment.managment.data.services
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,13 +9,16 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.substituemanagment.managment.MainActivity
 import com.substituemanagment.managment.R
 import com.substituemanagment.managment.data.utils.ReportManager
@@ -330,6 +334,24 @@ class ReportingService : Service() {
         }
     }
     
+    /**
+     * Notify error with permission check
+     */
+    private fun notifyError(notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // Request the permission
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE_POST_NOTIFICATIONS)
+            } else {
+                // Permission already granted, proceed with notification
+                notificationManager.notify(ERROR_NOTIFICATION_ID, notification)
+            }
+        } else {
+            // For devices below Android 13, no need to request permission
+            notificationManager.notify(ERROR_NOTIFICATION_ID, notification)
+        }
+    }
+    
     companion object {
         // Actions for intent
         const val ACTION_APP_START = "com.substituemanagment.managment.ACTION_APP_START"
@@ -345,5 +367,8 @@ class ReportingService : Service() {
         
         // How many consecutive errors before we notify the user
         private const val MAX_ERRORS_BEFORE_NOTIFY = 3
+        
+        // Request code for POST_NOTIFICATIONS permission
+        private const val REQUEST_CODE_POST_NOTIFICATIONS = 1234
     }
-} 
+}
