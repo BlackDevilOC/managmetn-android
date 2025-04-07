@@ -52,11 +52,22 @@ object SmsDataManager {
     // Initialize method to ensure directories exist
     fun initialize(context: Context) {
         try {
+            // Ensure base directory exists
+            val baseDir = File(EXTERNAL_STORAGE_BASE_PATH)
+            if (!baseDir.exists()) {
+                val baseCreated = baseDir.mkdirs()
+                Log.d(TAG, "Created base directory: $baseCreated - ${baseDir.absolutePath}")
+            }
+            
+            // Ensure SMS directory exists
             val smsDir = File(SMS_DIR)
             if (!smsDir.exists()) {
                 val created = smsDir.mkdirs()
                 Log.d(TAG, "Created SMS directory: $created - ${smsDir.absolutePath}")
             }
+            
+            // Log storage info for debugging
+            Log.d(TAG, "Storage Info: ${getStorageInfo()}")
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing SMS directory", e)
             e.printStackTrace()
@@ -171,7 +182,28 @@ object SmsDataManager {
     // File utilities
     private fun saveToFile(context: Context, fileName: String, content: String) {
         try {
-            val file = File(SMS_DIR, fileName)
+            // Make sure directories exist
+            initialize(context)
+            
+            val smsDir = File(SMS_DIR)
+            if (!smsDir.exists()) {
+                val created = smsDir.mkdirs()
+                if (!created) {
+                    Log.e(TAG, "Failed to create SMS directory ${smsDir.absolutePath}")
+                    return
+                }
+            }
+            
+            val file = File(smsDir, fileName)
+            val parentDir = file.parentFile
+            if (parentDir != null && !parentDir.exists()) {
+                val created = parentDir.mkdirs()
+                if (!created) {
+                    Log.e(TAG, "Failed to create parent directory ${parentDir.absolutePath}")
+                    return
+                }
+            }
+            
             FileOutputStream(file).use { stream ->
                 stream.write(content.toByteArray())
             }
@@ -184,6 +216,9 @@ object SmsDataManager {
     
     private fun loadFromFile(context: Context, fileName: String): String? {
         return try {
+            // Make sure directories exist
+            initialize(context)
+            
             val file = File(SMS_DIR, fileName)
             if (!file.exists()) {
                 Log.d(TAG, "File does not exist: ${file.absolutePath}")

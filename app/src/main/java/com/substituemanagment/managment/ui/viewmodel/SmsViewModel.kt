@@ -24,11 +24,12 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileReader
 import java.util.*
+import android.util.Log
 
 // Paths to substitute data files
 private const val EXTERNAL_STORAGE_BASE_PATH = "/storage/emulated/0/Android/data/com.substituemanagment.managment/files/substitute_data"
 private const val PROCESSED_PATH = "$EXTERNAL_STORAGE_BASE_PATH/processed"
-private const val PROCESSED_ASSIGNED_SUBSTITUTES_PATH = "$PROCESSED_PATH/assigned_substitute.json"
+private const val PROCESSED_ASSIGNED_SUBSTITUTES_PATH = "$EXTERNAL_STORAGE_BASE_PATH/assigned_substitute.json"
 private const val PROCESSED_TEACHERS_PATH = "$PROCESSED_PATH/total_teacher.json"
 
 class SmsViewModel(application: Application) : AndroidViewModel(application) {
@@ -114,48 +115,80 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                 templates.clear()
                 templates.addAll(uiTemplates)
                 
+                // Check if assigned_substitute.json exists
+                val substitutesFile = File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH)
+                Log.d("SmsViewModel", "Assignment file path: $PROCESSED_ASSIGNED_SUBSTITUTES_PATH")
+                Log.d("SmsViewModel", "Assignment file exists: ${substitutesFile.exists()}")
+                
                 // Load substitute assignments first for real data
                 val substitutes = loadSubstituteAssignments()
+                Log.d("SmsViewModel", "Loaded ${substitutes.size} substitute assignments")
                 
-                // Load teachers from total_teacher.json to get all available teachers
-                val allTeachers = loadAllTeachers()
-                
-                // Combine substitute data with all teacher data
+                // Only load teachers from the assigned substitute file
                 val teacherMap = mutableMapOf<String, TeacherContact>()
                 
-                // First add all teachers from the total_teacher.json
-                allTeachers.forEach { teacher ->
-                    teacherMap[teacher.name.lowercase()] = TeacherContact(
-                        id = UUID.randomUUID().toString(),
-                        name = teacher.name,
-                        phone = teacher.phone
-                    )
-                }
-                
-                // Then update with substitute information for teachers who are substitutes
+                // Add teachers who are assigned as substitutes
                 substitutes.forEach { substitute ->
-                    val substituteName = substitute.substitute.lowercase()
-                    if (teacherMap.containsKey(substituteName)) {
-                        // Update existing teacher with substitute phone
-                        val existingTeacher = teacherMap[substituteName]!!
-                        if (existingTeacher.phone.isBlank() && substitute.substitutePhone.isNotBlank()) {
-                            teacherMap[substituteName] = existingTeacher.copy(
+                    if (substitute.substitute.isNotBlank()) {
+                        val substituteName = substitute.substitute.lowercase()
+                        if (!teacherMap.containsKey(substituteName)) {
+                            teacherMap[substituteName] = TeacherContact(
+                                id = UUID.randomUUID().toString(),
+                                name = substitute.substitute,
                                 phone = substitute.substitutePhone
                             )
                         }
-                    } else {
-                        // Add new teacher from substitute data
-                        teacherMap[substituteName] = TeacherContact(
-                            id = UUID.randomUUID().toString(),
-                            name = substitute.substitute,
-                            phone = substitute.substitutePhone
-                        )
+                    }
+                }
+                
+                // If we found no teachers in assignments, load from total_teacher.json as fallback
+                if (teacherMap.isEmpty()) {
+                    Log.d("SmsViewModel", "No substitute teachers found in assignments, loading from all teachers")
+                    val allTeachers = loadAllTeachers()
+                    Log.d("SmsViewModel", "Loaded ${allTeachers.size} teachers from total_teacher.json")
+                    
+                    allTeachers.forEach { teacher ->
+                        if (teacher.isSubstitute) {
+                            teacherMap[teacher.name.lowercase()] = TeacherContact(
+                                id = UUID.randomUUID().toString(),
+                                name = teacher.name,
+                                phone = teacher.phone
+                            )
+                        }
+                    }
+                    
+                    if (teacherMap.isEmpty() && allTeachers.isNotEmpty()) {
+                        // If no substitutes found but teachers exist, use all teachers as a last resort
+                        Log.d("SmsViewModel", "No substitutes found, using all teachers")
+                        allTeachers.forEach { teacher ->
+                            teacherMap[teacher.name.lowercase()] = TeacherContact(
+                                id = UUID.randomUUID().toString(),
+                                name = teacher.name,
+                                phone = teacher.phone
+                            )
+                        }
                     }
                 }
                 
                 // Convert map to list for UI
+                val oldSelectedIds = teachers.filter { it.selected }.map { it.id }
                 teachers.clear()
-                teachers.addAll(teacherMap.values)
+                
+                // Add all teachers from the map and preserve selection state if possible
+                val teacherList = teacherMap.values.toList().sortedBy { it.name }
+                teachers.addAll(teacherList)
+                
+                // Restore selected state if this is a refresh
+                if (oldSelectedIds.isNotEmpty()) {
+                    teachers.forEach { teacher ->
+                        if (teacher.id in oldSelectedIds) {
+                            val index = teachers.indexOf(teacher)
+                            if (index >= 0) {
+                                teachers[index] = teacher.copy(selected = true)
+                            }
+                        }
+                    }
+                }
                 
                 // Load SMS history
                 val historyDtos = SmsDataManager.loadSmsHistory(context)
@@ -167,6 +200,7 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                 smsHistory.addAll(uiHistory)
                 
             } catch (e: Exception) {
+                Log.e("SmsViewModel", "Error refreshing data", e)
                 _errorMessage.value = "Failed to load data: ${e.message}"
             } finally {
                 _isLoading.value = false
@@ -181,33 +215,62 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
         try {
             val file = File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH)
             if (!file.exists()) {
+                Log.w("SmsViewModel", "Substitute assignment file does not exist at: $PROCESSED_ASSIGNED_SUBSTITUTES_PATH")
+                return@withContext emptyList()
+            }
+            
+            val fileSize = file.length()
+            if (fileSize == 0L) {
+                Log.w("SmsViewModel", "Substitute assignment file is empty")
                 return@withContext emptyList()
             }
             
             val gson = Gson()
             val content = FileReader(file).use { it.readText() }
+            
+            if (content.isBlank()) {
+                Log.w("SmsViewModel", "Substitute assignment file content is blank")
+                return@withContext emptyList()
+            }
+            
+            Log.d("SmsViewModel", "Parsing assignment file content: ${content.take(100)}...")
+            
             val type = object : TypeToken<Map<String, Any>>() {}.type
             val data: Map<String, Any> = gson.fromJson(content, type)
             
+            if (data.isEmpty()) {
+                Log.w("SmsViewModel", "Parsed data is empty")
+                return@withContext emptyList()
+            }
+            
             if (data.containsKey("assignments")) {
                 val assignments = data["assignments"] as? List<*> ?: emptyList<Any>()
+                Log.d("SmsViewModel", "Found ${assignments.size} assignments in file")
+                
                 return@withContext assignments.mapNotNull { assignment ->
                     if (assignment is Map<*, *>) {
+                        val originalTeacher = assignment["originalTeacher"] as? String ?: ""
+                        val substitute = assignment["substitute"] as? String ?: ""
+                        val substitutePhone = assignment["substitutePhone"] as? String ?: ""
+                        val period = (assignment["period"] as? Double)?.toInt() 
+                              ?: (assignment["period"] as? Int) ?: 0
+                        val className = assignment["className"] as? String ?: ""
+                        
                         SubstituteAssignmentData(
-                            originalTeacher = (assignment["originalTeacher"] as? String ?: ""),
-                            substitute = (assignment["substitute"] as? String ?: ""),
-                            substitutePhone = (assignment["substitutePhone"] as? String ?: ""),
-                            period = (assignment["period"] as? Double)?.toInt() 
-                                  ?: (assignment["period"] as? Int) ?: 0,
-                            className = (assignment["className"] as? String ?: "")
+                            originalTeacher = originalTeacher,
+                            substitute = substitute,
+                            substitutePhone = substitutePhone,
+                            period = period,
+                            className = className
                         )
                     } else null
                 }
+            } else {
+                Log.w("SmsViewModel", "No 'assignments' key found in data")
+                return@withContext emptyList()
             }
-            
-            return@withContext emptyList()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("SmsViewModel", "Error loading substitute assignments", e)
             return@withContext emptyList()
         }
     }
@@ -243,8 +306,15 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
      * This should be called before navigating to the SMS process screen
      */
     fun prepareTeachersForSmsProcess() {
-        selectedTeachersForSms.clear()
-        selectedTeachersForSms.addAll(teachers.filter { it.selected })
+        val selectedTeachers = teachers.filter { it.selected }
+        
+        // Only proceed if there are selected teachers
+        if (selectedTeachers.isNotEmpty()) {
+            selectedTeachersForSms.clear()
+            selectedTeachersForSms.addAll(selectedTeachers)
+        } else {
+            _errorMessage.value = "No teachers selected for SMS"
+        }
     }
     
     /**
