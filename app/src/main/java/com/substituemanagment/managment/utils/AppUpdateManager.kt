@@ -34,7 +34,7 @@ class AppUpdateManager(private val context: Context) {
     private var updateInfo: UpdateInfo? = null
     
     // URL where update metadata is stored
-    private val UPDATE_METADATA_URL = "https://raw.githubusercontent.com/YOURUSERNAME/YOURREPO/main/update.json"
+    private val UPDATE_METADATA_URL = "https://raw.githubusercontent.com/BlackDevilOC/managmetn-android/new/update.json"
     
     /**
      * Data class to hold update information
