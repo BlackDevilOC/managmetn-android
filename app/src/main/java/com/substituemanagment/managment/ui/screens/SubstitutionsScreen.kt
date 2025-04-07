@@ -98,6 +98,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import com.substituemanagment.managment.navigation.Screen
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.text.style.TextOverflow
+import com.substituemanagment.managment.utils.capitalizeWords
 
 data class SubstituteAssignmentUI(
     val originalTeacher: String,

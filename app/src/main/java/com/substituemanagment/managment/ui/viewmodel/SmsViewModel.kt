@@ -17,6 +17,8 @@ import com.substituemanagment.managment.data.SmsDataManager
 import com.substituemanagment.managment.data.SmsHistoryDto
 import com.substituemanagment.managment.data.SmsTemplateDto
 import com.substituemanagment.managment.data.TeacherContactDto
+import com.substituemanagment.managment.ui.screens.AssignmentUI
+import com.substituemanagment.managment.ui.screens.SubstituteTeacherUI
 import com.substituemanagment.managment.utils.SmsSender
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

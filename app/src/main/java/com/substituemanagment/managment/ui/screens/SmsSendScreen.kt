@@ -1,6 +1,7 @@
 package com.substituemanagment.managment.ui.screens
 
 import android.Manifest
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -47,12 +49,44 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.substituemanagment.managment.algorithm.PROCESSED_ASSIGNED_SUBSTITUTES_PATH
 import com.substituemanagment.managment.navigation.Screen
 import com.substituemanagment.managment.ui.viewmodel.SmsViewModel
+import com.substituemanagment.managment.utils.capitalizeWords
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+
+// Extension function to capitalize words in a string
+// Moving to StringUtils.kt to avoid conflicts
+// fun String.capitalizeWords(): String {
+//     return this.split(" ").joinToString(" ") { word ->
+//         word.lowercase().replaceFirstChar { 
+//             if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() 
+//         }
+//     }
+// }
+
+// Data class for UI representation of substitute assignments
+data class SubstituteTeacherUI(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String,
+    val phoneNumber: String? = null,
+    val assignments: List<AssignmentUI>
+)
+
+// Data class for assignment information
+data class AssignmentUI(
+    val period: Int,
+    val className: String,
+    val originalTeacher: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
