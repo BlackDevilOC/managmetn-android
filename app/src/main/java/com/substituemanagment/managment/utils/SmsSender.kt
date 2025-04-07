@@ -15,7 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.substituemanagment.managment.data.SmsHistoryDto
 import com.substituemanagment.managment.data.SmsDataManager
-import com.substituemanagment.managment.ui.viewmodel.SmsViewModel
+import com.substituemanagment.managment.data.TeacherContactDto
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -59,14 +59,14 @@ object SmsSender {
      * Send SMS messages to the specified recipients.
      * 
      * @param context The application context
-     * @param recipients List of SmsViewModel.TeacherContact objects representing recipients
+     * @param recipients List of TeacherContactDto objects representing recipients
      * @param message The message content to send
      * @param saveToHistory Whether to save the message to history
      * @return A pair of (success, error message)
      */
     fun sendSms(
         context: Context,
-        recipients: List<SmsViewModel.TeacherContact>,
+        recipients: List<TeacherContactDto>,
         message: String,
         saveToHistory: Boolean = true
     ): Pair<Boolean, String?> {

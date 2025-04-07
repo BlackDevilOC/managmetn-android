@@ -3,6 +3,7 @@ package com.substituemanagment.managment.ui.viewmodel
 import android.Manifest
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.compose.runtime.State
@@ -21,6 +22,7 @@ import com.substituemanagment.managment.data.SmsTemplateDto
 import com.substituemanagment.managment.data.TeacherContactDto
 import com.substituemanagment.managment.utils.SmsSender
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -31,6 +33,7 @@ import java.util.*
 // Paths to substitute data files
 private const val EXTERNAL_STORAGE_BASE_PATH = "/storage/emulated/0/Android/data/com.substituemanagment.managment/files/substitute_data"
 private const val PROCESSED_ASSIGNED_SUBSTITUTES_PATH = "$EXTERNAL_STORAGE_BASE_PATH/assigned_substitute.json"
+private const val SELECTED_TEACHERS_PATH = "$EXTERNAL_STORAGE_BASE_PATH/sms/selected_teachers.json"
 private const val PROCESSED_PATH = "$EXTERNAL_STORAGE_BASE_PATH/processed"
 private const val PROCESSED_TEACHERS_PATH = "$PROCESSED_PATH/total_teacher.json"
 
@@ -55,7 +58,7 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
     
     private val _needsPermission = mutableStateOf(false)
     val needsPermission: State<Boolean> = _needsPermission
-    
+
     // SMS history
     val smsHistory = mutableStateListOf<SmsMessage>()
     
@@ -244,6 +247,8 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
         // Get selected teachers and their assignments
         val selectedTeachersList = selectedTeachers.filter { it.value }.keys.toList()
         
+        Log.d(TAG, "Preparing ${selectedTeachersList.size} selected teachers for SMS")
+        
         selectedTeachersList.forEach { teacherName ->
             val assignments = teacherAssignments[teacherName] ?: emptyList()
             
@@ -251,20 +256,143 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                 // Get phone number from the first assignment (they should all be the same)
                 val phone = assignments.first().substitutePhone
                 
-                teachersToProcess.add(
-                    TeacherWithAssignments(
-                        name = teacherName,
-                        phone = phone,
-                        assignments = assignments
-                    )
+                val teacherWithAssignments = TeacherWithAssignments(
+                    name = teacherName,
+                    phone = phone,
+                    assignments = assignments
                 )
+                
+                teachersToProcess.add(teacherWithAssignments)
                 
                 // Initialize phone number map
                 phoneNumbers[teacherName] = phone
             }
         }
         
+        // Save selected teachers to file for persistence
+        saveSelectedTeachersToFile()
+        
         Log.d(TAG, "Prepared ${teachersToProcess.size} teachers for SMS processing")
+    }
+    
+    /**
+     * Save selected teachers to a file to ensure persistence between screens
+     */
+    private fun saveSelectedTeachersToFile() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Create directory if it doesn't exist
+                val smsDir = File("$EXTERNAL_STORAGE_BASE_PATH/sms")
+                if (!smsDir.exists()) {
+                    smsDir.mkdirs()
+                }
+                
+                val file = File(SELECTED_TEACHERS_PATH)
+                
+                // Create a JSON object with selected teachers
+                val teachersData = teachersToProcess.map { teacher ->
+                    mapOf(
+                        "name" to teacher.name,
+                        "phone" to teacher.phone,
+                        "assignments" to teacher.assignments.map { assignment ->
+                            mapOf(
+                                "originalTeacher" to assignment.originalTeacher,
+                                "substitute" to assignment.substitute,
+                                "substitutePhone" to assignment.substitutePhone,
+                                "period" to assignment.period,
+                                "className" to assignment.className,
+                                "date" to assignment.date
+                            )
+                        }
+                    )
+                }
+                
+                val jsonData = mapOf("teachers" to teachersData)
+                val gson = Gson()
+                val jsonString = gson.toJson(jsonData)
+                
+                // Write to file
+                file.writeText(jsonString)
+                
+                Log.d(TAG, "Saved ${teachersToProcess.size} selected teachers to file: ${file.absolutePath}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error saving selected teachers to file", e)
+            }
+        }
+    }
+    
+    /**
+     * Load selected teachers from file
+     */
+    fun loadSelectedTeachersFromFile() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val file = File(SELECTED_TEACHERS_PATH)
+                if (!file.exists()) {
+                    Log.d(TAG, "Selected teachers file does not exist, skipping load")
+                    return@launch
+                }
+                
+                val jsonString = file.readText()
+                val gson = Gson()
+                val type = object : TypeToken<Map<String, List<Map<String, Any>>>>() {}.type
+                val data: Map<String, List<Map<String, Any>>> = gson.fromJson(jsonString, type)
+                
+                withContext(Dispatchers.Main) {
+                    // Clear the current list
+                    teachersToProcess.clear()
+                    
+                    // Parse the teachers from the JSON data
+                    val teachersData = data["teachers"] ?: emptyList()
+                    teachersData.forEach { teacherMap ->
+                        val name = teacherMap["name"] as? String ?: ""
+                        val phone = teacherMap["phone"] as? String ?: ""
+                        
+                        val assignmentsData = teacherMap["assignments"] as? List<Map<String, Any>> ?: emptyList()
+                        val assignments = assignmentsData.mapNotNull { assignmentMap ->
+                            try {
+                                val originalTeacher = assignmentMap["originalTeacher"] as? String ?: ""
+                                val substitute = assignmentMap["substitute"] as? String ?: ""
+                                val substitutePhone = assignmentMap["substitutePhone"] as? String ?: ""
+                                val period = (assignmentMap["period"] as? Double)?.toInt() 
+                                      ?: (assignmentMap["period"] as? Int) ?: 0
+                                val className = assignmentMap["className"] as? String ?: ""
+                                val date = assignmentMap["date"] as? String ?: getCurrentDate()
+                                
+                                AssignmentData(
+                                    originalTeacher = originalTeacher,
+                                    substitute = substitute,
+                                    substitutePhone = substitutePhone,
+                                    period = period,
+                                    className = className,
+                                    date = date
+                                )
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error parsing assignment data", e)
+                                null
+                            }
+                        }
+                        
+                        if (name.isNotEmpty() && assignments.isNotEmpty()) {
+                            teachersToProcess.add(
+                                TeacherWithAssignments(
+                                    name = name,
+                                    phone = phone,
+                                    assignments = assignments
+                                )
+                            )
+                            
+                            // Update the phone numbers map
+                            phoneNumbers[name] = phone
+                        }
+                    }
+                    
+                    Log.d(TAG, "Loaded ${teachersToProcess.size} selected teachers from file")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading selected teachers from file", e)
+            }
+        }
     }
     
     /**
@@ -328,9 +456,10 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     /**
-     * Send SMS to all selected teachers
+     * Send SMS to teachers one by one, showing progress
+     * This method sends SMS messages sequentially to reduce failure risk
      */
-    fun sendSmsToAllTeachers(onSuccess: () -> Unit) {
+    fun sendSmsToTeachersOneByOne(context: Context, onAllSent: () -> Unit) {
         if (teachersToProcess.isEmpty()) {
             _errorMessage.value = "No teachers selected for SMS"
             return
@@ -344,15 +473,24 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             
             try {
-                val context = getApplication<Application>()
-                val successCount = mutableListOf<String>()
-                val failedCount = mutableListOf<String>()
+                val totalTeachers = teachersToProcess.size
+                var successCount = 0
+                val failedTeachers = mutableListOf<String>()
                 
-                teachersToProcess.forEach { teacher ->
+                // Send SMS one by one
+                for ((index, teacher) in teachersToProcess.withIndex()) {
                     val message = generateSmsForTeacher(teacher)
                     val phoneNumber = phoneNumbers[teacher.name] ?: ""
                     
                     if (isValidPhoneNumber(phoneNumber) && message.isNotBlank()) {
+                        // Use a delay between messages to prevent flooding
+                        if (index > 0) {
+                            delay(1000) // 1 second delay between messages
+                        }
+                        
+                        // Update loading message with progress
+                        _errorMessage.value = "Sending SMS to ${teacher.name} (${index + 1}/$totalTeachers)..."
+                        
                         val success = SmsSender.sendSingleSms(
                             context = context,
                             phoneNumber = phoneNumber,
@@ -360,7 +498,7 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                         )
                         
                         if (success) {
-                            successCount.add(teacher.name)
+                            successCount++
                             
                             // Save to history
                             val historyItem = SmsHistoryDto(
@@ -381,8 +519,10 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                                 timestamp = historyItem.timestamp,
                                 status = "Sent"
                             ))
+                            
+                            Log.d(TAG, "Successfully sent SMS to ${teacher.name}")
                         } else {
-                            failedCount.add(teacher.name)
+                            failedTeachers.add(teacher.name)
                             
                             // Save failed to history
                             val historyItem = SmsHistoryDto(
@@ -403,17 +543,21 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                                 timestamp = historyItem.timestamp,
                                 status = "Failed"
                             ))
+                            
+                            Log.e(TAG, "Failed to send SMS to ${teacher.name}")
                         }
                     } else {
-                        failedCount.add(teacher.name)
+                        failedTeachers.add(teacher.name)
+                        Log.e(TAG, "Invalid phone number or message for ${teacher.name}")
                     }
                 }
                 
-                if (failedCount.isEmpty() && successCount.isNotEmpty()) {
+                // Set final message
+                if (failedTeachers.isEmpty() && successCount > 0) {
                     _errorMessage.value = null
-                    onSuccess()
-                } else if (failedCount.isNotEmpty() && successCount.isNotEmpty()) {
-                    _errorMessage.value = "Sent SMS to ${successCount.size} teachers, failed for ${failedCount.size} teachers"
+                    onAllSent()
+                } else if (failedTeachers.isNotEmpty() && successCount > 0) {
+                    _errorMessage.value = "Sent SMS to $successCount teachers, failed for ${failedTeachers.size} teachers"
                 } else {
                     _errorMessage.value = "Failed to send SMS to all selected teachers"
                 }

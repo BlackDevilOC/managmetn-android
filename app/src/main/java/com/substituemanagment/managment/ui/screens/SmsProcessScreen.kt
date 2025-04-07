@@ -1,5 +1,6 @@
 package com.substituemanagment.managment.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Send
@@ -58,21 +60,34 @@ fun SmsProcessScreen(navController: NavController) {
     
     // Check if there are any selected teachers and prepare them
     LaunchedEffect(Unit) {
-        viewModel.prepareSelectedTeachersForSms()
+        // Load selected teachers from the saved file
+        viewModel.loadSelectedTeachersFromFile()
+        
+        // Add a delay to ensure the file loading completes
+        delay(500)
+        
+        // Log the teachers to process
+        Log.d("SmsProcessScreen", "Teachers to process count: ${viewModel.teachersToProcess.size}")
+        
+        // Clear and reload the teachers from the ViewModel
         selectedTeachers.clear()
         selectedTeachers.addAll(viewModel.teachersToProcess)
         
+        Log.d("SmsProcessScreen", "Selected teachers count after reload: ${selectedTeachers.size}")
+        
         if (selectedTeachers.isEmpty()) {
             // No teachers were selected, show error message then navigate back
+            Log.d("SmsProcessScreen", "No teachers selected, showing error and navigating back")
             snackbarHostState.showSnackbar(
                 message = "No teachers selected for SMS. Please select teachers first.",
                 duration = SnackbarDuration.Short
             )
             // Navigate back after showing the message
             delay(1500)
-            navController.popBackStack()
+            navController.navigate(Screen.SmsSend.route)
         } else {
             // Initialize phone numbers from viewModel data
+            Log.d("SmsProcessScreen", "Initializing phone numbers for ${selectedTeachers.size} teachers")
             selectedTeachers.forEach { teacher ->
                 phoneNumbers[teacher.name] = teacher.phone
                 // Mark for editing if phone is empty or invalid
@@ -102,76 +117,76 @@ fun SmsProcessScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Verify Phone Numbers") },
+                title = { Text("Review Selected Teachers") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.navigate(Screen.SmsSend.route) }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    // Small history icon to view SMS history
+                    IconButton(
+                        onClick = { 
+                            // Navigate to SMS screen with history flag
+                            navController.navigate(Screen.SmsSend.route)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "SMS History",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )
         },
         floatingActionButton = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Back to selection button
-                ExtendedFloatingActionButton(
-                    onClick = { navController.popBackStack() },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    icon = { Icon(Icons.Default.ArrowBack, contentDescription = "Back to Selection") },
-                    text = { Text("Back") }
-                )
-                
-                // Main send button
-                ExtendedFloatingActionButton(
-                    onClick = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    // Update phone numbers in viewModel
+                    val invalidPhones = selectedTeachers.filter { teacher -> 
+                        val phone = phoneNumbers[teacher.name] ?: ""
+                        phone.isBlank() || !viewModel.isValidPhoneNumber(phone)
+                    }
+                    
+                    if (invalidPhones.isEmpty()) {
                         // Update phone numbers in viewModel
-                        val invalidPhones = selectedTeachers.filter { teacher -> 
+                        selectedTeachers.forEach { teacher ->
                             val phone = phoneNumbers[teacher.name] ?: ""
-                            phone.isBlank() || !viewModel.isValidPhoneNumber(phone)
+                            viewModel.updatePhoneNumber(teacher.name, phone)
                         }
                         
-                        if (invalidPhones.isEmpty()) {
-                            // Update phone numbers in viewModel
-                            selectedTeachers.forEach { teacher ->
-                                val phone = phoneNumbers[teacher.name] ?: ""
-                                viewModel.updatePhoneNumber(teacher.name, phone)
-                            }
-                            
-                            // Send SMS with success callback
-                            if (viewModel.checkSmsPermissions()) {
-                                viewModel.sendSmsToAllTeachers {
-                                    showSuccess("SMS sent successfully")
-                                    scope.launch {
-                                        delay(1500)
-                                        navController.popBackStack()
-                                    }
-                                }
-                            } else {
+                        // Send SMS with success callback
+                        if (viewModel.checkSmsPermissions()) {
+                            viewModel.sendSmsToTeachersOneByOne(context) {
+                                showSuccess("SMS sent successfully")
                                 scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = "SMS permission is required to send messages",
-                                        duration = SnackbarDuration.Short
-                                    )
+                                    delay(1500)
+                                    navController.navigate(Screen.SmsSend.route)
                                 }
                             }
                         } else {
                             scope.launch {
                                 snackbarHostState.showSnackbar(
-                                    message = "Please fix invalid phone numbers before proceeding",
+                                    message = "SMS permission is required to send messages",
                                     duration = SnackbarDuration.Short
                                 )
                             }
                         }
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    icon = { Icon(Icons.Default.Send, contentDescription = "Send SMS") },
-                    text = { Text("Send SMS") }
-                )
-            }
+                    } else {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Please fix invalid phone numbers before proceeding",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                icon = { Icon(Icons.Default.Send, contentDescription = "Send SMS") },
+                text = { Text("Send SMS") }
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
@@ -184,11 +199,28 @@ fun SmsProcessScreen(navController: NavController) {
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(50.dp),
-                        strokeWidth = 4.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(50.dp),
+                            strokeWidth = 4.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Show the error message as a progress indicator
+                        errorMessage?.let {
+                            if (it.startsWith("Sending SMS")) {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 }
             }
             
@@ -234,18 +266,40 @@ fun SmsProcessScreen(navController: NavController) {
                     .padding(paddingValues)
                     .padding(16.dp)
             ) {
-                Text(
-                    text = "Verify Recipient Phone Numbers",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                Text(
-                    text = "Please verify the phone numbers for each teacher before sending SMS notifications.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Selected Teachers for SMS",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            text = "${selectedTeachers.size} teachers selected",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            text = "Please verify phone numbers before sending SMS.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
                 
                 // Display selected teachers with phone verification
                 if (selectedTeachers.isEmpty()) {
@@ -255,12 +309,24 @@ fun SmsProcessScreen(navController: NavController) {
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "No teachers selected for SMS notification",
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .padding(bottom = 8.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "No teachers selected for SMS notification",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 } else {
                     LazyColumn(

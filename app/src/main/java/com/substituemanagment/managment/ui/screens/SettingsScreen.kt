@@ -108,6 +108,14 @@ fun SettingsScreen(navController: NavController) {
                 onClick = { navController.navigate(Screen.Teachers.route) }
             )
             
+            // Teacher Details Button
+            SettingCard(
+                icon = Icons.Default.Person,
+                title = "Teacher Details",
+                description = "View detailed information about individual teachers",
+                onClick = { navController.navigate(Screen.TeacherDetails.route) }
+            )
+            
             // Substitution Management section
             SectionHeader(title = "Substitution Management")
             
