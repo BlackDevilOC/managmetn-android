@@ -351,4 +351,150 @@ object SmsSender {
             else -> "N/A"
         }
     }
+    
+    /**
+     * Send a single SMS message to one teacher.
+     *
+     * @param context The application context
+     * @param phoneNumber The recipient's phone number
+     * @param message The message content to send (already processed with real data)
+     * @return true if the message was sent successfully, false otherwise
+     */
+    fun sendSingleSms(
+        context: Context,
+        phoneNumber: String,
+        message: String
+    ): Boolean {
+        if (phoneNumber.isBlank()) {
+            Log.e(TAG, "Phone number is empty")
+            return false
+        }
+        
+        if (message.isBlank()) {
+            Log.e(TAG, "Message is empty")
+            return false
+        }
+        
+        // Check if we have permission to send SMS
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.SEND_SMS
+            ) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "SMS permission not granted")
+            return false
+        }
+        
+        try {
+            // Get the SMS manager
+            val smsManager = SmsManager.getDefault()
+            
+            // Since Android uses multithreaded operation, we use this to track completion
+            val messageSent = mutableListOf<Boolean>()
+            val messageDelivered = mutableListOf<Boolean>()
+            
+            // Synchronization to wait for callbacks
+            val lock = Object()
+            
+            // Create sent and delivered intents
+            val sentPI = PendingIntent.getBroadcast(
+                context, 0, Intent(SMS_SENT_ACTION),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            val deliveredPI = PendingIntent.getBroadcast(
+                context, 0, Intent(SMS_DELIVERED_ACTION),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            // Register broadcast receivers for sent status
+            context.registerReceiver(object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    synchronized(lock) {
+                        when (resultCode) {
+                            Activity.RESULT_OK -> {
+                                Log.d(TAG, "SMS sent successfully to $phoneNumber")
+                                messageSent.add(true)
+                            }
+                            else -> {
+                                Log.e(TAG, "Failed to send SMS to $phoneNumber, result code: $resultCode")
+                                messageSent.add(false)
+                            }
+                        }
+                        lock.notify()
+                    }
+                    context.unregisterReceiver(this)
+                }
+            }, IntentFilter(SMS_SENT_ACTION))
+            
+            // Register broadcast receivers for delivered status
+            context.registerReceiver(object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    synchronized(lock) {
+                        when (resultCode) {
+                            Activity.RESULT_OK -> {
+                                Log.d(TAG, "SMS delivered to $phoneNumber")
+                                messageDelivered.add(true)
+                            }
+                            else -> {
+                                Log.d(TAG, "SMS not delivered to $phoneNumber")
+                                messageDelivered.add(false)
+                            }
+                        }
+                        lock.notify()
+                    }
+                    context.unregisterReceiver(this)
+                }
+            }, IntentFilter(SMS_DELIVERED_ACTION))
+            
+            // Send the SMS based on message length
+            val messageLength = message.length
+            if (messageLength > 160) {
+                // For longer messages, use divideMessage
+                val messageParts = smsManager.divideMessage(message)
+                val sentIntents = ArrayList<PendingIntent>()
+                val deliveredIntents = ArrayList<PendingIntent>()
+                
+                for (i in messageParts.indices) {
+                    sentIntents.add(sentPI)
+                    deliveredIntents.add(deliveredPI)
+                }
+                
+                smsManager.sendMultipartTextMessage(
+                    phoneNumber,
+                    null,
+                    messageParts,
+                    sentIntents,
+                    deliveredIntents
+                )
+            } else {
+                // For short messages, use sendTextMessage
+                smsManager.sendTextMessage(
+                    phoneNumber,
+                    null,
+                    message,
+                    sentPI,
+                    deliveredPI
+                )
+            }
+            
+            // Show a toast notification
+            Toast.makeText(context, "Sending SMS to $phoneNumber...", Toast.LENGTH_SHORT).show()
+            
+            // Wait for the callbacks with a timeout
+            synchronized(lock) {
+                try {
+                    lock.wait(5000) // Wait for 5 seconds max
+                } catch (e: InterruptedException) {
+                    Log.e(TAG, "Wait interrupted", e)
+                }
+            }
+            
+            // Return success if the message was sent
+            return messageSent.isNotEmpty() && messageSent.first()
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending SMS: ${e.message}", e)
+            return false
+        }
+    }
 } 

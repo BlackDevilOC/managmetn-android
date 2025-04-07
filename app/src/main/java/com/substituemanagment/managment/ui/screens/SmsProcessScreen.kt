@@ -1,6 +1,5 @@
 package com.substituemanagment.managment.ui.screens
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,7 +46,7 @@ fun SmsProcessScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     
     // State for phone number editing
-    val selectedTeachers = remember { viewModel.selectedTeachersForSms }
+    val selectedTeachers = remember { mutableStateListOf<SmsViewModel.TeacherWithAssignments>() }
     val editingPhoneNumber = remember { mutableStateMapOf<String, Boolean>() }
     val phoneNumbers = remember { mutableStateMapOf<String, String>() }
     
@@ -57,25 +56,27 @@ fun SmsProcessScreen(navController: NavController) {
     var showSuccessBar by remember { mutableStateOf(false) }
     var successMessage by remember { mutableStateOf("") }
     
-    // Check if there are any selected teachers
+    // Check if there are any selected teachers and prepare them
     LaunchedEffect(Unit) {
-        if (viewModel.selectedTeachersForSms.isEmpty()) {
+        viewModel.prepareSelectedTeachersForSms()
+        selectedTeachers.clear()
+        selectedTeachers.addAll(viewModel.teachersToProcess)
+        
+        if (selectedTeachers.isEmpty()) {
             // No teachers were selected, show error message then navigate back
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    message = "No teachers selected for SMS. Please select teachers first.",
-                    duration = SnackbarDuration.Short
-                )
-                // Navigate back after showing the message
-                delay(1500)
-                navController.popBackStack()
-            }
+            snackbarHostState.showSnackbar(
+                message = "No teachers selected for SMS. Please select teachers first.",
+                duration = SnackbarDuration.Short
+            )
+            // Navigate back after showing the message
+            delay(1500)
+            navController.popBackStack()
         } else {
             // Initialize phone numbers from viewModel data
-            viewModel.selectedTeachersForSms.forEach { teacher ->
-                phoneNumbers[teacher.id] = teacher.phone
+            selectedTeachers.forEach { teacher ->
+                phoneNumbers[teacher.name] = teacher.phone
                 // Mark for editing if phone is empty or invalid
-                editingPhoneNumber[teacher.id] = teacher.phone.isBlank() || !isValidPhoneNumber(teacher.phone)
+                editingPhoneNumber[teacher.name] = teacher.phone.isBlank() || !viewModel.isValidPhoneNumber(teacher.phone)
             }
         }
     }
@@ -127,21 +128,23 @@ fun SmsProcessScreen(navController: NavController) {
                 ExtendedFloatingActionButton(
                     onClick = {
                         // Update phone numbers in viewModel
-                        val invalidPhones = selectedTeachers.filter { 
-                            phoneNumbers[it.id]?.isBlank() == true || !isValidPhoneNumber(phoneNumbers[it.id] ?: "")
+                        val invalidPhones = selectedTeachers.filter { teacher -> 
+                            val phone = phoneNumbers[teacher.name] ?: ""
+                            phone.isBlank() || !viewModel.isValidPhoneNumber(phone)
                         }
                         
                         if (invalidPhones.isEmpty()) {
                             // Update phone numbers in viewModel
-                            viewModel.updatePhoneNumbers(phoneNumbers)
+                            selectedTeachers.forEach { teacher ->
+                                val phone = phoneNumbers[teacher.name] ?: ""
+                                viewModel.updatePhoneNumber(teacher.name, phone)
+                            }
                             
-                            // Directly send SMS
+                            // Send SMS with success callback
                             if (viewModel.checkSmsPermissions()) {
-                                viewModel.sendSms()
-                                scope.launch {
-                                    delay(500) // Wait for the SMS to be sent
-                                    if (viewModel.errorMessage.value == null && !viewModel.needsPermission.value) {
-                                        showSuccess("SMS sent successfully")
+                                viewModel.sendSmsToAllTeachers {
+                                    showSuccess("SMS sent successfully")
+                                    scope.launch {
                                         delay(1500)
                                         navController.popBackStack()
                                     }
@@ -267,18 +270,33 @@ fun SmsProcessScreen(navController: NavController) {
                         items(selectedTeachers) { teacher ->
                             TeacherPhoneVerificationItem(
                                 teacherName = teacher.name,
-                                phoneNumber = phoneNumbers[teacher.id] ?: "",
-                                isEditing = editingPhoneNumber[teacher.id] ?: false,
-                                onEditClick = { editingPhoneNumber[teacher.id] = true },
-                                onPhoneChange = { phoneNumbers[teacher.id] = it },
-                                onDone = { editingPhoneNumber[teacher.id] = false },
-                                isValid = isValidPhoneNumber(phoneNumbers[teacher.id] ?: "")
+                                phoneNumber = phoneNumbers[teacher.name] ?: "",
+                                isEditing = editingPhoneNumber[teacher.name] ?: false,
+                                onEditClick = { editingPhoneNumber[teacher.name] = true },
+                                onPhoneChange = { phoneNumbers[teacher.name] = it },
+                                onDone = { editingPhoneNumber[teacher.name] = false },
+                                isValid = viewModel.isValidPhoneNumber(phoneNumbers[teacher.name] ?: ""),
+                                assignmentsSummary = getSummaryForAssignments(teacher.assignments)
                             )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+// Helper function to create a summary of assignments
+private fun getSummaryForAssignments(assignments: List<SmsViewModel.AssignmentData>): String {
+    if (assignments.isEmpty()) return "No assignments"
+    
+    val sortedAssignments = assignments.sortedBy { it.period }
+    return if (sortedAssignments.size == 1) {
+        val assignment = sortedAssignments.first()
+        "Period ${assignment.period}: ${assignment.className} (for ${assignment.originalTeacher})"
+    } else {
+        "Multiple assignments (${sortedAssignments.size}): " + 
+        sortedAssignments.joinToString(", ") { "P${it.period}" }
     }
 }
 
@@ -290,7 +308,8 @@ fun TeacherPhoneVerificationItem(
     onEditClick: () -> Unit,
     onPhoneChange: (String) -> Unit,
     onDone: () -> Unit,
-    isValid: Boolean
+    isValid: Boolean,
+    assignmentsSummary: String = ""
 ) {
     Card(
         modifier = Modifier
@@ -308,11 +327,21 @@ fun TeacherPhoneVerificationItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = teacherName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = teacherName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    if (assignmentsSummary.isNotEmpty()) {
+                        Text(
+                            text = assignmentsSummary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 
                 if (!isEditing) {
                     IconButton(onClick = onEditClick) {
