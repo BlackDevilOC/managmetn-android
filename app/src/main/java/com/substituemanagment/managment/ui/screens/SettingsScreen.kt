@@ -111,8 +111,8 @@ fun SettingsScreen(navController: NavController) {
             // Teacher Details Button
             SettingCard(
                 icon = Icons.Default.Person,
-                title = "Teacher Details",
-                description = "View detailed information about individual teachers",
+                title = "Teacher Numbers",
+                description = "Manage teacher phone numbers and contact information",
                 onClick = { navController.navigate(Screen.TeacherDetails.route) }
             )
             

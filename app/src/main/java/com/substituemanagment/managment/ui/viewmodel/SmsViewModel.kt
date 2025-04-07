@@ -36,6 +36,7 @@ private const val PROCESSED_ASSIGNED_SUBSTITUTES_PATH = "$EXTERNAL_STORAGE_BASE_
 private const val SELECTED_TEACHERS_PATH = "$EXTERNAL_STORAGE_BASE_PATH/sms/selected_teachers.json"
 private const val PROCESSED_PATH = "$EXTERNAL_STORAGE_BASE_PATH/processed"
 private const val PROCESSED_TEACHERS_PATH = "$PROCESSED_PATH/total_teacher.json"
+private const val TEACHER_DETAILS_PATH = "$EXTERNAL_STORAGE_BASE_PATH/teacher_details.json"
 
 class SmsViewModel(application: Application) : AndroidViewModel(application) {
     private val TAG = "SmsViewModel"
@@ -66,6 +67,9 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
     val messageTemplate = mutableStateOf(
         "Dear {substitute}, you have been assigned to cover {class} Period {period} on {date} (${getCurrentDay()}). Please confirm your availability."
     )
+    
+    // Track whether a teacher's phone number was loaded from the total_teacher.json file
+    val phoneNumberSources = mutableStateMapOf<String, String>()
     
     // Data models
     data class AssignmentData(
@@ -612,6 +616,178 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
         if (phone.isBlank()) return false
         val phoneRegex = Regex("^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}\$")
         return phone.matches(phoneRegex)
+    }
+    
+    /**
+     * Load phone numbers from teacher_details.json file
+     * 
+     * This method attempts to find phone numbers for teachers in the
+     * teacher_details.json file and falls back to total_teacher.json if needed
+     */
+    fun loadPhoneNumbers() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Attempting to load phone numbers from teacher_details.json...")
+                // First try teacher_details.json, which is our primary source
+                val teacherDetailsFile = File(TEACHER_DETAILS_PATH)
+                if (teacherDetailsFile.exists()) {
+                    val detailsJson = teacherDetailsFile.readText()
+                    if (detailsJson.isNotBlank()) {
+                        try {
+                            // Define structure matching TeacherDetailsViewModel.TeacherDetails
+                            data class TeacherDetails(
+                                val name: String, 
+                                val phoneNumber: String = "",
+                                val variations: List<String> = emptyList()
+                            )
+                            
+                            val gson = Gson()
+                            val detailsType = object : TypeToken<List<TeacherDetails>>() {}.type
+                            val teacherDetails: List<TeacherDetails> = gson.fromJson(detailsJson, detailsType)
+                            
+                            withContext(Dispatchers.Main) {
+                                val detailsMap = teacherDetails.associateBy { normalizeTeacherName(it.name) }
+                                var matchedCount = 0
+                                
+                                teachersToProcess.forEach { teacher ->
+                                    val normalizedName = normalizeTeacherName(teacher.name)
+                                    
+                                    // Try exact match first
+                                    val exactMatch = teacherDetails.find { it.name == teacher.name }
+                                    if (exactMatch != null && exactMatch.phoneNumber.isNotBlank()) {
+                                        // Only update if the current phone number is empty or invalid
+                                        val currentPhone = phoneNumbers[teacher.name] ?: ""
+                                        if (currentPhone.isBlank() || !isValidPhoneNumber(currentPhone)) {
+                                            phoneNumbers[teacher.name] = exactMatch.phoneNumber
+                                            // Mark as auto-loaded
+                                            phoneNumberSources[teacher.name] = "auto"
+                                            matchedCount++
+                                            Log.d(TAG, "Loaded phone number for ${teacher.name} (exact match) from teacher_details.json: ${exactMatch.phoneNumber}")
+                                        }
+                                        return@forEach
+                                    }
+                                    
+                                    // Try normalized name match
+                                    val matchedTeacher = detailsMap[normalizedName]
+                                    if (matchedTeacher != null && matchedTeacher.phoneNumber.isNotBlank()) {
+                                        // Only update if the current phone number is empty or invalid
+                                        val currentPhone = phoneNumbers[teacher.name] ?: ""
+                                        if (currentPhone.isBlank() || !isValidPhoneNumber(currentPhone)) {
+                                            phoneNumbers[teacher.name] = matchedTeacher.phoneNumber
+                                            // Mark as auto-loaded
+                                            phoneNumberSources[teacher.name] = "auto"
+                                            matchedCount++
+                                            Log.d(TAG, "Loaded phone number for ${teacher.name} (normalized match) from teacher_details.json: ${matchedTeacher.phoneNumber}")
+                                        }
+                                        return@forEach
+                                    }
+                                    
+                                    // Try variation matches
+                                    for (teacher in teacherDetails) {
+                                        if (teacher.variations.isNotEmpty() && teacher.phoneNumber.isNotBlank()) {
+                                            val normalizedVariations = teacher.variations.map { normalizeTeacherName(it) }
+                                            if (normalizedVariations.contains(normalizedName)) {
+                                                val currentPhone = phoneNumbers[teacher.name] ?: ""
+                                                if (currentPhone.isBlank() || !isValidPhoneNumber(currentPhone)) {
+                                                    phoneNumbers[teacher.name] = teacher.phoneNumber
+                                                    phoneNumberSources[teacher.name] = "auto"
+                                                    matchedCount++
+                                                    Log.d(TAG, "Loaded phone number for ${teacher.name} (variation match) from teacher_details.json: ${teacher.phoneNumber}")
+                                                }
+                                                break
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                Log.d(TAG, "Matched $matchedCount phone numbers from teacher_details.json")
+                            }
+                            
+                            return@launch // Exit if successful
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error loading from teacher_details.json: ${e.message}", e)
+                            // Continue to fallback
+                        }
+                    }
+                } else {
+                    Log.d(TAG, "Teacher details file does not exist at: $TEACHER_DETAILS_PATH")
+                }
+                
+                // Fallback to total_teacher.json if needed
+                Log.d(TAG, "Falling back to total_teacher.json...")
+                val file = File(PROCESSED_TEACHERS_PATH)
+                if (!file.exists()) {
+                    Log.d(TAG, "Total teachers file does not exist at: $PROCESSED_TEACHERS_PATH")
+                    return@launch
+                }
+                
+                val jsonString = file.readText()
+                if (jsonString.isBlank()) {
+                    Log.d(TAG, "Total teachers file is empty")
+                    return@launch
+                }
+                
+                val gson = Gson()
+                
+                // Try to parse as a list of objects with name and phone fields
+                try {
+                    data class TeacherJson(
+                        val name: String,
+                        val phone: String? = null,
+                        val phoneNumber: String? = null,
+                        val variations: List<String>? = null
+                    )
+                    
+                    val type = object : TypeToken<List<TeacherJson>>() {}.type
+                    val teachers: List<TeacherJson> = gson.fromJson(jsonString, type)
+                    
+                    withContext(Dispatchers.Main) {
+                        // Create a map for quick lookup by normalized name
+                        val teacherMap = teachers.associateBy { normalizeTeacherName(it.name) }
+                        var matchedCount = 0
+                        
+                        // For each teacher in the process list, try to find a matching entry in the total teachers list
+                        teachersToProcess.forEach { teacher ->
+                            val normalizedName = normalizeTeacherName(teacher.name)
+                            val matchedTeacher = teacherMap[normalizedName]
+                            
+                            if (matchedTeacher != null) {
+                                // Use phone or phoneNumber field, whichever is available
+                                val phoneFromFile = matchedTeacher.phone ?: matchedTeacher.phoneNumber ?: ""
+                                
+                                if (phoneFromFile.isNotBlank()) {
+                                    // Only update if the current phone number is empty or invalid
+                                    val currentPhone = phoneNumbers[teacher.name] ?: ""
+                                    if (currentPhone.isBlank() || !isValidPhoneNumber(currentPhone)) {
+                                        phoneNumbers[teacher.name] = phoneFromFile
+                                        // Mark as auto-loaded
+                                        phoneNumberSources[teacher.name] = "auto"
+                                        matchedCount++
+                                        Log.d(TAG, "Loaded phone number for ${teacher.name} from total_teacher.json: $phoneFromFile")
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Log.d(TAG, "Matched $matchedCount phone numbers from total_teacher.json")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing total_teacher.json: ${e.message}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading phone numbers: ${e.message}", e)
+            }
+        }
+    }
+    
+    /**
+     * Normalize teacher name for matching (lowercase, remove titles, remove extra spaces)
+     */
+    private fun normalizeTeacherName(name: String): String {
+        return name.lowercase()
+            .replace(Regex("^(sir|miss|mrs?|ms)\\s+"), "")
+            .replace(Regex("\\s+"), " ")
+            .trim()
     }
     
     companion object {

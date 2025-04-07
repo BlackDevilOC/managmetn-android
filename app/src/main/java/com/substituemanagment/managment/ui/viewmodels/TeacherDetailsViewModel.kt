@@ -41,7 +41,8 @@ class TeacherDetailsViewModel : ViewModel() {
     // Model for Teacher Details
     data class TeacherDetails(
         val name: String,
-        var phoneNumber: String = ""
+        var phoneNumber: String = "",
+        val variations: List<String> = emptyList()
     )
     
     // UI state sealed class
@@ -77,8 +78,8 @@ class TeacherDetailsViewModel : ViewModel() {
                 // Check for files in alternative locations and copy if needed
                 checkAndCopyDataFiles(context)
                 
-                // Load any existing teacher details and display
-                loadExistingTeacherDetails()
+                // Automatically load teacher data
+                autoLoadTeacherData()
             } catch (e: Exception) {
                 Log.e(TAG, "Error initializing: ${e.message}", e)
                 _uiState.value = TeacherDetailsUiState.Error("Failed to initialize: ${e.message}")
@@ -88,20 +89,60 @@ class TeacherDetailsViewModel : ViewModel() {
         }
     }
     
-    // BUTTON 1: Load names from total_teachers.json to teacher_details.json
+    // Automatically load teacher data (both steps in sequence)
+    private fun autoLoadTeacherData() {
+        viewModelScope.launch {
+            isLoading.value = true
+            Log.d(TAG, "Starting automatic data loading process")
+            
+            try {
+                // Step 1: Load teacher names from total_teacher.json
+                if (!totalTeachersFilePath.exists()) {
+                    _uiState.value = TeacherDetailsUiState.Error("Total teachers file not found at: ${totalTeachersFilePath.absolutePath}")
+                    return@launch
+                }
+                
+                // Load existing data or load from total_teacher.json if needed
+                if (teachers.isEmpty()) {
+                    loadExistingTeacherDetails()
+                }
+                
+                // If still empty, try loading from total_teacher.json
+                if (teachers.isEmpty()) {
+                    loadTeacherNamesFromTotalTeachers()
+                    // Wait a moment for the first step to complete
+                    kotlinx.coroutines.delay(500)
+                }
+                
+                // Step 2: Match phone numbers from substitute file
+                if (teachers.isNotEmpty() && substituteFilePath.exists()) {
+                    matchPhoneNumbersFromSubstituteFile()
+                }
+                
+                Log.d(TAG, "Automatic data loading process completed")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in automatic data loading: ${e.message}", e)
+                _uiState.value = TeacherDetailsUiState.Error("Failed to load data automatically: ${e.message}")
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+    
+    // BUTTON 1: Load names from total_teacher.json to teacher_details.json
     fun loadTeacherNamesFromTotalTeachers() {
         viewModelScope.launch {
             isLoading.value = true
             _uiState.value = TeacherDetailsUiState.Loading
             
             try {
-                // Check if total_teachers.json exists
+                // Check if total_teacher.json exists
                 if (!totalTeachersFilePath.exists()) {
                     _uiState.value = TeacherDetailsUiState.Error("Total teachers file not found at: ${totalTeachersFilePath.absolutePath}")
                     return@launch
                 }
                 
-                // Read total_teachers.json
+                // Read total_teacher.json
                 val json = totalTeachersFilePath.readText()
                 if (json.isBlank()) {
                     _uiState.value = TeacherDetailsUiState.Error("Total teachers file is empty")
@@ -121,11 +162,11 @@ class TeacherDetailsViewModel : ViewModel() {
                     val teacherObjects = gson.fromJson<List<TeacherJson>>(json, type) ?: emptyList()
                     
                     if (teacherObjects.isNotEmpty()) {
-                        Log.d(TAG, "Loaded ${teacherObjects.size} teacher objects from total_teachers.json")
+                        Log.d(TAG, "Loaded ${teacherObjects.size} teacher objects from total_teacher.json")
                         
                         // Create TeacherDetails objects from the parsed data
                         val newTeachers = teacherObjects.map { 
-                            TeacherDetails(it.name, it.phone) 
+                            TeacherDetails(it.name, it.phone, it.variations) 
                         }
                         
                         // Save to teacher_details.json
@@ -152,10 +193,10 @@ class TeacherDetailsViewModel : ViewModel() {
                     return@launch
                 }
                 
-                Log.d(TAG, "Loaded ${teacherNames.size} teacher names from total_teachers.json")
+                Log.d(TAG, "Loaded ${teacherNames.size} teacher names from total_teacher.json")
                 
                 // Create TeacherDetails objects (just names, no phone numbers yet)
-                val newTeachers = teacherNames.map { TeacherDetails(it, "") }
+                val newTeachers = teacherNames.map { TeacherDetails(it, "", emptyList()) }
                 
                 // Save to teacher_details.json
                 saveTeacherDetails(newTeachers)
@@ -206,12 +247,52 @@ class TeacherDetailsViewModel : ViewModel() {
                 
                 // Match phone numbers with existing teachers
                 var matchCount = 0
+                var variationMatchCount = 0
+                var normalizedMatchCount = 0
+                
                 val updatedTeachers = teachers.map { teacher ->
+                    // Try to match by exact name first
                     if (phoneMap.containsKey(teacher.name)) {
                         matchCount++
                         teacher.copy(phoneNumber = phoneMap[teacher.name] ?: "")
                     } else {
-                        teacher
+                        // Try to match by normalized name
+                        val normalizedName = normalizeTeacherName(teacher.name)
+                        if (phoneMap.containsKey(normalizedName)) {
+                            normalizedMatchCount++
+                            Log.d(TAG, "Matched ${teacher.name} by normalized name: $normalizedName")
+                            teacher.copy(phoneNumber = phoneMap[normalizedName] ?: "")
+                        } else {
+                            // If no direct match, try to match by variations
+                            var matchedByVariation = false
+                            var matchedPhone = ""
+                            
+                            for (variation in teacher.variations) {
+                                if (phoneMap.containsKey(variation)) {
+                                    matchedByVariation = true
+                                    matchedPhone = phoneMap[variation] ?: ""
+                                    variationMatchCount++
+                                    Log.d(TAG, "Matched ${teacher.name} by variation: $variation")
+                                    break
+                                }
+                                
+                                // Try normalized variation
+                                val normalizedVariation = normalizeTeacherName(variation)
+                                if (phoneMap.containsKey(normalizedVariation)) {
+                                    matchedByVariation = true
+                                    matchedPhone = phoneMap[normalizedVariation] ?: ""
+                                    variationMatchCount++
+                                    Log.d(TAG, "Matched ${teacher.name} by normalized variation: $normalizedVariation")
+                                    break
+                                }
+                            }
+                            
+                            if (matchedByVariation) {
+                                teacher.copy(phoneNumber = matchedPhone)
+                            } else {
+                                teacher
+                            }
+                        }
                     }
                 }
                 
@@ -223,7 +304,14 @@ class TeacherDetailsViewModel : ViewModel() {
                 teachers.addAll(updatedTeachers)
                 
                 val missingCount = teachers.count { it.phoneNumber.isBlank() }
-                _uiState.value = TeacherDetailsUiState.Success("Matched $matchCount phone numbers. $missingCount teachers still missing phone numbers.")
+                val totalMatches = matchCount + normalizedMatchCount + variationMatchCount
+                val matchDetails = buildString {
+                    append("$matchCount direct matches")
+                    if (normalizedMatchCount > 0) append(", $normalizedMatchCount by normalized names")
+                    if (variationMatchCount > 0) append(", $variationMatchCount through variations")
+                }
+                
+                _uiState.value = TeacherDetailsUiState.Success("Matched $totalMatches phone numbers ($matchDetails). $missingCount teachers still missing phone numbers.")
             } catch (e: Exception) {
                 Log.e(TAG, "Error matching phone numbers: ${e.message}", e)
                 _uiState.value = TeacherDetailsUiState.Error("Failed to match phone numbers: ${e.message}")
@@ -253,7 +341,7 @@ class TeacherDetailsViewModel : ViewModel() {
             
             processedDir = File(baseDir, "processed")
             rawDir = File(baseDir, "raw")
-            totalTeachersFilePath = File(processedDir, "total_teachers.json")
+            totalTeachersFilePath = File(processedDir, "total_teacher.json")
             substituteFilePath = File(rawDir, "Substitude_file.csv")
             teacherDetailsFilePath = File(baseDir, "teacher_details.json")
             
@@ -265,7 +353,7 @@ class TeacherDetailsViewModel : ViewModel() {
             baseDir = File(context.filesDir, "substitute_data")
             processedDir = File(baseDir, "processed")
             rawDir = File(baseDir, "raw")
-            totalTeachersFilePath = File(processedDir, "total_teachers.json")
+            totalTeachersFilePath = File(processedDir, "total_teacher.json")
             substituteFilePath = File(rawDir, "Substitude_file.csv")
             teacherDetailsFilePath = File(baseDir, "teacher_details.json")
         }
@@ -317,12 +405,22 @@ class TeacherDetailsViewModel : ViewModel() {
                             val name = parts[0].trim()
                             val phone = parts[1].trim()
                             if (name.isNotBlank()) {
+                                // Add the name as-is
                                 phoneMap[name] = phone
+                                
+                                // Also add normalized versions to improve matching
+                                phoneMap[normalizeTeacherName(name)] = phone
+                                
                                 validEntries++
                             }
                         } else if (parts.size == 1 && parts[0].isNotBlank()) {
                             // Teacher with no phone number
-                            phoneMap[parts[0].trim()] = ""
+                            val name = parts[0].trim()
+                            phoneMap[name] = ""
+                            
+                            // Also add normalized version 
+                            phoneMap[normalizeTeacherName(name)] = ""
+                            
                             validEntries++
                         }
                     }
@@ -334,6 +432,26 @@ class TeacherDetailsViewModel : ViewModel() {
         }
         
         return phoneMap
+    }
+    
+    // Helper function to normalize teacher names for better matching
+    private fun normalizeTeacherName(name: String): String {
+        // Convert to lowercase
+        var normalized = name.lowercase()
+        
+        // Remove common prefixes like "Sir", "Miss", etc.
+        val prefixes = listOf("sir ", "miss ", "mr. ", "mrs. ", "ms. ", "dr. ")
+        for (prefix in prefixes) {
+            if (normalized.startsWith(prefix)) {
+                normalized = normalized.substring(prefix.length)
+                break
+            }
+        }
+        
+        // Remove extra spaces
+        normalized = normalized.trim()
+        
+        return normalized
     }
     
     private fun saveTeacherDetails(teachers: List<TeacherDetails>) {
@@ -393,13 +511,16 @@ class TeacherDetailsViewModel : ViewModel() {
     // Check for data files in alternative locations and copy them to expected paths
     private fun checkAndCopyDataFiles(context: Context) {
         try {
-            // Possible alternative paths for total_teachers.json
+            // Possible alternative paths for total_teacher.json
             val potentialTotalTeachersFiles = listOf(
+                File(context.getExternalFilesDir(null), "total_teacher.json"),
+                File(context.getExternalFilesDir(null), "my_fiels/data/total_teacher.json"),
+                File("/storage/emulated/0/Download/total_teacher.json"),
+                File("/storage/emulated/0/my_fiels/data/total_teacher.json"),
+                File("/storage/emulated/0/Android/data/com.substituemanagment.managment/files/total_teacher.json"),
+                // Include the original path with "original" in case that's what the user has
                 File(context.getExternalFilesDir(null), "total_teacher_original.json"),
-                File(context.getExternalFilesDir(null), "my_fiels/data/total_teacher_original.json"),
-                File("/storage/emulated/0/Download/total_teacher_original.json"),
-                File("/storage/emulated/0/my_fiels/data/total_teacher_original.json"),
-                File("/storage/emulated/0/Android/data/com.substituemanagment.managment/files/total_teacher_original.json")
+                File("/storage/emulated/0/Download/total_teacher_original.json")
             )
             
             // Possible alternative paths for substitute file
@@ -413,12 +534,12 @@ class TeacherDetailsViewModel : ViewModel() {
             
             // Check if expected files already exist
             if (!totalTeachersFilePath.exists()) {
-                // Try to find total_teachers.json in alternative locations
+                // Try to find total_teacher.json in alternative locations
                 for (file in potentialTotalTeachersFiles) {
                     if (file.exists()) {
-                        Log.d(TAG, "Found total teachers file at alternative location: ${file.absolutePath}")
+                        Log.d(TAG, "Found total teacher file at alternative location: ${file.absolutePath}")
                         file.copyTo(totalTeachersFilePath, overwrite = true)
-                        Log.d(TAG, "Copied total teachers file to: ${totalTeachersFilePath.absolutePath}")
+                        Log.d(TAG, "Copied total teacher file to: ${totalTeachersFilePath.absolutePath}")
                         break
                     }
                 }

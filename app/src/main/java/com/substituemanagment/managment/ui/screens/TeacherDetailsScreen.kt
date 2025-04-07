@@ -85,7 +85,7 @@ fun TeacherDetailsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Teacher Details") },
+                title = { Text("Teacher Numbers") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -105,7 +105,7 @@ fun TeacherDetailsScreen(navController: NavController) {
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // Action Buttons
+                // Status Card - Shows the current status instead of buttons
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -119,43 +119,131 @@ fun TeacherDetailsScreen(navController: NavController) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Teacher Data Import Steps",
+                            text = "Teacher Data Status",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         
-                        Text(
-                            text = "Step 1: Load teacher names from total_teachers.json file",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        
-                        Button(
-                            onClick = { viewModel.loadTeacherNamesFromTotalTeachers() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 12.dp)
-                        ) {
-                            Icon(Icons.Default.People, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("1. Load Teacher Names")
+                        when (val state = viewModel.uiState.collectAsState().value) {
+                            is TeacherDetailsViewModel.TeacherDetailsUiState.Loading -> {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text("Loading data automatically...")
+                                }
+                            }
+                            is TeacherDetailsViewModel.TeacherDetailsUiState.Success -> {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = "Success",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(state.message)
+                                }
+                            }
+                            is TeacherDetailsViewModel.TeacherDetailsUiState.Error -> {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Error,
+                                        contentDescription = "Error",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        state.message,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                            else -> {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Info,
+                                        contentDescription = "Info",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        "Teacher data loaded automatically",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
                         }
                         
+                        // Summary information
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
                         
-                        Text(
-                            text = "Step 2: Match phone numbers from Substitude_file.csv",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(bottom = 4.dp, top = 8.dp)
-                        )
-                        
-                        Button(
-                            onClick = { viewModel.matchPhoneNumbersFromSubstituteFile() },
-                            modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(Icons.Default.Phone, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("2. Match Phone Numbers")
+                            Text(
+                                text = "Total Teachers:",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "${viewModel.teachers.size}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "With Phone Numbers:",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "${viewModel.teachers.count { it.phoneNumber.isNotBlank() }}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Missing Phone Numbers:",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "${viewModel.teachers.count { it.phoneNumber.isBlank() }}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (viewModel.teachers.any { it.phoneNumber.isBlank() }) 
+                                    MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
@@ -262,9 +350,10 @@ fun TeacherDetailsScreen(navController: NavController) {
                                         color = MaterialTheme.colorScheme.error
                                     )
                                     Text(
-                                        text = "Follow steps above to import teacher data:\n" +
-                                               "1. Load teacher names from total_teachers.json\n" +
-                                               "2. Match phone numbers from Substitude_file.csv",
+                                        text = "Teacher data is loaded automatically from files:\n" +
+                                               "- Names from total_teacher.json\n" +
+                                               "- Phone numbers from Substitude_file.csv\n\n" +
+                                               "Please check if these files exist in the proper location.",
                                         style = MaterialTheme.typography.bodyMedium,
                                         textAlign = TextAlign.Center
                                     )

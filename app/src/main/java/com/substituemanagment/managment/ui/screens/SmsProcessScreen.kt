@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.substituemanagment.managment.navigation.Screen
 import com.substituemanagment.managment.ui.viewmodel.SmsViewModel
+import com.substituemanagment.managment.ui.viewmodels.TeacherDetailsViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
@@ -44,6 +46,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SmsProcessScreen(navController: NavController) {
     val viewModel: SmsViewModel = viewModel()
+    val teacherDetailsViewModel: TeacherDetailsViewModel = viewModel()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
@@ -52,11 +55,28 @@ fun SmsProcessScreen(navController: NavController) {
     val editingPhoneNumber = remember { mutableStateMapOf<String, Boolean>() }
     val phoneNumbers = remember { mutableStateMapOf<String, String>() }
     
+    // Track original state of phone numbers to detect new additions
+    val originalPhoneStatus = remember { mutableStateMapOf<String, Boolean>() }
+    
     val isLoading by remember { viewModel.isLoading }
     val errorMessage by remember { viewModel.errorMessage }
     val snackbarHostState = remember { SnackbarHostState() }
     var showSuccessBar by remember { mutableStateOf(false) }
     var successMessage by remember { mutableStateOf("") }
+    
+    // Track if we should show an info banner about auto-loaded numbers
+    var showAutoLoadedInfo by remember { mutableStateOf(false) }
+    var autoLoadedCount by remember { mutableStateOf(0) }
+    
+    // For confirmation dialog when saving a new phone number
+    var showSaveNumberDialog by remember { mutableStateOf(false) }
+    var currentTeacherForSaving by remember { mutableStateOf<String?>(null) }
+    var currentNumberForSaving by remember { mutableStateOf("") }
+    
+    // Initialize TeacherDetailsViewModel
+    LaunchedEffect(Unit) {
+        teacherDetailsViewModel.initialize(context)
+    }
     
     // Check if there are any selected teachers and prepare them
     LaunchedEffect(Unit) {
@@ -92,7 +112,33 @@ fun SmsProcessScreen(navController: NavController) {
                 phoneNumbers[teacher.name] = teacher.phone
                 // Mark for editing if phone is empty or invalid
                 editingPhoneNumber[teacher.name] = teacher.phone.isBlank() || !viewModel.isValidPhoneNumber(teacher.phone)
+                // Track original phone status for later comparison
+                originalPhoneStatus[teacher.name] = viewModel.isValidPhoneNumber(teacher.phone)
             }
+            
+            // Try to load phone numbers from teacher_details.json and fallback to total_teacher.json if needed
+            viewModel.loadPhoneNumbers()
+            
+            // Short delay to ensure numbers are loaded
+            delay(500)
+            
+            // Update phone numbers from the viewModel
+            selectedTeachers.forEach { teacher ->
+                val phoneNumber = viewModel.phoneNumbers[teacher.name] ?: ""
+                if (phoneNumber.isNotBlank()) {
+                    phoneNumbers[teacher.name] = phoneNumber
+                    // If a valid number was auto-loaded, no need to edit
+                    if (viewModel.isValidPhoneNumber(phoneNumber) && 
+                        viewModel.phoneNumberSources[teacher.name] == "auto") {
+                        autoLoadedCount++
+                        editingPhoneNumber[teacher.name] = false
+                        originalPhoneStatus[teacher.name] = true
+                    }
+                }
+            }
+            
+            // Show info banner if any numbers were auto-loaded
+            showAutoLoadedInfo = autoLoadedCount > 0
         }
     }
     
@@ -112,6 +158,71 @@ fun SmsProcessScreen(navController: NavController) {
         errorMessage?.let {
             snackbarHostState.showSnackbar(message = it)
         }
+    }
+    
+    // Dialog to confirm saving phone number to teacher details
+    if (showSaveNumberDialog && currentTeacherForSaving != null) {
+        AlertDialog(
+            onDismissRequest = { 
+                showSaveNumberDialog = false 
+            },
+            title = { 
+                Text("Save Phone Number") 
+            },
+            text = { 
+                Column {
+                    Text("Do you want to save this phone number for ${currentTeacherForSaving} permanently for future use?")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Phone: $currentNumberForSaving",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "This will update the teacher's contact information for all future communications.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // Save to TeacherDetailsViewModel
+                        currentTeacherForSaving?.let { teacherName ->
+                            teacherDetailsViewModel.updateTeacherPhone(teacherName, currentNumberForSaving)
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Phone number saved for $teacherName",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
+                        showSaveNumberDialog = false
+                    }
+                ) {
+                    Icon(Icons.Default.Save, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Save Permanently")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { 
+                        showSaveNumberDialog = false 
+                    }
+                ) {
+                    Text("Just Use Once")
+                }
+            },
+            icon = {
+                Icon(
+                    Icons.Default.Save,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        )
     }
     
     Scaffold(
@@ -298,6 +409,25 @@ fun SmsProcessScreen(navController: NavController) {
                             text = "Please verify phone numbers before sending SMS.",
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        
+                        // Show info about auto-loaded numbers
+                        if (showAutoLoadedInfo) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                text = "$autoLoadedCount phone numbers were automatically loaded from teacher records.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            
+                            Spacer(modifier = Modifier.height(4.dp))
+                            
+                            Text(
+                                text = "You can manage phone numbers in the Teacher Numbers screen in Settings.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 
@@ -340,9 +470,26 @@ fun SmsProcessScreen(navController: NavController) {
                                 isEditing = editingPhoneNumber[teacher.name] ?: false,
                                 onEditClick = { editingPhoneNumber[teacher.name] = true },
                                 onPhoneChange = { phoneNumbers[teacher.name] = it },
-                                onDone = { editingPhoneNumber[teacher.name] = false },
+                                onDone = { phoneNumber ->
+                                    // Get the original status (valid phone or not)
+                                    val hadValidPhone = originalPhoneStatus[teacher.name] ?: false
+                                    // Check if this is a new valid phone number where there wasn't one before
+                                    val isNewPhoneAdded = !hadValidPhone && viewModel.isValidPhoneNumber(phoneNumber)
+                                    
+                                    if (isNewPhoneAdded) {
+                                        // Show dialog to save permanently
+                                        currentTeacherForSaving = teacher.name
+                                        currentNumberForSaving = phoneNumber
+                                        showSaveNumberDialog = true
+                                    }
+                                    
+                                    // Close the editing mode
+                                    editingPhoneNumber[teacher.name] = false
+                                },
                                 isValid = viewModel.isValidPhoneNumber(phoneNumbers[teacher.name] ?: ""),
-                                assignmentsSummary = getSummaryForAssignments(teacher.assignments)
+                                assignmentsSummary = getSummaryForAssignments(teacher.assignments),
+                                isAutoLoaded = viewModel.phoneNumberSources[teacher.name] == "auto",
+                                hadValidPhoneInitially = originalPhoneStatus[teacher.name] ?: false
                             )
                         }
                     }
@@ -373,9 +520,11 @@ fun TeacherPhoneVerificationItem(
     isEditing: Boolean,
     onEditClick: () -> Unit,
     onPhoneChange: (String) -> Unit,
-    onDone: () -> Unit,
+    onDone: (String) -> Unit,
     isValid: Boolean,
-    assignmentsSummary: String = ""
+    assignmentsSummary: String = "",
+    isAutoLoaded: Boolean = false,
+    hadValidPhoneInitially: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -442,7 +591,7 @@ fun TeacherPhoneVerificationItem(
                     Spacer(modifier = Modifier.width(8.dp))
                     
                     IconButton(
-                        onClick = onDone,
+                        onClick = { onDone(phoneNumber) },
                         enabled = isValid
                     ) {
                         Icon(
@@ -476,12 +625,32 @@ fun TeacherPhoneVerificationItem(
                     
                     Spacer(modifier = Modifier.width(8.dp))
                     
-                    Text(
-                        text = if (phoneNumber.isBlank()) "No phone number provided" else phoneNumber,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (phoneNumber.isBlank() || !isValid) MaterialTheme.colorScheme.error 
-                               else MaterialTheme.colorScheme.onSurface
-                    )
+                    Column {
+                        Text(
+                            text = if (phoneNumber.isBlank()) "No phone number provided" else phoneNumber,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (phoneNumber.isBlank() || !isValid) MaterialTheme.colorScheme.error 
+                                   else MaterialTheme.colorScheme.onSurface
+                        )
+                        
+                        // Show auto-loaded tag
+                        if (isAutoLoaded && isValid) {
+                            Text(
+                                text = "Auto-loaded from teacher records",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            )
+                        }
+                        
+                        // Show a tag if this is a new number that wasn't there initially
+                        if (isValid && !hadValidPhoneInitially && !isAutoLoaded) {
+                            Text(
+                                text = "Newly added",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                        }
+                    }
                     
                     if (phoneNumber.isBlank() || !isValid) {
                         Spacer(modifier = Modifier.width(8.dp))
