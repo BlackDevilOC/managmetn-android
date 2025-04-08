@@ -1,0 +1,6 @@
+{
+  "versionCode": 4,
+  "versionName": "1.3",
+  "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v1.3/app-debug.apk",
+  "releaseNotes": "Version 1.3 updates:\n- Improved auto-update system with better reliability\n- Enhanced download verification process\n- Added dedicated installation screen\n- Fixed installation issues on various Android versions"
+} 

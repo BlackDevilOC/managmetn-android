@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -30,12 +31,14 @@ import com.substituemanagment.managment.navigation.NavGraph
 import com.substituemanagment.managment.navigation.Screen
 import com.substituemanagment.managment.ui.components.BottomNav
 import com.substituemanagment.managment.ui.theme.SubstitutionManagementTheme
+import com.substituemanagment.managment.ui.viewmodels.TeacherDetailsViewModel
 import com.substituemanagment.managment.utils.FileChecker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
+    private lateinit var teacherDetailsViewModel: TeacherDetailsViewModel
     
     // Permission launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -46,6 +49,8 @@ class MainActivity : ComponentActivity() {
             Log.d(TAG, "All permissions granted")
             // Create directories after permissions granted
             FileChecker.createRequiredDirectories(this)
+            // Initialize teacher details data
+            initializeTeacherDetailsData()
         } else {
             Log.e(TAG, "Not all permissions granted: $permissions")
             // Handle permission denial
@@ -55,11 +60,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Initialize TeacherDetailsViewModel
+        teacherDetailsViewModel = ViewModelProvider(this)[TeacherDetailsViewModel::class.java]
+        
         // Check and request permissions first
         checkAndRequestPermissions()
         
         // Create required directories (will also be called after permissions are granted)
         FileChecker.createRequiredDirectories(this)
+        
+        // Initialize teacher details data
+        initializeTeacherDetailsData()
         
         // Start the reporting service
         startReportingService()
@@ -118,6 +129,20 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+    
+    /**
+     * Initialize teacher details data
+     * This ensures that teacher details are loaded when the app starts,
+     * preventing errors when accessing this data later
+     */
+    private fun initializeTeacherDetailsData() {
+        try {
+            Log.d(TAG, "Initializing teacher details data")
+            teacherDetailsViewModel.initialize(this)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing teacher details data: ${e.message}", e)
         }
     }
     
