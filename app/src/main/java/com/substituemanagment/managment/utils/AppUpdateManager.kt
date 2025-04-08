@@ -153,13 +153,16 @@ class AppUpdateManager(private val context: Context) {
                 val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                 val uri = Uri.parse(info.downloadUrl)
                 
+                // Create a more unique filename to avoid conflicts
+                val apkFileName = "app-update-${info.versionName}-${System.currentTimeMillis()}.apk"
+                
                 val request = DownloadManager.Request(uri).apply {
                     setTitle("Downloading Update")
                     setDescription("Downloading version ${info.versionName}")
                     setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                     setDestinationInExternalPublicDir(
                         Environment.DIRECTORY_DOWNLOADS,
-                        "app-update-${info.versionName}.apk"
+                        apkFileName
                     )
                 }
                 
@@ -168,39 +171,79 @@ class AppUpdateManager(private val context: Context) {
                     override fun onReceive(context: Context, intent: Intent) {
                         val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                         if (id == downloadID) {
-                            // Download completed
-                            context.unregisterReceiver(this)
+                            Log.d(TAG, "Download with ID $downloadID completed")
                             
-                            // Get download info
-                            val query = DownloadManager.Query().apply {
-                                setFilterById(downloadID)
-                            }
-                            val cursor = downloadManager.query(query)
-                            
-                            if (cursor.moveToFirst()) {
-                                val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                                val status = cursor.getInt(statusIndex)
+                            try {
+                                // Unregister receiver first to avoid memory leaks
+                                context.unregisterReceiver(this)
                                 
-                                if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                                    // Get downloaded file
-                                    val localUriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
-                                    val localUri = cursor.getString(localUriIndex)
-                                    val uri = Uri.parse(localUri)
-                                    val file = File(uri.path!!)
-                                    
-                                    Log.d(TAG, "Download completed: ${file.absolutePath}")
-                                    updateCallback?.onUpdateDownloadCompleted(file)
-                                    
-                                    // Install the APK
-                                    installUpdate(file)
-                                } else {
-                                    val reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-                                    val reason = cursor.getInt(reasonIndex)
-                                    Log.e(TAG, "Download failed: $reason")
-                                    updateCallback?.onUpdateDownloadFailed("Download failed: $reason")
+                                // Get download info
+                                val query = DownloadManager.Query().apply {
+                                    setFilterById(downloadID)
                                 }
+                                val cursor = downloadManager.query(query)
+                                
+                                if (cursor.moveToFirst()) {
+                                    val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                                    val status = cursor.getInt(statusIndex)
+                                    
+                                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                                        // Get download location
+                                        val localUriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+                                        val localUri = cursor.getString(localUriIndex)
+                                        Log.d(TAG, "Download URI: $localUri")
+                                        
+                                        // Get the file from the Downloads directory
+                                        val file = File(
+                                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                                            apkFileName
+                                        )
+                                        
+                                        if (file.exists()) {
+                                            Log.d(TAG, "APK file found at: ${file.absolutePath}")
+                                            updateCallback?.onUpdateDownloadCompleted(file)
+                                            
+                                            // Launch the DownloadCompleteActivity to handle installation
+                                            launchInstallActivity(file, info.versionName)
+                                        } else {
+                                            // Try alternative method to get the file
+                                            try {
+                                                val uri = Uri.parse(localUri)
+                                                val path = uri.path
+                                                if (path != null) {
+                                                    val alternativeFile = File(path)
+                                                    if (alternativeFile.exists()) {
+                                                        Log.d(TAG, "APK file found at alternative path: ${alternativeFile.absolutePath}")
+                                                        updateCallback?.onUpdateDownloadCompleted(alternativeFile)
+                                                        launchInstallActivity(alternativeFile, info.versionName)
+                                                    } else {
+                                                        Log.e(TAG, "Alternative file does not exist: $path")
+                                                        updateCallback?.onUpdateDownloadFailed("Downloaded file not found")
+                                                    }
+                                                } else {
+                                                    Log.e(TAG, "URI path is null: $localUri")
+                                                    updateCallback?.onUpdateDownloadFailed("Downloaded file path is null")
+                                                }
+                                            } catch (e: Exception) {
+                                                Log.e(TAG, "Error finding downloaded file: ${e.message}", e)
+                                                updateCallback?.onUpdateDownloadFailed("Error finding downloaded file: ${e.message}")
+                                            }
+                                        }
+                                    } else {
+                                        val reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
+                                        val reason = cursor.getInt(reasonIndex)
+                                        Log.e(TAG, "Download failed: Status = $status, Reason = $reason")
+                                        updateCallback?.onUpdateDownloadFailed("Download failed: Status = $status, Reason = $reason")
+                                    }
+                                } else {
+                                    Log.e(TAG, "Download query returned no results")
+                                    updateCallback?.onUpdateDownloadFailed("Download information not found")
+                                }
+                                cursor.close()
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error processing download: ${e.message}", e)
+                                updateCallback?.onUpdateDownloadFailed("Error processing download: ${e.message}")
                             }
-                            cursor.close()
                         }
                     }
                 }
@@ -213,11 +256,11 @@ class AppUpdateManager(private val context: Context) {
                 
                 // Start download
                 downloadID = downloadManager.enqueue(request)
-                Log.d(TAG, "Started download with ID: $downloadID")
+                Log.d(TAG, "Started download with ID: $downloadID for URL: ${info.downloadUrl}")
                 updateCallback?.onUpdateDownloadStarted()
             } catch (e: Exception) {
                 Log.e(TAG, "Error downloading update: ${e.message}", e)
-                updateCallback?.onUpdateDownloadFailed("Error: ${e.message}")
+                updateCallback?.onUpdateDownloadFailed("Error downloading update: ${e.message}")
             }
         } ?: run {
             Log.e(TAG, "No update info available")
@@ -226,30 +269,89 @@ class AppUpdateManager(private val context: Context) {
     }
     
     /**
-     * Install the downloaded APK
+     * Launch the DownloadCompleteActivity to handle APK installation
+     */
+    private fun launchInstallActivity(file: File, versionName: String) {
+        try {
+            Log.d(TAG, "Launching DownloadCompleteActivity for file: ${file.absolutePath}")
+            
+            val intent = Intent(context, Class.forName("com.substituemanagment.managment.DownloadCompleteActivity")).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                putExtra("FILE_PATH", file.absolutePath)
+                putExtra("VERSION_NAME", versionName)
+            }
+            
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error launching install activity: ${e.message}", e)
+            
+            // Fallback to direct installation if activity launch fails
+            installUpdate(file)
+        }
+    }
+    
+    /**
+     * Install the downloaded APK (fallback method)
      */
     private fun installUpdate(file: File) {
         try {
+            Log.d(TAG, "Initiating APK installation for: ${file.absolutePath}")
+            
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 
                 // For Android N and above, we need to use FileProvider
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    val authority = "${context.packageName}.fileprovider"
+                    Log.d(TAG, "Using FileProvider with authority: $authority")
+                    
                     val uri = FileProvider.getUriForFile(
                         context,
-                        "${context.packageName}.fileprovider",
+                        authority,
                         file
                     )
+                    Log.d(TAG, "FileProvider URI: $uri")
+                    
                     setDataAndType(uri, "application/vnd.android.package-archive")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 } else {
-                    setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive")
+                    val uri = Uri.fromFile(file)
+                    Log.d(TAG, "Direct file URI: $uri")
+                    setDataAndType(uri, "application/vnd.android.package-archive")
                 }
             }
             
+            Log.d(TAG, "Starting installation activity")
             context.startActivity(intent)
         } catch (e: Exception) {
             Log.e(TAG, "Error installing update: ${e.message}", e)
+            
+            // Try alternative installation method if the first one fails
+            try {
+                Log.d(TAG, "Trying alternative installation method")
+                val intent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file
+                        )
+                    } else {
+                        Uri.fromFile(file)
+                    }
+                    data = uri
+                    putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+                    putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, context.applicationInfo.packageName)
+                    
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                }
+                context.startActivity(intent)
+            } catch (e2: Exception) {
+                Log.e(TAG, "Alternative installation also failed: ${e2.message}", e2)
+            }
         }
     }
 } 
