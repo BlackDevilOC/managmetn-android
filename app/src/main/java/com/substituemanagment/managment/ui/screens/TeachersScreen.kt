@@ -1,11 +1,13 @@
 package com.substituemanagment.managment.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,62 +21,61 @@ import com.substituemanagment.managment.ui.viewmodels.TeachersViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TeachersScreen(
-    viewModel: TeachersViewModel = viewModel()
-) {
+fun TeachersScreen() {
+    val viewModel: TeachersViewModel = viewModel()
     val context = LocalContext.current
     val teachers by viewModel.teachers.collectAsState()
+    val showCancellationDialog by viewModel.showCancellationDialog.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.initialize(context)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Teachers") }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            items(teachers) { teacher ->
+                TeacherItem(
+                    teacher = teacher,
+                    onToggleAttendance = { viewModel.toggleTeacherAttendance(teacher.name) }
+                )
+            }
+        }
+
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center)
             )
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Teacher Name",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = "Status",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.width(100.dp),
-                    textAlign = TextAlign.Center
-                )
-            }
+    }
 
-            // Teachers List
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                items(teachers) { teacher ->
-                    TeacherItem(
-                        teacher = teacher,
-                        onToggleAttendance = { viewModel.toggleTeacherAttendance(teacher.name) }
-                    )
+    showCancellationDialog?.let { teacherName ->
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissCancellationDialog() },
+            title = { Text("Teacher Return") },
+            text = { Text("Do you want to send cancellation notifications to assigned substitutes?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.handleTeacherReturn(context, teacherName, true)
+                    }
+                ) {
+                    Text("Yes, Send Notifications")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.handleTeacherReturn(context, teacherName, false)
+                    }
+                ) {
+                    Text("No, Just Mark Present")
                 }
             }
-        }
+        )
     }
 }
 
@@ -88,25 +89,28 @@ private fun TeacherItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        onClick = onToggleAttendance
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = teacher.name,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
-            Icon(
-                imageVector = if (teacher.isAbsent) Icons.Default.Close else Icons.Default.Check,
-                contentDescription = if (teacher.isAbsent) "Absent" else "Present",
-                tint = if (teacher.isAbsent) Color.Red else Color.Green,
-                modifier = Modifier.width(24.dp)
+            Switch(
+                checked = teacher.isAbsent,
+                onCheckedChange = { onToggleAttendance() }
             )
         }
     }

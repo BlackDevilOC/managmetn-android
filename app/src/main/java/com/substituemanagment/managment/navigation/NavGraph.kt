@@ -18,6 +18,7 @@ import com.substituemanagment.managment.ui.screens.SmsSendScreen
 import com.substituemanagment.managment.ui.screens.SmsProcessScreen
 import com.substituemanagment.managment.ui.screens.AttendanceReportsScreen
 import com.substituemanagment.managment.ui.screens.TeacherDetailsScreen
+import com.substituemanagment.managment.ui.screens.BackupTestScreen
 
 sealed class Screen(val route: String) {
     // Main screens accessible from bottom navigation
@@ -37,6 +38,7 @@ sealed class Screen(val route: String) {
     object AttendanceReports : Screen("attendance_reports")
     object SmsProcess : Screen("sms_process") // Phone number verification for SMS
     object TeacherDetails : Screen("teacher_details") // Teacher details screen
+    object BackupTest : Screen("backup_test") // Backup test screen
 }
 
 @Composable
@@ -49,6 +51,10 @@ fun NavGraph(
         startDestination = Screen.Home.route,
         modifier = modifier
     ) {
+        composable(Screen.BackupTest.route) {
+            BackupTestScreen()
+        }
+        
         composable(Screen.Home.route) {
             HomeScreen(navController)
         }
