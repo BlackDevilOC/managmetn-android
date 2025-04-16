@@ -64,7 +64,7 @@ fun SmsSendScreen(navController: NavController) {
         floatingActionButton = {
             // Only show FAB if at least one teacher is selected
             if (selectedTeachers.any { it.value }) {
-                FloatingActionButton(
+            FloatingActionButton(
                     onClick = {
                         // Get all selected teachers
                         val selectedTeachersList = selectedTeachers
@@ -83,11 +83,11 @@ fun SmsSendScreen(navController: NavController) {
                         modifier = Modifier.padding(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
+            ) {
+                Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Process SMS"
-                        )
+                    contentDescription = "Process SMS"
+                )
                         Text("Process SMS")
                     }
                 }
