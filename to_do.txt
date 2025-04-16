@@ -1,0 +1,34 @@
+this is content of  {
+  "assignments": [
+    {
+      "className": "7A",
+      "originalTeacher": "sir jamalullah",
+      "period": 1,
+      "substitute": "sir faraz ahmed",
+      "substitutePhone": ""
+    },
+    {
+      "className": "7A",
+      "originalTeacher": "sir jamalullah",
+      "period": 2,
+      "substitute": "sir waqar ali",
+      "substitutePhone": ""
+    },
+    {
+      "className": "8B",
+      "originalTeacher": "sir jamalullah",
+      "period": 5,
+      "substitute": "sir bakir Shah",
+      "substitutePhone": ""
+    },
+    {
+      "className": "7A",
+      "originalTeacher": "sir jamalullah",
+      "period": 8,
+      "substitute": "sir muhammad Taha",
+      "substitutePhone": ""
+    }
+  ],
+  "unassignedClasses": [],
+  "warnings": []
+}   file /storage/emulated/0/Android/data/com.substituemanagment.managment/files/substitute_data/assigned_substitute.json   on user device this file will contain info of teahcer who is assigedn for whom as you can see now add logic to display the data from this file bur rember that 

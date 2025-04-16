@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-files-path name="substitute_data" path="substitute_data" />
+    <external-files-path name="external_files" path="." />
+    
+    <!-- Add access to Downloads directory for APK installation -->
+    <external-path name="external_downloads" path="Download" />
+    <external-path name="external" path="." />
+    
+    <!-- For devices that have a separate storage path -->
+    <external-storage-path name="external_storage" path="." />
+    <root-path name="external_files" path="/storage/emulated/0/Download" />
+</paths> 

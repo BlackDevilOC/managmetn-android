@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "name": "John Smith",
+    "phone": "+1234567890"
+  },
+  {
+    "id": "2",
+    "name": "Mary Johnson",
+    "phone": "+1234567891"
+  },
+  {
+    "id": "3",
+    "name": "Robert Williams",
+    "phone": "+1234567892"
+  },
+  {
+    "id": "4",
+    "name": "Sarah Brown",
+    "phone": "+1234567893"
+  },
+  {
+    "id": "5",
+    "name": "Michael Davis",
+    "phone": "+1234567894"
+  },
+  {
+    "id": "6",
+    "name": "Jennifer Miller",
+    "phone": "+1234567895"
+  },
+  {
+    "id": "7",
+    "name": "David Wilson",
+    "phone": "+1234567896"
+  },
+  {
+    "id": "8",
+    "name": "Lisa Moore",
+    "phone": "+1234567897"
+  }
+] 
