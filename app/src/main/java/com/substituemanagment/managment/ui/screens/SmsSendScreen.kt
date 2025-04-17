@@ -48,14 +48,16 @@ fun SmsSendScreen(navController: NavController) {
                 title = { Text("SMS Notifications") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.refreshData() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
-                    IconButton(onClick = { /* TODO: Add history action */ }) {
+                    IconButton(
+                        onClick = { navController.navigate("sms_history") }
+                    ) {
                         Icon(Icons.Default.History, contentDescription = "History")
                     }
                 }

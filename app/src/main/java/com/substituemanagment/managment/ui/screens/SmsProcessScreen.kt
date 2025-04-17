@@ -3,6 +3,7 @@ package com.substituemanagment.managment.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -22,6 +24,8 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.substituemanagment.managment.ui.viewmodel.SmsViewModel
 import com.substituemanagment.managment.utils.SmsSender
+import com.substituemanagment.managment.data.SmsDataManager
+import com.substituemanagment.managment.data.SmsHistoryDto
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -49,11 +53,11 @@ fun SmsProcessScreen(
     val phoneNumbers = remember { mutableStateMapOf<String, String>() }
     val sortedTeachers = remember { mutableStateListOf<String>() }
     
-    // State for dialogs
-    var showProgress by remember { mutableStateOf(false) }
-    var showCompletionDialog by remember { mutableStateOf(false) }
-    var currentProgress by remember { mutableStateOf(0) }
-    var totalTeachers by remember { mutableStateOf(0) }
+    // Dialog states
+    var showSendingDialog by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0) }
+    var total by remember { mutableStateOf(0) }
     var isSending by remember { mutableStateOf(false) }
 
     // Function to get teacher phone number
@@ -79,13 +83,45 @@ fun SmsProcessScreen(
         return null
     }
 
-    // Load phone numbers for all teachers
+    // Initialize SMS directory and files
     LaunchedEffect(Unit) {
-        // Sort teachers: those without phone numbers first
-        sortedTeachers.addAll(teachersList.sortedBy { teacher ->
-            val phone = getTeacherPhoneNumber(teacher)
-            if (phone.isNullOrEmpty()) 0 else 1
-        })
+        try {
+            val baseDir = File(context.getExternalFilesDir(null), "substitute_data")
+            val smsDir = File(baseDir, "sms")
+            if (!smsDir.exists()) {
+                smsDir.mkdirs()
+            }
+
+            // Initialize history file if it doesn't exist
+            val historyFile = File(smsDir, "sms_history.json")
+            if (!historyFile.exists()) {
+                historyFile.createNewFile()
+                // Initialize with empty array
+                historyFile.writeText("[]")
+            }
+
+            // Initialize templates file if it doesn't exist
+            val templatesFile = File(smsDir, "sms_templates.json")
+            if (!templatesFile.exists()) {
+                templatesFile.createNewFile()
+                templatesFile.writeText("[]")
+            }
+
+            // Initialize contacts file if it doesn't exist
+            val contactsFile = File(smsDir, "teacher_contacts.json")
+            if (!contactsFile.exists()) {
+                contactsFile.createNewFile()
+                contactsFile.writeText("[]")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            scope.launch {
+                snackbarHostState.showSnackbar("Error initializing SMS storage: ${e.message}")
+            }
+        }
+
+        // Load phone numbers for all teachers
+        sortedTeachers.addAll(teachersList)
         
         // Initialize phone numbers
         teachersList.forEach { teacher ->
@@ -96,157 +132,110 @@ fun SmsProcessScreen(
         }
     }
 
-    // Function to save SMS history
-    fun saveSmsHistory(teacher: String, phone: String, message: String, status: String) {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val timestamp = dateFormat.format(Date())
-        
-        // Add to viewModel's history
-        viewModel.smsHistory.add(0, SmsViewModel.SmsMessage(
-            id = UUID.randomUUID().toString(),
-            teacherName = teacher,
-            teacherPhone = phone,
-            message = message,
-            timestamp = System.currentTimeMillis(),
-            status = status
-        ))
-    }
-
-    // Progress Dialog
-    if (showProgress) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .wrapContentHeight(),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
+    // Sending Dialog
+    if (showSendingDialog) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = {
+                Text(
+                    "Sending SMS",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
                 Column(
                     modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(
-                        text = "Sending SMS",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-
+                    // Infinite animation progress indicator
                     CircularProgressIndicator(
-                        progress = currentProgress.toFloat() / totalTeachers,
-                        modifier = Modifier.size(64.dp),
-                        strokeWidth = 6.dp
+                        modifier = Modifier.size(48.dp),
+                        color = MaterialTheme.colorScheme.primary
                     )
-
-                    Text(
-                        text = "$currentProgress of $totalTeachers messages sent",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
-                    Button(
-                        onClick = { 
-                            showProgress = false
-                            isSending = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                    
+                    // Progress text
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("Cancel")
+                        Text(
+                            "Sending messages...",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "$progress of $total sent",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        isSending = false
+                        showSendingDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
             }
-        }
+        )
     }
 
-    // Completion Dialog
-    if (showCompletionDialog) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .wrapContentHeight(),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+    // Success Dialog
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            title = {
+                Text(
+                    "SMS Sent Successfully",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("All messages have been sent successfully.")
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Success",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp)
-                    )
-
-                    Text(
-                        text = "SMS Sent Successfully",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "All messages have been sent successfully. Where would you like to go?",
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    TextButton(
+                        onClick = {
+                            showSuccessDialog = false
+                            navController.navigate("home")
+                        },
+                        modifier = Modifier.weight(1f)
                     ) {
-                        OutlinedButton(
-                            onClick = { 
-                                showCompletionDialog = false
-                                navController.navigate("home")
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Home")
-                        }
-                        Button(
-                            onClick = { 
-                                showCompletionDialog = false
-                                navController.navigate("sms_history")
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("SMS History")
-                        }
+                        Text("Home")
+                    }
+                    Button(
+                        onClick = {
+                            showSuccessDialog = false
+                            navController.navigate("sms_history")
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("View History")
                     }
                 }
             }
-        }
+        )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Process SMS") },
+                title = { Text("Send SMS") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { navController.navigate("sms_history") }) {
-                        Icon(Icons.Default.History, contentDescription = "SMS History")
                     }
                 }
             )
@@ -258,6 +247,19 @@ fun SmsProcessScreen(
                     
                     scope.launch {
                         try {
+                            // Verify SMS directory exists before sending
+                            val baseDir = File(context.getExternalFilesDir(null), "substitute_data")
+                            val smsDir = File(baseDir, "sms")
+                            if (!smsDir.exists()) {
+                                smsDir.mkdirs()
+                            }
+
+                            val historyFile = File(smsDir, "sms_history.json")
+                            if (!historyFile.exists()) {
+                                historyFile.createNewFile()
+                                historyFile.writeText("[]")
+                            }
+
                             isSending = true
                             
                             // Get teachers with valid phone numbers
@@ -272,78 +274,145 @@ fun SmsProcessScreen(
                                 return@launch
                             }
 
-                            // Initialize progress tracking
-                            currentProgress = 0
-                            totalTeachers = teachersWithPhone.size
-                            showProgress = true
+                            // Initialize progress
+                            progress = 0
+                            total = teachersWithPhone.size
+                            showSendingDialog = true
 
-                            // Send SMS to each teacher one by one
-                            for (teacher in teachersWithPhone) {
-                                if (!showProgress) break  // Stop if cancelled
+                            var successCount = 0
+                            var failureCount = 0
+
+                            // Process teachers in smaller batches
+                            val batchSize = 3
+                            teachersWithPhone.chunked(batchSize).forEach { batch ->
+                                if (!isSending) return@forEach
                                 
-                                val phone = phoneNumbers[teacher] ?: continue
-                                
-                                // Get teacher's assignments from viewModel
-                                val assignments = viewModel.teacherAssignments[teacher] ?: emptyList()
-                                if (assignments.isEmpty()) continue
-                                
-                                // Sort assignments by period
-                                val sortedAssignments = assignments.sortedBy { it.period }
-                                
-                                // Create detailed message
-                                val dateStr = sortedAssignments.first().date
-                                val dayStr = java.time.LocalDate.parse(dateStr).dayOfWeek.toString().lowercase()
-                                    .replaceFirstChar { it.uppercase() }
-                                
-                                val message = if (sortedAssignments.size == 1) {
-                                    val assignment = sortedAssignments.first()
-                                    """
-                                    Dear ${teacher.split(" ").firstOrNull() ?: teacher},
-                                    You have been assigned as a substitute teacher for ${assignment.className} 
-                                    Period: ${assignment.period}
-                                    Date: $dateStr ($dayStr)
-                                    Original Teacher: ${assignment.originalTeacher}
-                                    Please confirm your availability.
-                                    """.trimIndent()
-                                } else {
-                                    """
-                                    Dear ${teacher.split(" ").firstOrNull() ?: teacher},
-                                    You have been assigned to the following classes on $dateStr ($dayStr):
+                                batch.forEach { teacher ->
+                                    if (!isSending) return@forEach
                                     
-                                    ${sortedAssignments.joinToString("\n") { assignment ->
-                                        "• Period ${assignment.period}: ${assignment.className} (for ${assignment.originalTeacher})"
-                                    }}
-                                    
-                                    Please confirm your availability.
-                                    """.trimIndent()
+                                    val phone = phoneNumbers[teacher] ?: return@forEach
+                                    val assignments = viewModel.teacherAssignments[teacher] ?: emptyList()
+                                    if (assignments.isEmpty()) return@forEach
+
+                                    val sortedAssignments = assignments.sortedBy { it.period }
+                                    val dateStr = sortedAssignments.first().date
+                                    val dayStr = java.time.LocalDate.parse(dateStr).dayOfWeek.toString()
+                                        .lowercase().replaceFirstChar { it.uppercase() }
+
+                                    val message = if (sortedAssignments.size == 1) {
+                                        val assignment = sortedAssignments.first()
+                                        """
+                                        Dear ${teacher.split(" ").firstOrNull() ?: teacher},
+                                        You have been assigned to:
+                                        Period ${assignment.period}: ${assignment.className}
+                                        Date: $dateStr ($dayStr)
+                                        Original Teacher: ${assignment.originalTeacher}
+                                        Please confirm your availability.
+                                        """.trimIndent()
+                                    } else {
+                                        """
+                                        Dear ${teacher.split(" ").firstOrNull() ?: teacher},
+                                        You have been assigned to the following classes on $dateStr ($dayStr):
+                                        
+                                        ${sortedAssignments.joinToString("\n") { assignment ->
+                                            "• Period ${assignment.period}: ${assignment.className} (for ${assignment.originalTeacher})"
+                                        }}
+                                        
+                                        Please confirm your availability.
+                                        """.trimIndent()
+                                    }
+
+                                    try {
+                                        val success = SmsSender.sendSingleSms(context, phone, message)
+                                        val smsId = UUID.randomUUID().toString()
+                                        val timestamp = System.currentTimeMillis()
+                                        
+                                        if (success) {
+                                            successCount++
+                                            // Save successful SMS to history
+                                            val historyEntry = SmsHistoryDto(
+                                                id = smsId,
+                                                recipients = listOf(teacher),
+                                                message = message,
+                                                timestamp = timestamp,
+                                                status = "Sent"
+                                            )
+                                            SmsDataManager.addSmsToHistory(context, historyEntry)
+                                            
+                                            // Add to view model's history
+                                            viewModel.smsHistory.add(0, SmsViewModel.SmsMessage(
+                                                id = smsId,
+                                                teacherName = teacher,
+                                                teacherPhone = phone,
+                                                message = message,
+                                                timestamp = timestamp,
+                                                status = "Sent"
+                                            ))
+                                        } else {
+                                            failureCount++
+                                            // Save failed SMS to history
+                                            val historyEntry = SmsHistoryDto(
+                                                id = smsId,
+                                                recipients = listOf(teacher),
+                                                message = message,
+                                                timestamp = timestamp,
+                                                status = "Failed to send"
+                                            )
+                                            SmsDataManager.addSmsToHistory(context, historyEntry)
+                                            
+                                            // Add to view model's history
+                                            viewModel.smsHistory.add(0, SmsViewModel.SmsMessage(
+                                                id = smsId,
+                                                teacherName = teacher,
+                                                teacherPhone = phone,
+                                                message = message,
+                                                timestamp = timestamp,
+                                                status = "Failed to send"
+                                            ))
+                                        }
+                                    } catch (e: Exception) {
+                                        failureCount++
+                                        val smsId = UUID.randomUUID().toString()
+                                        val timestamp = System.currentTimeMillis()
+                                        
+                                        // Save error to history
+                                        val historyEntry = SmsHistoryDto(
+                                            id = smsId,
+                                            recipients = listOf(teacher),
+                                            message = message,
+                                            timestamp = timestamp,
+                                            status = "Error: ${e.message}"
+                                        )
+                                        SmsDataManager.addSmsToHistory(context, historyEntry)
+                                        
+                                        // Add to view model's history
+                                        viewModel.smsHistory.add(0, SmsViewModel.SmsMessage(
+                                            id = smsId,
+                                            teacherName = teacher,
+                                            teacherPhone = phone,
+                                            message = message,
+                                            timestamp = timestamp,
+                                            status = "Error: ${e.message}"
+                                        ))
+                                    }
+
+                                    progress++
+                                    delay(500) // Delay between messages
                                 }
-                                
-                                // Send SMS and update progress
-                                val success = SmsSender.sendSingleSms(
-                                    context = context,
-                                    phoneNumber = phone,
-                                    message = message
-                                )
-
-                                // Save to history
-                                saveSmsHistory(
-                                    teacher = teacher,
-                                    phone = phone,
-                                    message = message,
-                                    status = if (success) "Sent" else "Failed"
-                                )
-
-                                currentProgress++
-                                delay(500) // Small delay to prevent overwhelming the system
+                                delay(1000) // Delay between batches
                             }
 
-                            if (showProgress) {  // Only show completion if not cancelled
-                                showProgress = false
-                                showCompletionDialog = true
+                            // Show completion dialog with results
+                            showSendingDialog = false
+                            if (isSending) {
+                                snackbarHostState.showSnackbar(
+                                    "Completed: $successCount sent, $failureCount failed"
+                                )
+                                showSuccessDialog = successCount > 0
                             }
                             isSending = false
                         } catch (e: Exception) {
-                            showProgress = false
+                            showSendingDialog = false
                             isSending = false
                             snackbarHostState.showSnackbar("Error: ${e.message}")
                         }
@@ -359,16 +428,17 @@ fun SmsProcessScreen(
                     Icon(
                         imageVector = Icons.Default.Send,
                         contentDescription = "Send SMS",
-                        tint = if (isSending) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onPrimary
+                        tint = if (isSending) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                            else MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
                         text = "Send SMS",
-                        color = if (isSending) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onPrimary
+                        color = if (isSending) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                            else MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier

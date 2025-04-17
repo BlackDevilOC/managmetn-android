@@ -2,31 +2,28 @@ package com.substituemanagment.managment.data
 
 import android.content.Context
 import android.util.Log
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
 import java.io.IOException
+import java.util.UUID
 
 // Data models for SMS functionality
 
-@Serializable
 data class SmsTemplateDto(
     val id: String,
     val name: String,
     val content: String
 )
 
-@Serializable
 data class TeacherContactDto(
     val id: String,
     val name: String,
     val phone: String
 )
 
-@Serializable
 data class SmsHistoryDto(
     val id: String,
     val recipients: List<String>,
@@ -47,7 +44,7 @@ object SmsDataManager {
     private const val SMS_HISTORY_FILE = "sms_history.json"
     private const val SAMPLE_TEACHERS_ASSET = "sample_teachers.json"
     
-    private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
+    private val gson = Gson()
     
     // Initialize method to ensure directories exist
     fun initialize(context: Context) {
@@ -66,6 +63,25 @@ object SmsDataManager {
                 Log.d(TAG, "Created SMS directory: $created - ${smsDir.absolutePath}")
             }
             
+            // Initialize files with empty arrays if they don't exist
+            val historyFile = File(smsDir, SMS_HISTORY_FILE)
+            if (!historyFile.exists()) {
+                historyFile.createNewFile()
+                historyFile.writeText("[]")
+            }
+            
+            val templatesFile = File(smsDir, SMS_TEMPLATES_FILE)
+            if (!templatesFile.exists()) {
+                templatesFile.createNewFile()
+                templatesFile.writeText("[]")
+            }
+            
+            val contactsFile = File(smsDir, TEACHER_CONTACTS_FILE)
+            if (!contactsFile.exists()) {
+                contactsFile.createNewFile()
+                contactsFile.writeText("[]")
+            }
+            
             // Log storage info for debugging
             Log.d(TAG, "Storage Info: ${getStorageInfo()}")
         } catch (e: Exception) {
@@ -76,7 +92,7 @@ object SmsDataManager {
     
     // SMS Templates
     fun saveTemplates(context: Context, templates: List<SmsTemplateDto>) {
-        val jsonString = json.encodeToString(templates)
+        val jsonString = gson.toJson(templates)
         saveToFile(context, SMS_TEMPLATES_FILE, jsonString)
     }
     
@@ -84,81 +100,17 @@ object SmsDataManager {
         initialize(context)
         val jsonString = loadFromFile(context, SMS_TEMPLATES_FILE) ?: return getDefaultTemplates()
         return try {
-            json.decodeFromString<List<SmsTemplateDto>>(jsonString)
+            val type = object : TypeToken<List<SmsTemplateDto>>() {}.type
+            gson.fromJson(jsonString, type) ?: getDefaultTemplates()
         } catch (e: Exception) {
             Log.e(TAG, "Error loading templates", e)
             getDefaultTemplates()
         }
     }
     
-    private fun getDefaultTemplates(): List<SmsTemplateDto> {
-        return listOf(
-            SmsTemplateDto(
-                "1", 
-                "Standard Assignment", 
-                "Dear {substitute_teacher}, you have been assigned to cover {class} Period {period} for {original_teacher} on {date} ({day}). Please confirm your availability."
-            ),
-            SmsTemplateDto(
-                "2", 
-                "Urgent Assignment", 
-                "URGENT: Dear {substitute_teacher}, you have been assigned to cover {class} Period {period} for {original_teacher} today ({day}). Please reply Y/N ASAP."
-            ),
-            SmsTemplateDto(
-                "3", 
-                "Detailed Assignment", 
-                "Dear {substitute_teacher},\n\nYou have been assigned to substitute for:\n\nClass: {class}\nOriginal Teacher: {original_teacher}\nDate: {date} ({day})\nPeriod: {period}\nRoom: {room}\n\nPlease arrive 10 minutes early and confirm your availability."
-            )
-        )
-    }
-    
-    // Teacher Contacts
-    fun saveTeacherContacts(context: Context, contacts: List<TeacherContactDto>) {
-        val jsonString = json.encodeToString(contacts)
-        saveToFile(context, TEACHER_CONTACTS_FILE, jsonString)
-    }
-    
-    fun loadTeacherContacts(context: Context): List<TeacherContactDto> {
-        initialize(context)
-        val jsonString = loadFromFile(context, TEACHER_CONTACTS_FILE)
-        
-        // If no teacher data exists, try to load sample data from assets
-        if (jsonString == null) {
-            return loadSampleTeachers(context)
-        }
-        
-        return try {
-            json.decodeFromString<List<TeacherContactDto>>(jsonString)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error loading teacher contacts", e)
-            loadSampleTeachers(context)
-        }
-    }
-    
-    private fun loadSampleTeachers(context: Context): List<TeacherContactDto> {
-        try {
-            val inputStream = context.assets.open(SAMPLE_TEACHERS_ASSET)
-            val size = inputStream.available()
-            val buffer = ByteArray(size)
-            inputStream.read(buffer)
-            inputStream.close()
-            val jsonString = String(buffer, Charsets.UTF_8)
-            
-            val sampleTeachers = json.decodeFromString<List<TeacherContactDto>>(jsonString)
-            
-            // Save the sample data to local storage for future use
-            saveTeacherContacts(context, sampleTeachers)
-            
-            return sampleTeachers
-        } catch (e: IOException) {
-            Log.e(TAG, "Error loading sample teachers", e)
-            e.printStackTrace()
-            return emptyList()
-        }
-    }
-    
     // SMS History
     fun saveSmsHistory(context: Context, history: List<SmsHistoryDto>) {
-        val jsonString = json.encodeToString(history)
+        val jsonString = gson.toJson(history)
         saveToFile(context, SMS_HISTORY_FILE, jsonString)
     }
     
@@ -166,7 +118,8 @@ object SmsDataManager {
         initialize(context)
         val jsonString = loadFromFile(context, SMS_HISTORY_FILE) ?: return emptyList()
         return try {
-            json.decodeFromString<List<SmsHistoryDto>>(jsonString)
+            val type = object : TypeToken<List<SmsHistoryDto>>() {}.type
+            gson.fromJson(jsonString, type) ?: emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Error loading SMS history", e)
             emptyList()
@@ -174,76 +127,68 @@ object SmsDataManager {
     }
     
     fun addSmsToHistory(context: Context, sms: SmsHistoryDto) {
-        val currentHistory = loadSmsHistory(context).toMutableList()
-        currentHistory.add(0, sms) // Add to the beginning for most recent first
-        saveSmsHistory(context, currentHistory)
-    }
-    
-    // File utilities
-    private fun saveToFile(context: Context, fileName: String, content: String) {
         try {
-            // Make sure directories exist
-            initialize(context)
-            
-            val smsDir = File(SMS_DIR)
-            if (!smsDir.exists()) {
-                val created = smsDir.mkdirs()
-                if (!created) {
-                    Log.e(TAG, "Failed to create SMS directory ${smsDir.absolutePath}")
-                    return
-                }
-            }
-            
-            val file = File(smsDir, fileName)
-            val parentDir = file.parentFile
-            if (parentDir != null && !parentDir.exists()) {
-                val created = parentDir.mkdirs()
-                if (!created) {
-                    Log.e(TAG, "Failed to create parent directory ${parentDir.absolutePath}")
-                    return
-                }
-            }
-            
-            FileOutputStream(file).use { stream ->
-                stream.write(content.toByteArray())
-            }
-            Log.d(TAG, "File saved: ${file.absolutePath}")
+            val currentHistory = loadSmsHistory(context).toMutableList()
+            currentHistory.add(0, sms) // Add to the beginning for most recent first
+            saveSmsHistory(context, currentHistory)
+            Log.d(TAG, "Successfully added SMS to history: ${sms.id}")
         } catch (e: Exception) {
-            Log.e(TAG, "Error saving file: $fileName", e)
+            Log.e(TAG, "Error adding SMS to history", e)
             e.printStackTrace()
         }
     }
     
-    private fun loadFromFile(context: Context, fileName: String): String? {
-        return try {
-            // Make sure directories exist
-            initialize(context)
-            
-            val file = File(SMS_DIR, fileName)
-            if (!file.exists()) {
-                Log.d(TAG, "File does not exist: ${file.absolutePath}")
-                return null
+    // File utilities
+    private fun saveToFile(context: Context, filename: String, content: String) {
+        try {
+            val file = File(SMS_DIR, filename)
+            FileOutputStream(file).use { 
+                it.write(content.toByteArray())
             }
-            
-            FileReader(file).use { reader ->
-                reader.readText()
+            Log.d(TAG, "Successfully saved to $filename")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving to $filename", e)
+            e.printStackTrace()
+        }
+    }
+    
+    private fun loadFromFile(context: Context, filename: String): String? {
+        return try {
+            val file = File(SMS_DIR, filename)
+            if (file.exists()) {
+                file.readText()
+            } else {
+                null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading file: $fileName", e)
+            Log.e(TAG, "Error loading from $filename", e)
             e.printStackTrace()
             null
         }
     }
     
-    // This function can be used for data migration
-    fun getStorageInfo(): String {
+    private fun getStorageInfo(): String {
         val smsDir = File(SMS_DIR)
+        val templatesFile = File(smsDir, SMS_TEMPLATES_FILE)
+        val contactsFile = File(smsDir, TEACHER_CONTACTS_FILE)
+        val historyFile = File(smsDir, SMS_HISTORY_FILE)
+        
         return """
-            SMS Directory: ${smsDir.absolutePath}
+            SMS Directory: $SMS_DIR
             SMS Directory exists: ${smsDir.exists()}
-            SMS Templates: ${File(smsDir, SMS_TEMPLATES_FILE).absolutePath} (exists: ${File(smsDir, SMS_TEMPLATES_FILE).exists()})
-            Teacher Contacts: ${File(smsDir, TEACHER_CONTACTS_FILE).absolutePath} (exists: ${File(smsDir, TEACHER_CONTACTS_FILE).exists()})
-            SMS History: ${File(smsDir, SMS_HISTORY_FILE).absolutePath} (exists: ${File(smsDir, SMS_HISTORY_FILE).exists()})
+            SMS Templates: ${templatesFile.absolutePath} (exists: ${templatesFile.exists()})
+            Teacher Contacts: ${contactsFile.absolutePath} (exists: ${contactsFile.exists()})
+            SMS History: ${historyFile.absolutePath} (exists: ${historyFile.exists()})
         """.trimIndent()
+    }
+    
+    private fun getDefaultTemplates(): List<SmsTemplateDto> {
+        return listOf(
+            SmsTemplateDto(
+                id = UUID.randomUUID().toString(),
+                name = "Default Template",
+                content = "Dear {teacher}, you have been assigned to cover {class} Period {period} on {date}. Please confirm your availability."
+            )
+        )
     }
 } 
