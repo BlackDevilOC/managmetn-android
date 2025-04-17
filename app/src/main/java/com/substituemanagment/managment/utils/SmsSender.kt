@@ -168,7 +168,7 @@ object SmsSender {
                                 }
                                 context.unregisterReceiver(this)
                             }
-                        }, IntentFilter(SMS_SENT_ACTION))
+                        }, IntentFilter(SMS_SENT_ACTION), Context.RECEIVER_NOT_EXPORTED)
                         
                         context.registerReceiver(object : BroadcastReceiver() {
                             override fun onReceive(context: Context, intent: Intent) {
@@ -184,7 +184,7 @@ object SmsSender {
                                 }
                                 context.unregisterReceiver(this)
                             }
-                        }, IntentFilter(SMS_DELIVERED_ACTION))
+                        }, IntentFilter(SMS_DELIVERED_ACTION), Context.RECEIVER_NOT_EXPORTED)
                         
                         // Send the SMS using SmsManager API
                         if (messageLength > 160) {
@@ -424,7 +424,7 @@ object SmsSender {
                     }
                     context.unregisterReceiver(this)
                 }
-            }, IntentFilter(SMS_SENT_ACTION))
+            }, IntentFilter(SMS_SENT_ACTION), Context.RECEIVER_NOT_EXPORTED)
             
             // Register broadcast receivers for delivered status
             context.registerReceiver(object : BroadcastReceiver() {
@@ -444,7 +444,7 @@ object SmsSender {
                     }
                     context.unregisterReceiver(this)
                 }
-            }, IntentFilter(SMS_DELIVERED_ACTION))
+            }, IntentFilter(SMS_DELIVERED_ACTION), Context.RECEIVER_NOT_EXPORTED)
             
             // Send the SMS based on message length
             val messageLength = message.length
