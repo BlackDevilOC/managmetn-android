@@ -47,7 +47,8 @@ data class HomeScreenState(
     val isLoading: Boolean = false,
     val autoResetEnabled: Boolean = false,
     val autoResetHour: Int = 7,    // Default to 7 AM
-    val autoResetMinute: Int = 45  // Default to 45 minutes
+    val autoResetMinute: Int = 45,  // Default to 45 minutes
+    val autoResetIsAM: Boolean = true  // Default to AM
 )
 
 class HomeViewModel(private val context: Context) : ViewModel() {
@@ -58,6 +59,7 @@ class HomeViewModel(private val context: Context) : ViewModel() {
     private val KEY_AUTO_RESET = "auto_reset_enabled"
     private val KEY_RESET_HOUR = "reset_hour"
     private val KEY_RESET_MINUTE = "reset_minute"
+    private val KEY_RESET_IS_AM = "reset_is_am"
     
     // Initialize TeachersViewModel properly
     private lateinit var teachersViewModel: TeachersViewModel
@@ -216,11 +218,12 @@ class HomeViewModel(private val context: Context) : ViewModel() {
         state = state.copy(
             autoResetEnabled = prefs.getBoolean(KEY_AUTO_RESET, false),
             autoResetHour = prefs.getInt(KEY_RESET_HOUR, 7),
-            autoResetMinute = prefs.getInt(KEY_RESET_MINUTE, 45)
+            autoResetMinute = prefs.getInt(KEY_RESET_MINUTE, 45),
+            autoResetIsAM = prefs.getBoolean(KEY_RESET_IS_AM, true)
         )
         // Sync settings with AutoResetManager
         autoResetManager.setAutoResetEnabled(state.autoResetEnabled)
-        autoResetManager.setResetTime(state.autoResetHour, state.autoResetMinute)
+        autoResetManager.setResetTime(state.autoResetHour, state.autoResetMinute, state.autoResetIsAM)
     }
 
     private fun saveSettings() {
@@ -229,6 +232,7 @@ class HomeViewModel(private val context: Context) : ViewModel() {
             putBoolean(KEY_AUTO_RESET, state.autoResetEnabled)
             putInt(KEY_RESET_HOUR, state.autoResetHour)
             putInt(KEY_RESET_MINUTE, state.autoResetMinute)
+            putBoolean(KEY_RESET_IS_AM, state.autoResetIsAM)
             apply()
         }
     }
@@ -239,9 +243,13 @@ class HomeViewModel(private val context: Context) : ViewModel() {
         saveSettings()
     }
 
-    fun setResetTime(hour: Int, minute: Int) {
-        state = state.copy(autoResetHour = hour, autoResetMinute = minute)
-        autoResetManager.setResetTime(hour, minute)
+    fun setResetTime(hour: Int, minute: Int, isAM: Boolean) {
+        state = state.copy(
+            autoResetHour = hour,
+            autoResetMinute = minute,
+            autoResetIsAM = isAM
+        )
+        autoResetManager.setResetTime(hour, minute, isAM)
         saveSettings()
     }
     

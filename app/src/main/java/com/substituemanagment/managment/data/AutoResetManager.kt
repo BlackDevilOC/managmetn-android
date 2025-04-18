@@ -11,7 +11,6 @@ import com.substituemanagment.managment.ui.viewmodels.TeachersViewModel
 import kotlinx.coroutines.*
 import java.io.File
 import java.util.*
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 class AutoResetManager private constructor(private val context: Context) {
     private val TAG = "AutoResetManager"
@@ -19,10 +18,12 @@ class AutoResetManager private constructor(private val context: Context) {
     private val KEY_AUTO_RESET = "auto_reset_enabled"
     private val KEY_RESET_HOUR = "reset_hour"
     private val KEY_RESET_MINUTE = "reset_minute"
+    private val KEY_RESET_IS_AM = "reset_is_am"
     
     private var autoResetEnabled = false
     private var resetHour = 7  // Default 7 AM
     private var resetMinute = 45  // Default 45 minutes
+    private var resetIsAM = true  // Default to AM
     private var resetJob: Job? = null
     
     private val teachersViewModel = TeachersViewModel()
@@ -30,15 +31,10 @@ class AutoResetManager private constructor(private val context: Context) {
     
     private val autoBackupManager = AutoBackupManager.getInstance(context)
     
-    private val crashlytics = FirebaseCrashlytics.getInstance()
-    
     init {
         loadSettings()
         teachersViewModel.initialize(context)
         startMonitoring()
-        
-        // Set custom keys for better crash reporting
-        crashlytics.setCustomKey("component", "AutoResetManager")
     }
     
     private fun loadSettings() {
@@ -46,7 +42,8 @@ class AutoResetManager private constructor(private val context: Context) {
         autoResetEnabled = prefs.getBoolean(KEY_AUTO_RESET, false)
         resetHour = prefs.getInt(KEY_RESET_HOUR, 7)
         resetMinute = prefs.getInt(KEY_RESET_MINUTE, 45)
-        Log.d(TAG, "Settings loaded - Enabled: $autoResetEnabled, Time: $resetHour:$resetMinute")
+        resetIsAM = prefs.getBoolean(KEY_RESET_IS_AM, true)
+        Log.d(TAG, "Settings loaded - Enabled: $autoResetEnabled, Time: $resetHour:$resetMinute ${if (resetIsAM) "AM" else "PM"}")
     }
     
     private fun saveSettings() {
@@ -55,9 +52,10 @@ class AutoResetManager private constructor(private val context: Context) {
             putBoolean(KEY_AUTO_RESET, autoResetEnabled)
             putInt(KEY_RESET_HOUR, resetHour)
             putInt(KEY_RESET_MINUTE, resetMinute)
+            putBoolean(KEY_RESET_IS_AM, resetIsAM)
             apply()
         }
-        Log.d(TAG, "Settings saved - Enabled: $autoResetEnabled, Time: $resetHour:$resetMinute")
+        Log.d(TAG, "Settings saved - Enabled: $autoResetEnabled, Time: $resetHour:$resetMinute ${if (resetIsAM) "AM" else "PM"}")
     }
     
     fun setAutoResetEnabled(enabled: Boolean) {
@@ -70,11 +68,12 @@ class AutoResetManager private constructor(private val context: Context) {
         }
     }
     
-    fun setResetTime(hour: Int, minute: Int) {
+    fun setResetTime(hour: Int, minute: Int, isAM: Boolean) {
         resetHour = hour
         resetMinute = minute
+        resetIsAM = isAM
         saveSettings()
-        Log.d(TAG, "New reset time set: $hour:$minute")
+        Log.d(TAG, "New reset time set: $hour:$minute ${if (isAM) "AM" else "PM"}")
     }
     
     private fun startMonitoring() {
@@ -101,19 +100,25 @@ class AutoResetManager private constructor(private val context: Context) {
         val calendar = Calendar.getInstance()
         val currentHour = calendar.get(Calendar.HOUR)
         val currentMinute = calendar.get(Calendar.MINUTE)
-        val isAM = calendar.get(Calendar.AM_PM) == Calendar.AM
+        val currentIsAM = calendar.get(Calendar.AM_PM) == Calendar.AM
+        
+        // Convert 12 to 0 for comparison if needed
+        val compareCurrentHour = if (currentHour == 12) 0 else currentHour
+        val compareResetHour = if (resetHour == 12) 0 else resetHour
         
         Log.d(TAG, """
             🕒 Auto-reset check:
-            Current time: $currentHour:$currentMinute ${if (isAM) "AM" else "PM"}
-            Target time: $resetHour:$resetMinute AM
+            Current time: $currentHour:$currentMinute ${if (currentIsAM) "AM" else "PM"}
+            Target time: $resetHour:$resetMinute ${if (resetIsAM) "AM" else "PM"}
             Auto-reset enabled: $autoResetEnabled
-            Hour match: ${currentHour == resetHour}
+            Hour match: ${compareCurrentHour == compareResetHour}
             Minute match: ${currentMinute == resetMinute}
-            AM/PM match: $isAM
+            AM/PM match: ${currentIsAM == resetIsAM}
         """.trimIndent())
         
-        if (currentHour == resetHour && currentMinute == resetMinute && isAM) {
+        if (compareCurrentHour == compareResetHour && 
+            currentMinute == resetMinute && 
+            currentIsAM == resetIsAM) {
             Log.d(TAG, "🔄 Auto-reset time match detected! Starting reset process...")
             performReset()
         }
@@ -124,32 +129,25 @@ class AutoResetManager private constructor(private val context: Context) {
             withContext(Dispatchers.IO) {
                 // Step 1: Create backup first
                 Log.d(TAG, "📦 Step 1: Creating backup before reset...")
-                crashlytics.setCustomKey("reset_stage", "backup")
                 try {
                     autoBackupManager.createDailyBackup()
                     Log.d(TAG, "✅ Backup completed successfully")
                 } catch (e: Exception) {
-                    val errorMsg = "❌ Backup failed, aborting reset for safety: ${e.message}"
-                    Log.e(TAG, errorMsg)
-                    crashlytics.recordException(e)
-                    crashlytics.log(errorMsg)
+                    Log.e(TAG, "❌ Backup failed, aborting reset for safety: ${e.message}")
                     e.printStackTrace()
                     return@withContext
                 }
 
                 // Step 2: Only proceed with reset if backup was successful
                 Log.d(TAG, "🔄 Step 2: Starting reset process...")
-                crashlytics.setCustomKey("reset_stage", "reset_process")
                 
                 try {
                     // Reset attendance first
-                    crashlytics.setCustomKey("reset_substage", "attendance")
                     Log.d(TAG, "2.1: Starting attendance reset...")
                     teachersViewModel.resetAttendanceAndAssignments(context)
                     Log.d(TAG, "✅ Completed attendance reset")
                     
                     // Then reset substitutions
-                    crashlytics.setCustomKey("reset_substage", "substitutions")
                     Log.d(TAG, "2.2: Starting substitutions reset...")
                     val substituteManager = SubstituteManager(context)
                     substituteManager.loadData()
@@ -157,7 +155,6 @@ class AutoResetManager private constructor(private val context: Context) {
                     Log.d(TAG, "✅ Completed substitutions manager reset")
                     
                     // Finally clear assignments file
-                    crashlytics.setCustomKey("reset_substage", "assignments_file")
                     Log.d(TAG, "2.3: Writing empty assignments file...")
                     val file = File(PROCESSED_ASSIGNED_SUBSTITUTES_PATH)
                     val emptyAssignments = mapOf(
@@ -171,7 +168,6 @@ class AutoResetManager private constructor(private val context: Context) {
                     file.writeText(gson.toJson(emptyAssignments))
                     Log.d(TAG, "✅ Successfully cleared assignments file")
                     
-                    crashlytics.setCustomKey("reset_status", "success")
                     Log.d(TAG, """
                         ✅ Auto-reset completed successfully!
                         📝 Summary:
@@ -181,23 +177,15 @@ class AutoResetManager private constructor(private val context: Context) {
                         - Assignment file cleared
                     """.trimIndent())
                 } catch (e: Exception) {
-                    val errorMsg = """
+                    Log.e(TAG, """
                         ❌ Error during reset operations: ${e.message}
                         ℹ️ Note: Backup was created successfully before error occurred
-                    """.trimIndent()
-                    Log.e(TAG, errorMsg)
-                    crashlytics.recordException(e)
-                    crashlytics.log(errorMsg)
-                    crashlytics.setCustomKey("reset_status", "failed")
+                    """.trimIndent())
                     e.printStackTrace()
                 }
             }
         } catch (e: Exception) {
-            val errorMsg = "❌ Critical error in performReset: ${e.message}"
-            Log.e(TAG, errorMsg)
-            crashlytics.recordException(e)
-            crashlytics.log(errorMsg)
-            crashlytics.setCustomKey("reset_status", "critical_failure")
+            Log.e(TAG, "❌ Critical error in performReset: ${e.message}")
             e.printStackTrace()
         }
     }

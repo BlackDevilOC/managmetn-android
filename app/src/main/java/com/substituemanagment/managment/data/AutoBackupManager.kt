@@ -2,7 +2,6 @@ package com.substituemanagment.managment.data
 
 import android.content.Context
 import android.util.Log
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -13,7 +12,6 @@ import kotlinx.coroutines.withContext
 
 class AutoBackupManager private constructor(private val context: Context) {
     private val TAG = "AutoBackupManager"
-    private val crashlytics = FirebaseCrashlytics.getInstance()
     private val baseDir = File("/storage/emulated/0/Android/data/com.substituemanagment.managment/files/substitute_data")
     private val backupBaseDir = File(baseDir, "auto_backups")
     
@@ -25,11 +23,6 @@ class AutoBackupManager private constructor(private val context: Context) {
         "total_teacher.json"
     )
     
-    init {
-        // Set custom keys for better crash reporting
-        crashlytics.setCustomKey("component", "AutoBackupManager")
-    }
-    
     suspend fun createDailyBackup() {
         try {
             withContext(Dispatchers.IO) {
@@ -37,11 +30,6 @@ class AutoBackupManager private constructor(private val context: Context) {
                 val year = calendar.get(Calendar.YEAR)
                 val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault())
                 val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
-                
-                // Set backup context for crash reports
-                crashlytics.setCustomKey("backup_year", year)
-                crashlytics.setCustomKey("backup_month", month)
-                crashlytics.setCustomKey("backup_date", date)
                 
                 // Create directory structure: year/month/date
                 val yearDir = File(backupBaseDir, year.toString())
@@ -52,14 +40,9 @@ class AutoBackupManager private constructor(private val context: Context) {
                 dateDir.mkdirs()
                 
                 Log.d(TAG, "Creating backup in: ${dateDir.absolutePath}")
-                crashlytics.log("Starting backup in: ${dateDir.absolutePath}")
-                
-                var successfulBackups = 0
-                var failedBackups = 0
                 
                 // Backup each file
                 filesToBackup.forEach { fileName ->
-                    crashlytics.setCustomKey("current_file", fileName)
                     val sourceFile = File(baseDir, fileName)
                     if (sourceFile.exists()) {
                         try {
@@ -78,36 +61,27 @@ class AutoBackupManager private constructor(private val context: Context) {
                             // Write to backup file
                             backupFile.writeText(prettyJson)
                             Log.d(TAG, "✅ Backed up $fileName to ${backupFile.name}")
-                            successfulBackups++
                         } catch (e: Exception) {
-                            val errorMsg = "❌ Failed to backup $fileName: ${e.message}"
-                            Log.e(TAG, errorMsg)
-                            crashlytics.recordException(e)
-                            crashlytics.log(errorMsg)
-                            failedBackups++
+                            Log.e(TAG, "❌ Failed to backup $fileName: ${e.message}")
                         }
                     } else {
-                        val warningMsg = "⚠️ Source file $fileName not found"
-                        Log.w(TAG, warningMsg)
-                        crashlytics.log(warningMsg)
-                        failedBackups++
+                        Log.w(TAG, "⚠️ Source file $fileName not found")
                     }
                 }
                 
                 // Backup processed directory
-                crashlytics.setCustomKey("backup_stage", "processed_directory")
                 val processedDir = File(baseDir, "processed")
                 if (processedDir.exists()) {
                     val backupProcessedDir = File(dateDir, "processed")
                     backupProcessedDir.mkdirs()
                     
                     processedDir.listFiles()?.forEach { file ->
-                        crashlytics.setCustomKey("current_processed_file", file.name)
                         try {
                             if (file.isFile) {
                                 val content = file.readText()
                                 val backupFile = File(backupProcessedDir, file.name)
                                 
+                                // Pretty print JSON if it's a JSON file
                                 if (file.extension.equals("json", ignoreCase = true)) {
                                     val gson = GsonBuilder().setPrettyPrinting().create()
                                     val jsonElement = Gson().fromJson(content, com.google.gson.JsonElement::class.java)
@@ -116,14 +90,9 @@ class AutoBackupManager private constructor(private val context: Context) {
                                     backupFile.writeText(content)
                                 }
                                 Log.d(TAG, "✅ Backed up processed/${file.name}")
-                                successfulBackups++
                             }
                         } catch (e: Exception) {
-                            val errorMsg = "❌ Failed to backup processed/${file.name}: ${e.message}"
-                            Log.e(TAG, errorMsg)
-                            crashlytics.recordException(e)
-                            crashlytics.log(errorMsg)
-                            failedBackups++
+                            Log.e(TAG, "❌ Failed to backup processed/${file.name}: ${e.message}")
                         }
                     }
                 }
@@ -133,37 +102,22 @@ class AutoBackupManager private constructor(private val context: Context) {
                     "backup_time" to SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(calendar.time),
                     "backup_location" to dateDir.absolutePath,
                     "backed_up_files" to filesToBackup,
-                    "processed_files_backed_up" to (processedDir.listFiles()?.size ?: 0),
-                    "successful_backups" to successfulBackups,
-                    "failed_backups" to failedBackups
+                    "processed_files_backed_up" to (processedDir.listFiles()?.size ?: 0)
                 )
-                
-                crashlytics.setCustomKey("successful_backups", successfulBackups)
-                crashlytics.setCustomKey("failed_backups", failedBackups)
                 
                 val summaryFile = File(dateDir, "backup_summary.json")
                 val gson = GsonBuilder().setPrettyPrinting().create()
                 summaryFile.writeText(gson.toJson(summary))
                 
-                val completionMsg = """
-                    ✅ Daily backup completed!
+                Log.d(TAG, """
+                    ✅ Daily backup completed successfully!
                     📂 Location: ${dateDir.absolutePath}
-                    📊 Stats:
-                    - Successful backups: $successfulBackups
-                    - Failed backups: $failedBackups
-                    - Total files: ${successfulBackups + failedBackups}
-                """.trimIndent()
-                
-                Log.d(TAG, completionMsg)
-                crashlytics.log(completionMsg)
+                    📊 Total files backed up: ${filesToBackup.size + (processedDir.listFiles()?.size ?: 0)}
+                """.trimIndent())
             }
         } catch (e: Exception) {
-            val errorMsg = "❌ Critical error during daily backup: ${e.message}"
-            Log.e(TAG, errorMsg)
-            crashlytics.recordException(e)
-            crashlytics.log(errorMsg)
+            Log.e(TAG, "❌ Error during daily backup: ${e.message}")
             e.printStackTrace()
-            throw e // Re-throw to notify caller of failure
         }
     }
     

@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "project_id": "YOUR_PROJECT_ID",
-    "storage_bucket": "YOUR_PROJECT_BUCKET"
+    "project_number": "673039788647",
+    "project_id": "managment-fbb33",
+    "storage_bucket": "managment-fbb33.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "YOUR_APP_ID",
+        "mobilesdk_app_id": "1:673039788647:android:150c327adebdb5d35902c2",
         "android_client_info": {
           "package_name": "com.substituemanagment.managment"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAzdEmUXSNPZEQSxPTxH0BnS_zgrGVOD38"
+          "current_key": "AIzaSyD1YIyBC3PvGlwadcCvNNDMB9A12KiEqjA"
         }
       ],
       "services": {

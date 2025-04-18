@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.substituemanagment.managment.BuildConfig
 import com.substituemanagment.managment.navigation.Screen
 import com.substituemanagment.managment.ui.viewmodels.HomeViewModel
 import kotlinx.coroutines.delay
@@ -277,7 +278,8 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                                         onClick = {
                                             homeViewModel.setResetTime(
                                                 hour = selectedHour,
-                                                minute = selectedMinute
+                                                minute = selectedMinute,
+                                                isAM = selectedHour < 12
                                             )
                                             showTimePickerDialog = false
                                         }
@@ -340,6 +342,8 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                     )
                 }
             }
+
+
             
             // Welcome animation on first load
             AnimatedVisibility(
