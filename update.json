@@ -1,0 +1,6 @@
+{
+  "versionCode": 5,
+  "versionName": "1.5",
+  "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v1.5/app-debug.apk",
+  "releaseNotes": "Version 1.5 updates:\n- Improved responsive layout for attendance page\n- Added tab functionality to filter teachers by status\n- Enhanced UI for better experience on smaller screens\n- Fixed layout issues on older/smaller devices\n- Optimized touch targets for better usability\n- Added clickable status indicators for quicker attendance management\n- Various performance improvements and bug fixes"
+} 

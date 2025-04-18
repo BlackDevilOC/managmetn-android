@@ -53,11 +53,14 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.substituemanagment.managment.ui.viewmodels.ProcessUiState
 import com.substituemanagment.managment.ui.viewmodels.ProcessViewModel
+import com.substituemanagment.managment.ui.viewmodels.TeacherDetailsViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProcessScreen(navController: NavController = rememberNavController()) {
     val viewModel: ProcessViewModel = viewModel()
+    val teacherDetailsViewModel: TeacherDetailsViewModel = viewModel()
     val context = LocalContext.current
     val snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
@@ -74,6 +77,12 @@ fun ProcessScreen(navController: NavController = rememberNavController()) {
     LaunchedEffect(uiState) {
         when (uiState) {
             is ProcessUiState.Completed -> {
+                // When processing is complete, initialize teacher details data
+                teacherDetailsViewModel.initialize(context)
+                // Wait for teacher details to be initialized
+                delay(500)
+                
+                // Then show success message
                 snackbarHostState.showSnackbar(
                     message = "Processing completed successfully",
                     duration = SnackbarDuration.Short
@@ -271,7 +280,9 @@ fun ProcessScreen(navController: NavController = rememberNavController()) {
                 else -> {
                     // Process button
                     Button(
-                        onClick = { viewModel.processTimetable() },
+                        onClick = { 
+                            viewModel.processTimetable()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
