@@ -1,5 +1,5 @@
 {
-  "versionCode": 5,
+  "versionCode": 4,
   "versionName": "1.4",
   "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v1.4/app-debug.apk",
   "releaseNotes": "Version 1.4 updates:\n- Added auto-reset feature for attendance and substitutions\n- Added time picker dialog for configuring auto-reset time\n- Added current period widget with real-time updates\n- Added next period preview\n- Enhanced teacher schedule display\n- Added quick action buttons for common tasks\n- Added SMS notification system integration\n- Added file upload functionality\n- Improved UI/UX with Material 3 design\n- Various performance optimizations and bug fixes"
