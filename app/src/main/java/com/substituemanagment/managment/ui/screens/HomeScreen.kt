@@ -1,5 +1,6 @@
 package com.substituemanagment.managment.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -101,25 +103,191 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { refreshFunction() }) {
-                        Icon(
-                            imageVector = if (refreshing) Icons.Default.Refresh else Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            modifier = Modifier.size(24.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        var showTimePickerDialog by remember { mutableStateOf(false) }
+                        
+                        Text(
+                            text = "Auto Reset",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.clickable { showTimePickerDialog = true }
                         )
-                    }
-                    IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            modifier = Modifier.size(24.dp)
+                        Switch(
+                            checked = homeState.autoResetEnabled,
+                            onCheckedChange = { homeViewModel.toggleAutoReset() },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
                         )
+
+                        if (showTimePickerDialog) {
+                            var selectedHour by remember { mutableStateOf(homeState.autoResetHour) }
+                            var selectedMinute by remember { mutableStateOf(homeState.autoResetMinute) }
+                            
+                            AlertDialog(
+                                onDismissRequest = { showTimePickerDialog = false },
+                                title = {
+                                    Text(
+                                        "Auto Reset Configuration",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                },
+                                text = {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Text(
+                                            "Select the time when the app should automatically reset attendance and substitutions.",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.Center,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Hour Picker
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("Hour", style = MaterialTheme.typography.labelSmall)
+                                                Surface(
+                                                    modifier = Modifier
+                                                        .width(80.dp)
+                                                        .padding(4.dp),
+                                                    shape = MaterialTheme.shapes.small,
+                                                    color = MaterialTheme.colorScheme.surfaceVariant
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        IconButton(
+                                                            onClick = {
+                                                                selectedHour = if (selectedHour <= 0) 23 else selectedHour - 1
+                                                            },
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.KeyboardArrowDown,
+                                                                contentDescription = "Decrease hour",
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                        
+                                                        Text(
+                                                            text = selectedHour.toString().padStart(2, '0'),
+                                                            style = MaterialTheme.typography.titleLarge,
+                                                            modifier = Modifier.padding(horizontal = 4.dp)
+                                                        )
+                                                        
+                                                        IconButton(
+                                                            onClick = {
+                                                                selectedHour = if (selectedHour >= 23) 0 else selectedHour + 1
+                                                            },
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.KeyboardArrowUp,
+                                                                contentDescription = "Increase hour",
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // AM/PM indicator
+                                                Text(
+                                                    text = if (selectedHour < 12) "AM" else "PM",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                            
+                                            Text(":", style = MaterialTheme.typography.titleLarge)
+                                            
+                                            // Minute Picker
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("Minute", style = MaterialTheme.typography.labelSmall)
+                                                Surface(
+                                                    modifier = Modifier
+                                                        .width(80.dp)
+                                                        .padding(4.dp),
+                                                    shape = MaterialTheme.shapes.small,
+                                                    color = MaterialTheme.colorScheme.surfaceVariant
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        IconButton(
+                                                            onClick = {
+                                                                selectedMinute = if (selectedMinute <= 0) 59 else selectedMinute - 1
+                                                            },
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.KeyboardArrowDown,
+                                                                contentDescription = "Decrease minute",
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                        
+                                                        Text(
+                                                            text = selectedMinute.toString().padStart(2, '0'),
+                                                            style = MaterialTheme.typography.titleLarge,
+                                                            modifier = Modifier.padding(horizontal = 4.dp)
+                                                        )
+                                                        
+                                                        IconButton(
+                                                            onClick = {
+                                                                selectedMinute = if (selectedMinute >= 59) 0 else selectedMinute + 1
+                                                            },
+                                                            modifier = Modifier.size(24.dp)
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.KeyboardArrowUp,
+                                                                contentDescription = "Increase minute",
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Text(
+                                            "Current setting: ${homeState.autoResetHour.toString().padStart(2, '0')}:${homeState.autoResetMinute.toString().padStart(2, '0')} ${if (homeState.autoResetHour < 12) "AM" else "PM"}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
+                                confirmButton = {
+                                    homeViewModel.setResetTime(
+                                        hour = selectedHour,
+                                        minute = selectedMinute
+                                    )
+                                    showTimePickerDialog = false
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showTimePickerDialog = false }) {
+                                        Text("Cancel")
+                                    }
+                                }
+                            )
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.97f),
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                }
             )
         }
     ) { paddingValues ->
@@ -130,9 +298,40 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                 .padding(horizontal = 16.dp)
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
+            
+            // Quick Actions Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { refreshFunction() },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = if (refreshing) Icons.Default.Refresh else Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                
+                IconButton(
+                    onClick = { navController.navigate(Screen.Settings.route) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
             
             // Welcome animation on first load
             AnimatedVisibility(

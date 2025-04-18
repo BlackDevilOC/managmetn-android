@@ -3,13 +3,17 @@ package com.substituemanagment.managment.ui.viewmodels
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.substituemanagment.managment.data.SubstituteManager
+import com.substituemanagment.managment.algorithm.SubstituteManager
 import com.substituemanagment.managment.data.TeacherData
 import com.substituemanagment.managment.data.TeacherDataManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.io.FileOutputStream
 
 data class Teacher(
     val name: String,
@@ -78,5 +82,32 @@ class TeachersViewModel : ViewModel() {
     
     fun dismissCancellationDialog() {
         _showCancellationDialog.value = null
+    }
+
+    fun resetAttendanceAndAssignments(context: Context) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Reset attendance records
+                val baseDir = File("/storage/emulated/0/Android/data/com.substituemanagment.managment/files/substitute_data")
+                val absentTeachersFile = File(baseDir, "absent_teachers.json")
+                
+                // Clear absent teachers file
+                FileOutputStream(absentTeachersFile).use { outputStream ->
+                    outputStream.write("[]".toByteArray())
+                }
+
+                // Reset substitute assignments
+                val substituteManager = SubstituteManager(context)
+                substituteManager.clearAssignments()
+
+                // Reload teachers to update UI
+                loadTeachers()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 } 

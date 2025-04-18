@@ -29,6 +29,9 @@ fun TeachersScreen() {
     val isLoading by viewModel.isLoading.collectAsState()
     val currentDate = remember { SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault()).format(Date()) }
     
+    // State for reset popup
+    var showResetPopup by remember { mutableStateOf(false) }
+    
     // Search state
     var searchQuery by remember { mutableStateOf("") }
     
@@ -54,7 +57,18 @@ fun TeachersScreen() {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                ),
+                actions = {
+                    IconButton(
+                        onClick = { showResetPopup = true }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.RestartAlt,
+                            contentDescription = "Reset Attendance",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -186,6 +200,31 @@ fun TeachersScreen() {
                 }
             }
         }
+    }
+
+    // Reset attendance confirmation dialog
+    if (showResetPopup) {
+        AlertDialog(
+            onDismissRequest = { showResetPopup = false },
+            title = { Text("Reset Attendance") },
+            text = { Text("Are you sure you want to reset all attendance records and substitute assignments? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = { 
+                        // Reset attendance and substitute assignments
+                        viewModel.resetAttendanceAndAssignments(context)
+                        showResetPopup = false
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetPopup = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     // Show cancellation confirmation dialog

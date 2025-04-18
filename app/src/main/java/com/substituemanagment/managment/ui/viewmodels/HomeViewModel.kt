@@ -17,8 +17,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 // For teacher schedule display
 data class TeacherScheduleEntry(
@@ -36,23 +38,34 @@ data class HomeScreenState(
     val nextPeriod: Int? = null,
     val nextPeriodTimeRange: String = "",
     val currentSchedules: List<TeacherScheduleEntry> = emptyList(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val autoResetEnabled: Boolean = false,
+    val autoResetHour: Int = 7,    // Default to 7 AM
+    val autoResetMinute: Int = 45  // Default to 45 minutes
 )
 
 class HomeViewModel(private val context: Context) : ViewModel() {
     private val TAG = "HomeViewModel"
     private val teacherDataManager = TeacherDataManager(context)
+    private val PREFS_NAME = "home_settings"
+    private val KEY_AUTO_RESET = "auto_reset_enabled"
+    private val KEY_RESET_HOUR = "reset_hour"
+    private val KEY_RESET_MINUTE = "reset_minute"
     
     var state by mutableStateOf(HomeScreenState())
         private set
     
     init {
+        loadSettings()
         refreshData()
         // Start periodic refresh
         viewModelScope.launch {
             while (true) {
                 delay(60000) // Refresh every minute
                 refreshData()
+                if (state.autoResetEnabled) {
+                    checkAndResetForNewDay()
+                }
             }
         }
     }
@@ -185,6 +198,46 @@ class HomeViewModel(private val context: Context) : ViewModel() {
         val third: C,
         val fourth: D
     )
+    
+    private fun loadSettings() {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        state = state.copy(
+            autoResetEnabled = prefs.getBoolean(KEY_AUTO_RESET, false),
+            autoResetHour = prefs.getInt(KEY_RESET_HOUR, 7),
+            autoResetMinute = prefs.getInt(KEY_RESET_MINUTE, 45)
+        )
+    }
+
+    private fun saveSettings() {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            putBoolean(KEY_AUTO_RESET, state.autoResetEnabled)
+            putInt(KEY_RESET_HOUR, state.autoResetHour)
+            putInt(KEY_RESET_MINUTE, state.autoResetMinute)
+            apply()
+        }
+    }
+
+    fun toggleAutoReset() {
+        state = state.copy(autoResetEnabled = !state.autoResetEnabled)
+        saveSettings()
+    }
+
+    fun setResetTime(hour: Int, minute: Int) {
+        state = state.copy(autoResetHour = hour, autoResetMinute = minute)
+        saveSettings()
+    }
+
+    private fun checkAndResetForNewDay() {
+        val calendar = Calendar.getInstance()
+        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val currentMinute = calendar.get(Calendar.MINUTE)
+
+        if (currentHour == state.autoResetHour && currentMinute == state.autoResetMinute) {
+            // This will be implemented later with the actual reset logic
+            Log.d(TAG, "Auto-reset check triggered - Time: ${state.autoResetHour}:${state.autoResetMinute}")
+        }
+    }
     
     class Factory(private val context: Context) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
