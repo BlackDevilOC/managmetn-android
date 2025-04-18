@@ -6,4 +6,6 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.8.21" apply false
     id("org.jetbrains.kotlin.multiplatform") version "1.8.21" apply false
     id("org.jetbrains.kotlin.plugin.serialization") version "1.8.21" apply false
+    alias(libs.plugins.google.gms.google.services) apply false
+    alias(libs.plugins.google.firebase.crashlytics) apply false
 }

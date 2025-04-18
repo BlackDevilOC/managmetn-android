@@ -273,14 +273,22 @@ fun HomeScreen(navController: NavController = rememberNavController()) {
                                     }
                                 },
                                 confirmButton = {
-                                    homeViewModel.setResetTime(
-                                        hour = selectedHour,
-                                        minute = selectedMinute
-                                    )
-                                    showTimePickerDialog = false
+                                    TextButton(
+                                        onClick = {
+                                            homeViewModel.setResetTime(
+                                                hour = selectedHour,
+                                                minute = selectedMinute
+                                            )
+                                            showTimePickerDialog = false
+                                        }
+                                    ) {
+                                        Text("Save")
+                                    }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showTimePickerDialog = false }) {
+                                    TextButton(
+                                        onClick = { showTimePickerDialog = false }
+                                    ) {
                                         Text("Cancel")
                                     }
                                 }

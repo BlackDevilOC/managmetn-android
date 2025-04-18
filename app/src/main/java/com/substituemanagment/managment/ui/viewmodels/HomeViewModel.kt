@@ -7,11 +7,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.substituemanagment.managment.data.PeriodSettings
 import com.substituemanagment.managment.data.TeacherDataManager
+import com.substituemanagment.managment.algorithm.SubstituteManager
+import com.substituemanagment.managment.algorithm.PROCESSED_ASSIGNED_SUBSTITUTES_PATH
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -21,6 +26,7 @@ import java.io.FileOutputStream
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import com.substituemanagment.managment.data.AutoResetManager
 
 // For teacher schedule display
 data class TeacherScheduleEntry(
@@ -47,10 +53,14 @@ data class HomeScreenState(
 class HomeViewModel(private val context: Context) : ViewModel() {
     private val TAG = "HomeViewModel"
     private val teacherDataManager = TeacherDataManager(context)
+    private val autoResetManager = AutoResetManager.getInstance(context)
     private val PREFS_NAME = "home_settings"
     private val KEY_AUTO_RESET = "auto_reset_enabled"
     private val KEY_RESET_HOUR = "reset_hour"
     private val KEY_RESET_MINUTE = "reset_minute"
+    
+    // Initialize TeachersViewModel properly
+    private lateinit var teachersViewModel: TeachersViewModel
     
     var state by mutableStateOf(HomeScreenState())
         private set
@@ -58,14 +68,16 @@ class HomeViewModel(private val context: Context) : ViewModel() {
     init {
         loadSettings()
         refreshData()
+        
+        // Initialize TeachersViewModel
+        teachersViewModel = TeachersViewModel()
+        teachersViewModel.initialize(context)
+        
         // Start periodic refresh
         viewModelScope.launch {
             while (true) {
-                delay(60000) // Refresh every minute
+                delay(60000) // Check every minute
                 refreshData()
-                if (state.autoResetEnabled) {
-                    checkAndResetForNewDay()
-                }
             }
         }
     }
@@ -206,6 +218,9 @@ class HomeViewModel(private val context: Context) : ViewModel() {
             autoResetHour = prefs.getInt(KEY_RESET_HOUR, 7),
             autoResetMinute = prefs.getInt(KEY_RESET_MINUTE, 45)
         )
+        // Sync settings with AutoResetManager
+        autoResetManager.setAutoResetEnabled(state.autoResetEnabled)
+        autoResetManager.setResetTime(state.autoResetHour, state.autoResetMinute)
     }
 
     private fun saveSettings() {
@@ -220,23 +235,14 @@ class HomeViewModel(private val context: Context) : ViewModel() {
 
     fun toggleAutoReset() {
         state = state.copy(autoResetEnabled = !state.autoResetEnabled)
+        autoResetManager.setAutoResetEnabled(state.autoResetEnabled)
         saveSettings()
     }
 
     fun setResetTime(hour: Int, minute: Int) {
         state = state.copy(autoResetHour = hour, autoResetMinute = minute)
+        autoResetManager.setResetTime(hour, minute)
         saveSettings()
-    }
-
-    private fun checkAndResetForNewDay() {
-        val calendar = Calendar.getInstance()
-        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
-        val currentMinute = calendar.get(Calendar.MINUTE)
-
-        if (currentHour == state.autoResetHour && currentMinute == state.autoResetMinute) {
-            // This will be implemented later with the actual reset logic
-            Log.d(TAG, "Auto-reset check triggered - Time: ${state.autoResetHour}:${state.autoResetMinute}")
-        }
     }
     
     class Factory(private val context: Context) : ViewModelProvider.Factory {
