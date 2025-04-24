@@ -1,6 +1,6 @@
 {
-  "versionCode": 7,
-  "versionName": "1.6",
-  "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v1.6/app-debug.apk",
-  "releaseNotes": "Version 1.6 updates:\n- Added substitute teaching conflict detection\n- Improved verification process for substitute assignments\n- Enhanced conflict detection and reporting\n- Added automatic saving of conflict reports to JSON file\n- Fixed issues with substitute assignment process\n- Improved user feedback for assignment conflicts\n- Various performance improvements and bug fixes"
-} 
+  "versionCode": 8,
+  "versionName": "1.7",
+  "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v1.7/app-debug.apk",
+  "releaseNotes": "Version 1.7 updates:\n- [Add your new features, improvements, and bug fixes here]\n- Improved performance and stability\n- Various bug fixes"
+}
