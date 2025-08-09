@@ -1,6 +1,6 @@
 {
-  "versionCode": 11,
-  "versionName": "2.0",
-  "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v2.0/app-debug.apk",
-  "releaseNotes": "Version 2.0 updates:\n- Removed trial system for new users\n- Hidden skip buttons from payment screens\n- Enhanced user registration flow\n- Improved app stability and performance\n- Updated to version 2.0 with new subscription management"
+  "versionCode": 12,
+  "versionName": "2.1",
+  "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v2.1/app-debug.apk",
+  "releaseNotes": "Version 2.1 updates:\n- Stability improvements and minor fixes\n- General performance enhancements"
 }
