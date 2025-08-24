@@ -1,6 +1,6 @@
 {
-  "versionCode": 12,
-  "versionName": "2.1",
-  "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v2.1/app-debug.apk",
-  "releaseNotes": "Version 2.1 updates:\n- Stability improvements and minor fixes\n- General performance enhancements"
+  "versionCode": 13,
+  "versionName": "2.2",
+  "downloadUrl": "https://github.com/BlackDevilOC/managmetn-android/releases/download/v2.2/app-debug.apk",
+  "releaseNotes": "Version 2.2 updates:\n- Enhanced AI-powered substitute assignment system\n- Improved workload tracking and validation\n- Fixed critical assignment conflicts\n- Added comprehensive validation rules\n- Optimized build performance with 2GB RAM limit\n- Enhanced Gemini API integration with proper headers\n- Added retry mechanism for AI assignments\n- Improved error handling and logging"
 }
